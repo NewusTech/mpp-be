@@ -10,13 +10,13 @@ const tagblogRoute = require('./tagblog.route');
 const kategoriportofolioRoute = require('./kategoriportofolio.route');
 const tagportofolioRoute = require('./tagportofolio.route');
 
-module.exports = function(app,urlApi){
-    app.use(urlApi,userRoute);
+module.exports = function (app, urlApi) {
+    app.use(urlApi, userRoute);
 
-    app.use(urlApi,blogRoute);
-    app.use(urlApi,kategoriblogRoute);
-    app.use(urlApi,tagblogRoute);
+    app.use(urlApi, blogRoute);
+    app.use(urlApi, kategoriblogRoute);
+    app.use(urlApi, tagblogRoute);
 
-    app.use(urlApi,kategoriportofolioRoute);
-    app.use(urlApi,tagportofolioRoute);
+    app.use(urlApi, kategoriportofolioRoute);
+    app.use(urlApi, tagportofolioRoute);
 }
