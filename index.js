@@ -3,8 +3,8 @@
 //import config
 const baseConfig =  require('./config/base.config');
 
-//import express
 const express = require('express')
+const error = require('./errorHandler/errorHandler')
 
 const app = express();
 const port = 3000;
@@ -15,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //memanggil route pada routes\api.route.js
 require('./routes/api.route')(app,urlApi);
+app.use(error)
 
 //listen
 app.listen(port, () => {

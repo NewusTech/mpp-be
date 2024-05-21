@@ -1,17 +1,15 @@
-//kode dari file xxxxxxxxxx-create-kategoriblog.js
-
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Kategoriblogs', {
+    await queryInterface.createTable('Roles', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      title: {
+      name: {
         type: Sequelize.STRING
       },
       createdAt: {
@@ -23,10 +21,9 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
-  },
 
-  //untuk drop table ketika melakukan revert migrations
+  },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Kategoriblogs');
+    await queryInterface.dropTable('Roles');
   }
 };

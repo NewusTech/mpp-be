@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('Layanans', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -12,14 +12,17 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
-      email: {
+      slug: {
         type: Sequelize.STRING
       },
-      password: {
+      desc: {
         type: Sequelize.STRING
       },
-      role_id: {
-        type: Sequelize.INTEGER
+      image: {
+        type: Sequelize.STRING
+      },
+      status: {
+        type: Sequelize.BOOLEAN
       },
       instansi_id: {
         type: Sequelize.INTEGER
@@ -34,7 +37,7 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('Users', {
+    await queryInterface.addConstraint('Layanans', {
       fields: ['instansi_id'],
       type: 'foreign key',
       name: 'custom_fkey_instansi_id',
@@ -43,18 +46,10 @@ module.exports = {
         field: 'id'
       }
     });
-
-    await queryInterface.addConstraint('Users', {
-      fields: ['role_id'],
-      type: 'foreign key',
-      name: 'custom_fkey_role_id',
-      references: {
-        table: 'Roles',
-        field: 'id'
-      }
-    });
   },
+
+  //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable('Layanans');
   }
 };

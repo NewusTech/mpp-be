@@ -2,26 +2,32 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('Layananforms', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      name: {
+      field: {
         type: Sequelize.STRING
       },
-      email: {
+      tipedata: {
         type: Sequelize.STRING
       },
-      password: {
-        type: Sequelize.STRING
-      },
-      role_id: {
+      maxinput: {
         type: Sequelize.INTEGER
       },
-      instansi_id: {
+      mininput: {
+        type: Sequelize.INTEGER
+      },
+      isrequired: {
+        type: Sequelize.BOOLEAN
+      },
+      status: {
+        type: Sequelize.BOOLEAN
+      },
+      layanan_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {
@@ -34,27 +40,19 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('Users', {
-      fields: ['instansi_id'],
+    await queryInterface.addConstraint('Layananforms', {
+      fields: ['layanan_id'],
       type: 'foreign key',
-      name: 'custom_fkey_instansi_id',
+      name: 'custom_fkey_layanan_id',
       references: {
-        table: 'Instansis',
-        field: 'id'
-      }
-    });
-
-    await queryInterface.addConstraint('Users', {
-      fields: ['role_id'],
-      type: 'foreign key',
-      name: 'custom_fkey_role_id',
-      references: {
-        table: 'Roles',
+        table: 'Layanans',
         field: 'id'
       }
     });
   },
+
+  //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable('Layananforms');
   }
 };

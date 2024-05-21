@@ -11,16 +11,20 @@ const express = require('express');
 const route = express.Router();
 
 //membuat user baru route
-route.post('/admin/register', //route 
-userController.createUser); //controller
+route.post('/user/register', userController.createUser);
+
+//membuat table baru route
+// route.post('/user/table', //route 
+// userController.createTable); //controller
 
 //login user route
-route.post('/admin/login', //route
-userController.loginUser); //controller
+route.post('/user/login', userController.loginUser);
 
 //logout user route
-route.post('/admin/logout', //route
-[mid.isLogin, mid.isLogout], //middleware isLogin dan isLogout digunakan untuk mengecek apakah user sudah login atau belum atau sudah logout atau belum
-userController.logoutUser); //controller
+route.post('/user/logout', [mid.isLogin, mid.isLogout], userController.logoutUser); 
+
+route.get('/user/alluser/get', [mid.isLogin, mid.isLogout], userController.getuser); 
+route.get('/user/alluser/get/:id', [mid.isLogin, mid.isLogout], userController.getuserById); 
+route.delete('/user/alluser/delete/:id', [mid.isLogin, mid.isLogout], userController.deleteuser);
 
 module.exports = route;
