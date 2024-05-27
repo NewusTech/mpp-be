@@ -45,7 +45,6 @@ module.exports = {
                 },
             }
 
-          
             let image = null;
             
             if(req.file){

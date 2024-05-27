@@ -2,29 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Layanans', {
+    await queryInterface.createTable('Layananforminputs', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      name: {
+      data: {
         type: Sequelize.STRING
       },
-      slug: {
-        type: Sequelize.STRING
+      layananform_id: {
+        type: Sequelize.INTEGER
       },
-      desc: {
-        type: Sequelize.STRING
-      },
-      image: {
-        type: Sequelize.STRING
-      },
-      status: {
-        type: Sequelize.BOOLEAN
-      },
-      instansi_id: {
+      layananformnum_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {
@@ -37,12 +28,22 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('Layanans', {
-      fields: ['instansi_id'],
+    await queryInterface.addConstraint('Layananforminputs', {
+      fields: ['layananform_id'],
       type: 'foreign key',
-      name: 'custom_fkey_instansi_id',
+      name: 'custom_fkey_layananform_id',
       references: {
-        table: 'Instansis',
+        table: 'Layananforms',
+        field: 'id'
+      }
+    });
+
+    await queryInterface.addConstraint('Layananforminputs', {
+      fields: ['layananformnum_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_layananformnum_id',
+      references: {
+        table: 'Layananformnums',
         field: 'id'
       }
     });
@@ -50,9 +51,6 @@ module.exports = {
 
   //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Layananformnums');
     await queryInterface.dropTable('Layananforminputs');
-    await queryInterface.dropTable('Layananforms');
-    await queryInterface.dropTable('Layanans');
   }
 };

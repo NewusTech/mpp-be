@@ -1,13 +1,15 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananform } = require('../models');
+const { Layanan, Layananform } = require('../models');
 require('dotenv').config()
 
-const slugify = require('slugify');
+const { Op } = require('sequelize');
 const Validator = require("fastest-validator");
 const v = new Validator();
 
 module.exports = {
+
+    // LAYANAN FORM
 
     //membuat layananform
     createlayananform: async (req, res) => {
@@ -71,6 +73,40 @@ module.exports = {
             res.status(201).json(response(201, 'success create layananform', layananformCreate));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    //mendapatkan semua form berdasarkan layanan
+    getformbylayanan: async (req, res) => {
+        try {
+            const { layananid } = req.params;
+
+            let layananData = await Layanan.findOne({
+                where: {
+                    id: layananid
+                },
+                attributes: ['name', 'slug', 'desc', 'image'],
+                include: [{
+                    model: Layananform,
+                    attributes: { exclude: ['createdAt', 'updatedAt'] },
+                    where: {
+                        tipedata: {
+                            [Op.ne]: "file"
+                        },
+                        status: true
+                    }
+                }]
+            });
+
+            if (!layananData) {
+                return res.status(404).json(response(404, 'Layanan not found'));
+            }
+
+            // Response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'Success get layanan with forms', layananData));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
     },
@@ -234,5 +270,175 @@ module.exports = {
             console.log(err);
         }
     },
-    
+
+    // LAYANAN DOCS
+
+    //membuat layanandocs
+    createlayanandocs: async (req, res) => {
+        try {
+
+            //membuat schema untuk validasi
+            const schema = {
+                field: {
+                    type: "string",
+                    min: 1,
+                },
+                tipedata: {
+                    type: "string",
+                    min: 1,
+                    optional: true
+                },
+                status: {
+                    type: "number",
+                    optional: true
+                },
+                isrequired: {
+                    type: "number",
+                    optional: true
+                },
+                layanan_id: {
+                    type: "number",
+                    optional: true
+                },
+            }
+
+            //buat object layanandocs
+            let layanandocsCreateObj = {
+                field: req.body.field,
+                tipedata: req.body.tipedata,
+                isrequired: Number(req.body.isrequired),
+                status: Number(req.body.status),
+                layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : null,
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(layanandocsCreateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //buat layanandocs
+            let layanandocsCreate = await Layananform.create(layanandocsCreateObj);
+
+            //response menggunakan helper response.docsatter
+            res.status(201).json(response(201, 'success create layanandocs', layanandocsCreate));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    //mendapatkan semua form docs berdasarkan layanan
+    getdocsbylayanan: async (req, res) => {
+        try {
+            const { layananid } = req.params;
+
+            let layananData = await Layanan.findOne({
+                where: {
+                    id: layananid
+                },
+                attributes: ['name', 'slug', 'desc', 'image'],
+                include: [{
+                    model: Layananform,
+                    attributes: { exclude: ['createdAt', 'updatedAt'] },
+                    where: {
+                        tipedata: "file",
+                        status: true
+                    }
+                }]
+            });
+
+            if (!layananData) {
+                return res.status(404).json(response(404, 'Layanan not found'));
+            }
+
+            // Response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'Success get layanan with forms', layananData));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    //mengupdate layanandocs berdasarkan id
+    updatelayanandocs: async (req, res) => {
+        try {
+            //mendapatkan data layanandocs untuk pengecekan
+            let layanandocsGet = await Layananform.findOne({
+                where: {
+                    id: req.params.id
+                }
+            })
+
+            //cek apakah data layanandocs ada
+            if (!layanandocsGet) {
+                res.status(404).json(response(404, 'layanandocs not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                field: {
+                    type: "string",
+                    min: 1,
+                },
+                tipedata: {
+                    type: "string",
+                    min: 1,
+                    optional: true
+                },
+                status: {
+                    type: "number",
+                    optional: true
+                },
+                isrequired: {
+                    type: "number",
+                    optional: true
+                },
+                layanan_id: {
+                    type: "number",
+                    optional: true
+                },
+            }
+
+            //buat object layanandocs
+            let layanandocsUpdateObj = {
+                field: req.body.field,
+                tipedata: req.body.tipedata,
+                isrequired: Number(req.body.isrequired),
+                status: Number(req.body.status),
+                layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : null,
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(layanandocsUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update layanandocs
+            await Layananform.update(layanandocsUpdateObj, {
+                where: {
+                    id: req.params.id,
+                }
+            })
+
+            //mendapatkan data layanandocs setelah update
+            let layanandocsAfterUpdate = await Layananform.findOne({
+                where: {
+                    id: req.params.id,
+                }
+            })
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update layanandocs', layanandocsAfterUpdate));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
 }

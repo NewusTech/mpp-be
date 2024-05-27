@@ -9,12 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      name: {
-        type: Sequelize.STRING
-      },
-      email: {
-        type: Sequelize.STRING
-      },
       password: {
         type: Sequelize.STRING
       },
@@ -22,6 +16,9 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       instansi_id: {
+        type: Sequelize.INTEGER
+      },
+      userinfo_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {
@@ -40,6 +37,16 @@ module.exports = {
       name: 'custom_fkey_instansi_id',
       references: {
         table: 'Instansis',
+        field: 'id'
+      }
+    });
+
+    await queryInterface.addConstraint('Users', {
+      fields: ['userinfo_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_userinfo_id',
+      references: {
+        table: 'Userinfos',
         field: 'id'
       }
     });

@@ -7,7 +7,7 @@ module.exports = {
         name: 'Dinas Kesehatan',
         slug: 'dinas-kesehatan',
         desc: 'Dinas yang kesehatan',
-        image: null,
+        image: 'https://res.cloudinary.com/dpprzvs5d/image/upload/v1716348892/mpp/instansi/image_20240522T033448276Z.png',
         status: false,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -16,7 +16,7 @@ module.exports = {
         name: 'Dinas Pendidikan',
         slug: 'dinas-pendidikan',
         desc: 'Dinas yang Pendidikan',
-        image: null,
+        image: "https://res.cloudinary.com/dpprzvs5d/image/upload/v1716349843/mpp/instansi/image_20240522T035040587Z.jpg",
         status: false,
         createdAt: new Date(),
         updatedAt: new Date()

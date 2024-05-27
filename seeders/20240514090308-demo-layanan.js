@@ -4,22 +4,32 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Layanans = [
       {
-        name: 'Surat Keterangan Sakit Jiwa',
-        slug: 'surat-keterangan-sakit-jiwa',
-        desc: 'Surat Keterangan Gila adalah surat yang memverifikasi bahwa seseorang sudah benar-benar gila',
-        image: null,
+        name: 'Pengajuan Imunisasi Massal',
+        slug: 'pengajuan-imunisasi-massal',
+        desc: 'Imunisasi kepada balita untuk setiap kalangan masyarakat',
+        image: "https://res.cloudinary.com/dpprzvs5d/image/upload/v1716350281/mpp/layanan/image_20240522T035758624Z.png",
         status: false,
         instansi_id: 1,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        name: 'Surat Izin Bunuh Diri',
-        slug: 'surat-izin-bunuh-diri',
-        desc: 'Surat izin yang diberikan kepada orang yang sudah depresi dan tidak memiliki tujuan hidup lagi',
-        image: null,
+        name: 'Pengajuan Perubahan Domisili',
+        slug: 'pengajuan-perubahan-domisili',
+        desc: 'Pengajuan perubahan domisili tempat tinggal',
+        image: "https://res.cloudinary.com/dpprzvs5d/image/upload/v1716350300/mpp/layanan/image_20240522T035816783Z.webp",
         status: false,
-        instansi_id: 1,
+        instansi_id: 2,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Pengajuan Pembuatan KTP',
+        slug: 'pengajuan-pembuatan-ktp',
+        desc: 'Pengajuan pembuatan KTP elektronik',
+        image: "https://res.cloudinary.com/dpprzvs5d/image/upload/v1716350290/mpp/layanan/image_20240522T035807918Z.jpg",
+        status: false,
+        instansi_id: 2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -29,6 +39,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.bulkDelete('Layananforms', null, {});
     await queryInterface.bulkDelete('Layanans', null, {});
   }
 };

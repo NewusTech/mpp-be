@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Instansi, Role } = require('../models');
+const { User, Token, Instansi, Role, Userinfo, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -12,18 +12,18 @@ module.exports = {
 
     //membuat user baru
     createUser: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
         try {
 
-            console.log(req)
-
-            //membuat schema untuk validasi
+            // Membuat schema untuk validasi
             const schema = {
                 name: {
                     type: "string",
                     min: 3,
                 },
-                email: {
-                    type: "email",
+                nik: {
+                    type: "string",
                     min: 3,
                 },
                 password: {
@@ -40,49 +40,59 @@ module.exports = {
                 },
             };
 
-            //validasi
+            // Validasi
             const validate = v.validate({
                 name: req.body.name,
-                email: req.body.email,
+                nik: req.body.nik,
                 password: req.body.password,
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
             }, schema);
+
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
 
-            //mendapatkan data user untuk pengecekan
-            let userGets = await User.findOne({ 
+            // Cek apakah nik sudah terdaftar di tabel userinfos
+            let userinfoGets = await Userinfo.findOne({
                 where: {
-                    email: req.body.email
+                    nik: req.body.nik
                 }
-            }
-            );
+            });
 
-            //cek apakah email sudah terdaftar
-            if (userGets) {
-                res.status(409).json(response(409, 'email already registered'));
+            // Cek apakah nik sudah terdaftar
+            if (userinfoGets) {
+                res.status(409).json(response(409, 'nik already registered'));
                 return;
             }
 
-            //membuat object untuk create user
-            let userCreateObj = {
+            // Membuat object untuk create userinfo
+            let userinfoCreateObj = {
                 name: req.body.name,
-                email: req.body.email,
+                nik: req.body.nik,
+            };
+
+            // Membuat entri baru di tabel userinfo
+            let userinfoCreate = await Userinfo.create(userinfoCreateObj);
+
+            // Membuat object untuk create user
+            let userCreateObj = {
                 password: passwordHash.generate(req.body.password),
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
-            }
+                userinfo_id: userinfoCreate.id // Menggunakan ID dari entri userinfo yang baru dibuat
+            };
 
-            //membuat user baru
+            // Membuat user baru
             let userCreate = await User.create(userCreateObj);
 
-            //mengirim response dengan bantuan helper response.formatter
+            // Mengirim response dengan bantuan helper response.formatter
+            await transaction.commit();
             res.status(201).json(response(201, 'user created', userCreate));
 
         } catch (err) {
+            await transaction.rollback();
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
@@ -91,11 +101,9 @@ module.exports = {
     //login user
     loginUser: async (req, res) => {
         try {
-
-            //membuat schema untuk validasi
             const schema = {
-                email: {
-                    type: "email",
+                nik: {
+                    type: "string",
                     min: 3,
                 },
                 password: {
@@ -104,13 +112,11 @@ module.exports = {
                 }
             };
 
-            //memasukan req.body ke dalam variable
-            let email = req.body.email;
+            let nik = req.body.nik;
             let password = req.body.password;
 
-            //validasi menggunakan module fastest-validator
             const validate = v.validate({
-                email: email,
+                nik: nik,
                 password: password,
             }, schema);
             if (validate.length > 0) {
@@ -118,33 +124,47 @@ module.exports = {
                 return;
             }
 
-            //mendapatkan data user untuk pengecekan
-            let userGets = await User.findOne({ //kita menggunakan model User
+            // mendapatkan data user 
+            let userinfo = await Userinfo.findOne({
                 where: {
-                    email: email
-                }
+                    nik: nik
+                },
+                attributes: ['nik', 'id'],
+                include: [
+                    {
+                        model: User,
+                        attributes: ['password', 'id', 'role_id'],
+                        include: [
+                            {
+                                model: Role,
+                                attributes: ['id', 'name']
+                            }
+                        ]
+                    },
+                ],
             });
 
-            //cek apakah email ada
-            if (!userGets) {
-                res.status(404).json(response(404, 'email not found'));
+            // cek nik
+            if (!userinfo) {
+                res.status(404).json(response(404, 'nik not found'));
                 return;
             }
 
-            //check password
-            if (!passwordHash.verify(password, userGets.password)) {
+            // check password
+            if (!passwordHash.verify(password, userinfo.User.password)) {
                 res.status(403).json(response(403, 'password wrong'));
                 return;
             }
 
-            //membuat token jwt
+            // membuat token jwt
             let token = jwt.sign({
-                userId: userGets.id, //kita parsing id user
-            }, baseConfig.auth_secret, { //auth secret adalah secret key yang kita buat di config/base.config.js
-                expiresIn: 86400 // expired dalam 24 jam
+                userId: userinfo.id, // parsing id Userinfo
+                nik: userinfo.nik,
+                role: userinfo.User.Role.name
+            }, baseConfig.auth_secret, { // auth secret
+                expiresIn: 86400 // expired 24 jam
             });
 
-            //mengirim response dengan bantuan helper response.formatter
             res.status(200).json(response(200, 'login success', { token: token }));
 
         } catch (err) {
@@ -196,7 +216,7 @@ module.exports = {
                 return {
                     id: user.id,
                     name: user.name,
-                    email: user.email,
+                    nik: user.nik,
                     instansi_id: user.Instansi?.id,
                     instansi_name: user.Instansi?.name,
                     role_id: user.Role?.id,
@@ -247,7 +267,7 @@ module.exports = {
             let formattedUsers = {
                 id: userGet.id,
                 name: userGet.name,
-                email: userGet.email,
+                nik: userGet.nik,
                 instansi_id: userGet.Instansi?.id,
                 instansi_title: userGet.Instansi?.name,
                 role_id: userGet.Role?.id,

@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       Layanan.belongsTo(models.Instansi, {
         foreignKey: 'instansi_id',
       });
+      Layanan.hasMany(models.Layananform, {
+        foreignKey: 'layanan_id',
+      });
     }
   }
   Layanan.init({

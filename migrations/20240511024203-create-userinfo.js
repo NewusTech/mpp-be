@@ -1,0 +1,83 @@
+'use strict';
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('Userinfos', {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER
+      },
+      name: {
+        type: Sequelize.STRING
+      },
+      nik: {
+        type: Sequelize.CHAR(16)
+      },
+      email: {
+        type: Sequelize.CHAR(25)
+      },
+      telepon: {
+        type: Sequelize.CHAR(15)
+      },
+      alamat: {
+        type: Sequelize.STRING
+      },
+      agama: {
+        type: Sequelize.SMALLINT
+      },
+      tempat_lahir: {
+        type: Sequelize.STRING
+      },
+      tgl_lahir: {
+        type: Sequelize.DATEONLY
+      },
+      status_kawin: {
+        type: Sequelize.SMALLINT
+      },
+      gender: {
+        type: Sequelize.SMALLINT
+      },
+      pekerjaan: {
+        type: Sequelize.STRING
+      },
+      goldar: {
+        type: Sequelize.SMALLINT
+      },
+      pendidikan: {
+        type: Sequelize.SMALLINT
+      },
+      filektp: {
+        type: Sequelize.STRING
+      },
+      filekk: {
+        type: Sequelize.STRING
+      },
+      fileijazahsd: {
+        type: Sequelize.STRING
+      },
+      fileijazahsmp: {
+        type: Sequelize.STRING
+      },
+      fileijazahsma: {
+        type: Sequelize.STRING
+      },
+      fileijazahlain: {
+        type: Sequelize.STRING
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      }
+    });
+
+  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('Userinfos');
+  }
+};

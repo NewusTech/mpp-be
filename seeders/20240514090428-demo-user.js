@@ -6,8 +6,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = [
       {
-        name: 'Super Admin',
-        email: 'superadmin@gmail.com',
+        userinfo_id: 1,
         password: passwordHash.generate('123456'),
         instansi_id: null,
         role_id: 1,
@@ -15,11 +14,18 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        name: 'Muttaqin',
-        email: 'muttaqin0708@gmail.com',
+        userinfo_id: 2,
         password: passwordHash.generate('123456'),
         instansi_id: 1,
         role_id: 2,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        userinfo_id: 3,
+        password: passwordHash.generate('123456'),
+        instansi_id: null,
+        role_id: 3,
         createdAt: new Date(),
         updatedAt: new Date()
       }
