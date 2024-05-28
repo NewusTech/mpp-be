@@ -13,13 +13,25 @@ module.exports = {
         type: Sequelize.STRING
       },
       nik: {
-        type: Sequelize.CHAR(16)
+        type: Sequelize.STRING
       },
       email: {
-        type: Sequelize.CHAR(25)
+        type: Sequelize.STRING
       },
       telepon: {
-        type: Sequelize.CHAR(15)
+        type: Sequelize.STRING
+      },
+      kec: {
+        type: Sequelize.STRING
+      },
+      desa: {
+        type: Sequelize.STRING
+      },
+      rt: {
+        type: Sequelize.STRING
+      },
+      rw: {
+        type: Sequelize.STRING
       },
       alamat: {
         type: Sequelize.STRING

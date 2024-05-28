@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananforminput, Layananformnum, sequelize } = require('../models');
+const { Layananforminput, Layananformnum, Layananform, sequelize } = require('../models');
 require('dotenv').config()
 
 const Validator = require("fastest-validator");
@@ -36,7 +36,7 @@ module.exports = {
             let { datafile } = req.body;
 
             let layananID = {
-                user_id: Number(iduser),
+                userinfo_id: Number(iduser),
                 layanan_id: Number(idlayanan),
                 isonline: true,
                 status: true
@@ -93,14 +93,16 @@ module.exports = {
     //get input form user
     getdetailinputform: async (req, res) => {
         try {
-            const idlayanan = req.params.idlayanan;
-            const iduser = data.userId
             const idlayanannum = req.params.idlayanannum
 
             let inputformData = await Layananforminput.findAll({
                 where: {
                     layananformnum_id: idlayanannum
                 },
+                include: [{
+                    model: Layananform,
+                    attributes: { exclude: ['createdAt', 'updatedAt', "status"] },
+                }]
             });
 
             if (!inputformData || inputformData < 1) {
@@ -114,6 +116,8 @@ module.exports = {
                     data: datafilter.data,
                     layananform_id: datafilter.layananform_id,
                     layananformnum_id: datafilter.layananformnum_id,
+                    layananform_name: datafilter.Layananform.field,
+                    layananform_tipedata: datafilter.Layananform.tipedata
                 };
             });
 

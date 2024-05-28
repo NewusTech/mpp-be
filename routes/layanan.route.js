@@ -15,10 +15,10 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-route.post('/user/layanan/create', [mid.checkRolesAndLogout(['Admin Instansi'])], upload.single('image'), layananController.createlayanan);
-route.get('/user/layanan/get', [mid.checkRolesAndLogout(['Admin Instansi'])], layananController.getlayanan); 
-route.get('/user/layanan/get/:id', [mid.checkRolesAndLogout(['Admin Instansi'])], layananController.getlayananById); 
-route.put('/user/layanan/update/:id', [mid.checkRolesAndLogout(['Admin Instansi'])], upload.single('image'), layananController.updatelayanan); 
-route.delete('/user/layanan/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi'])], layananController.deletelayanan);
+route.post('/user/layanan/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), layananController.createlayanan);
+route.get('/user/layanan/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.getlayanan); 
+route.get('/user/layanan/get/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.getlayananById); 
+route.put('/user/layanan/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), layananController.updatelayanan); 
+route.delete('/user/layanan/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.deletelayanan);
 
 module.exports = route;

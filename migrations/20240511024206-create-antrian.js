@@ -2,21 +2,24 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Layananformnums', {
+    await queryInterface.createTable('Antrians', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      userinfo_id: {
+      code: {
+        type: Sequelize.STRING
+      },
+      instansi_id: {
         type: Sequelize.INTEGER
       },
       layanan_id: {
         type: Sequelize.INTEGER
       },
-      isonline: {
-        type: Sequelize.BOOLEAN
+      userinfo_id: {
+        type: Sequelize.INTEGER
       },
       status: {
         type: Sequelize.BOOLEAN
@@ -31,22 +34,32 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('Layananformnums', {
-      fields: ['userinfo_id'],
+    await queryInterface.addConstraint('Antrians', {
+      fields: ['layanan_id'],
       type: 'foreign key',
-      name: 'custom_fkey_userinfo_id',
+      name: 'custom_fkey_layanan_id2',
       references: {
-        table: 'Userinfos',
+        table: 'Layanans',
         field: 'id'
       }
     });
 
-    await queryInterface.addConstraint('Layananformnums', {
-      fields: ['layanan_id'],
+    await queryInterface.addConstraint('Antrians', {
+      fields: ['instansi_id'],
       type: 'foreign key',
-      name: 'custom_fkey_layanan_id',
+      name: 'custom_fkey_instansi_id2',
       references: {
-        table: 'Layanans',
+        table: 'Instansis',
+        field: 'id'
+      }
+    });
+
+    await queryInterface.addConstraint('Antrians', {
+      fields: ['userinfo_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_userinfo_id2',
+      references: {
+        table: 'Userinfos',
         field: 'id'
       }
     });
@@ -54,6 +67,6 @@ module.exports = {
 
   //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Layananformnums');
+    await queryInterface.dropTable('Antrians');
   }
 };

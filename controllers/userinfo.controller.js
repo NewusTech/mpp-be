@@ -1,11 +1,12 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Userinfo, sequelize } = require('../models');
+const { User, Userinfo, Role, Instansi, sequelize } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op } = require('sequelize');
+const { generatePagination } = require('../pagination/pagination');
 
 const cloudinary = require("cloudinary").v2;
 
@@ -22,40 +23,135 @@ module.exports = {
     getuserdata: async (req, res) => {
         try {
             const search = req.query.search ?? null;
-            const page = parseInt(req.query.page) || 1; // Default to page 1 
-            const limit = parseInt(req.query.limit) || 10; // Default to 10 records per page 
+            const role = req.query.role ?? null;
+            const instansi = req.query.instansi ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let userGets;
-    
-            if (search) {
-                userGets = await Userinfo.findAll({
-                    where: {
-                        [Op.or]: [
-                            { nik: { [Op.like]: `%${search}%` } },
-                            { name: { [Op.like]: `%${search}%` } }
-                        ]
-                    },
-                    limit: limit,
-                    offset: offset
-                });
-    
-                if (userGets.length === 0) {
-                    return res.status(404).json(response(404, 'user not found', []));
-                }
-            } else {
-                userGets = await Userinfo.findAll({
-                    limit: limit,
-                    offset: offset
-                });
+            let totalCount;
+
+            const userWhereClause = {};
+            if (role) {
+                userWhereClause.role_id = role;
             }
-    
-            res.status(200).json(response(200, 'success get user', userGets));
-    
+            if (instansi) {
+                userWhereClause.instansi_id = instansi;
+            }
+
+            if (search) {
+                [userGets, totalCount] = await Promise.all([
+                    Userinfo.findAll({
+                        where: {
+                            [Op.or]: [
+                                { nik: { [Op.iLike]: `%${search}%` } },
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        },
+                        include: [{
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                            include: [
+                                {
+                                    model: Role,
+                                    attributes: ['id', 'name'],
+                                },
+                                {
+                                    model: Instansi,
+                                    attributes: ['id', 'name'],
+                                }
+                            ],
+                        }],
+                        limit: limit,
+                        offset: offset
+                    }),
+                    Userinfo.count({
+                        where: {
+                            [Op.or]: [
+                                { nik: { [Op.iLike]: `%${search}%` } },
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        }
+                    })
+                ]);
+            } else {
+                [userGets, totalCount] = await Promise.all([
+                    Userinfo.findAll({
+                        limit: limit,
+                        offset: offset,
+                        include: [{
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                            include: [
+                                {
+                                    model: Role,
+                                    attributes: ['id', 'name'],
+                                },
+                                {
+                                    model: Instansi,
+                                    attributes: ['id', 'name'],
+                                }
+                            ],
+                        }],
+                    }),
+                    Userinfo.count()
+                ]);
+            }
+
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/alluserinfo/get');
+
+            const formattedData = userGets.map(user => {
+                return {
+                    id: user.id,
+                    name: user.name,
+                    nik: user.nik,
+                    email: user.email,
+                    telepon: user.telepon,
+                    kec: user.kec,
+                    desa: user.desa,
+                    rt: user.rt,
+                    rw: user.rw,
+                    alamat: user.alamat,
+                    agama: user.agama,
+                    tempat_lahir: user.tempat_lahir,
+                    tgl_lahir: user.tgl_lahir,
+                    status_kawin: user.status_kawin,
+                    gender: user.gender,
+                    pekerjaan: user.pekerjaan,
+                    goldar: user.goldar,
+                    pendidikan: user.pendidikan,
+                    filektp: user.filektp,
+                    filekk: user.filekk,
+                    fileijazahsd: user.fileijazahsd,
+                    fileijazahsmp: user.fileijazahsmp,
+                    fileijazahsma: user.fileijazahsma,
+                    fileijazahlain: user.fileijazahlain,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                    Role: user.User.Role ? user.User.Role.name : null,
+                    Instansi: user.User.Instansi ? user.User.Instansi.name : null
+                };
+            });
+            
+            res.status(200).json({
+                status: 200,
+                message: 'success get user',
+                data: formattedData,
+                pagination: pagination
+            });
+
         } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
+            res.status(500).json({
+                status: 500,
+                message: 'internal server error',
+                error: err
+            });
             console.log(err);
         }
     },
+
 
     //mendapatkan data user berdasarkan id
     //UTK ADMIN NGECEK DATA PEMOHON
@@ -100,6 +196,10 @@ module.exports = {
                 nik: { type: "string", length: 16 },
                 email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
+                kec: { type: "string", min: 1, optional: true },
+                desa: { type: "string", min: 1, optional: true },
+                rt: { type: "string", min: 1, optional: true },
+                rw: { type: "string", min: 1, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
                 agama: { type: "number", optional: true },
                 tempat_lahir: { type: "string", min: 2, optional: true },
@@ -121,6 +221,10 @@ module.exports = {
                 nik: req.body.nik,
                 email: req.body.email,
                 telepon: req.body.telepon,
+                kec: req.body.kec,
+                desa: req.body.desa,
+                rt: req.body.rt,
+                rw: req.body.rw,
                 alamat: req.body.alamat,
                 agama: req.body.agama ? Number(req.body.agama) : null,
                 tempat_lahir: req.body.tempat_lahir,
@@ -228,6 +332,10 @@ module.exports = {
                 nik: { type: "string", length: 16 },
                 email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
+                kec: { type: "string", min: 1, optional: true },
+                desa: { type: "string", min: 1, optional: true },
+                rt: { type: "string", min: 1, optional: true },
+                rw: { type: "string", min: 1, optional: true },
                 alamat: { type: "string", min: 3 },
                 agama: { type: "number" },
                 tempat_lahir: { type: "string", min: 2 },
@@ -245,6 +353,10 @@ module.exports = {
                 nik: req.body.nik,
                 email: req.body.email,
                 telepon: req.body.telepon,
+                kec: req.body.kec,
+                desa: req.body.desa,
+                rt: req.body.rt,
+                rw: req.body.rw,
                 alamat: req.body.alamat,
                 agama: Number(req.body.agama),
                 tempat_lahir: req.body.tempat_lahir,

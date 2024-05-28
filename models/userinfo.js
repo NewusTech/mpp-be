@@ -12,9 +12,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Userinfo.init({
     name: DataTypes.STRING,
-    nik: DataTypes.CHAR(16),
-    email: DataTypes.CHAR(25),
-    telepon: DataTypes.CHAR(15),
+    nik: DataTypes.STRING,
+    email: DataTypes.STRING,
+    telepon: DataTypes.STRING,
+    kec: DataTypes.STRING,
+    desa: DataTypes.STRING,
+    rt: DataTypes.STRING,
+    rw: DataTypes.STRING,
     alamat: DataTypes.STRING,
     agama: DataTypes.INTEGER,
     tempat_lahir: DataTypes.STRING,

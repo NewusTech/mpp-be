@@ -5,6 +5,8 @@ const { Instansi } = require('../models');
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const { generatePagination } = require('../pagination/pagination');
+const { Op } = require('sequelize');
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -41,14 +43,14 @@ module.exports = {
             }
 
             let image = null;
-            
-            if(req.file){
+
+            if (req.file) {
                 const { mimetype, buffer, originalname } = req.file;
                 const base64 = Buffer.from(buffer).toString("base64");
                 const dataURI = `data:${mimetype};base64,${base64}`;
 
                 const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, ''); 
+                const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `image_${timestamp}`;
 
                 const result = await cloudinary.uploader.upload(dataURI, {
@@ -103,11 +105,50 @@ module.exports = {
     //mendapatkan semua data instansi
     getinstansi: async (req, res) => {
         try {
-            //mendapatkan data semua instansi
-            let instansiGets = await Instansi.findAll({});
+            const search = req.query.search ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let instansiGets;
+            let totalCount;
 
-            //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get instansi', instansiGets));
+            if (search) {
+                [instansiGets, totalCount] = await Promise.all([
+                    Instansi.findAll({
+                        where: {
+                            [Op.or]: [
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        },
+                        limit: limit,
+                        offset: offset
+                    }),
+                    Instansi.count({
+                        where: {
+                            [Op.or]: [
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        }
+                    })
+                ]);
+            } else {
+                [instansiGets, totalCount] = await Promise.all([
+                    Instansi.findAll({
+                        limit: limit,
+                        offset: offset
+                    }),
+                    Instansi.count()
+                ]);
+            }
+
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/instansi/get');
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get instansi',
+                data: instansiGets,
+                pagination: pagination
+            });
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
@@ -179,14 +220,14 @@ module.exports = {
             }
 
             let image = null;
-            
-            if(req.file){
+
+            if (req.file) {
                 const { mimetype, buffer, originalname } = req.file;
                 const base64 = Buffer.from(buffer).toString("base64");
                 const dataURI = `data:${mimetype};base64,${base64}`;
 
                 const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, ''); 
+                const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `image_${timestamp}`;
 
                 const result = await cloudinary.uploader.upload(dataURI, {

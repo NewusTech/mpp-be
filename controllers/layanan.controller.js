@@ -6,6 +6,8 @@ require('dotenv').config()
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const { generatePagination } = require('../pagination/pagination');
+const { Op } = require('sequelize');
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -109,11 +111,51 @@ module.exports = {
     //mendapatkan semua data layanan
     getlayanan: async (req, res) => {
         try {
-            //mendapatkan data semua layanan
-            let layananGets = await Layanan.findAll({});
+          
+            const search = req.query.search ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let layananGets;
+            let totalCount;
 
-            //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get layanan', layananGets));
+            if (search) {
+                [layananGets, totalCount] = await Promise.all([
+                    Layanan.findAll({
+                        where: {
+                            [Op.or]: [
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        },
+                        limit: limit,
+                        offset: offset
+                    }),
+                    Layanan.count({
+                        where: {
+                            [Op.or]: [
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        }
+                    })
+                ]);
+            } else {
+                [layananGets, totalCount] = await Promise.all([
+                    Layanan.findAll({
+                        limit: limit,
+                        offset: offset
+                    }),
+                    Layanan.count()
+                ]);
+            }
+
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/layanan/get');
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get instansi',
+                data: layananGets,
+                pagination: pagination
+            });
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
