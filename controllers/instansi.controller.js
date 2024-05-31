@@ -23,23 +23,12 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: {
-                    type: "string",
-                    min: 3,
-                },
-                desc: {
-                    type: "string",
-                    min: 3,
-                    optional: true
-                },
-                image: {
-                    type: "string",
-                    optional: true
-                },
-                status: {
-                    type: "number",
-                    optional: true
-                }
+                name: { type: "string", min: 3 },
+                desc: { type: "string", min: 3, optional: true },
+                alamat: { type: "string", min: 3, optional: true },
+                image: { type: "string", optional: true },
+                status: { type: "number", optional: true },
+                telp: { type: "string", optional: true, min: 7, max: 15 }
             }
 
             let image = null;
@@ -66,6 +55,8 @@ module.exports = {
                 name: req.body.name,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : null,
                 desc: req.body.desc,
+                telp: req.body.telp,
+                alamat: req.body.alamat,
                 image: req.file ? image : null,
                 status: Number(req.body.status),
             }
@@ -200,23 +191,12 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: {
-                    type: "string",
-                    min: 3,
-                },
-                desc: {
-                    type: "string",
-                    min: 3,
-                    optional: true
-                },
-                image: {
-                    type: "string",
-                    optional: true
-                },
-                status: {
-                    type: "number",
-                    optional: true
-                }
+                name: { type: "string", min: 3 },
+                desc: { type: "string", min: 3, optional: true },
+                alamat: { type: "string", min: 3, optional: true },
+                image: { type: "string", optional: true },
+                status: { type: "number", optional: true },
+                telp: { type: "string", optional: true, min: 7, max: 15 }
             }
 
             let image = null;
@@ -247,6 +227,8 @@ module.exports = {
                 name: req.body.name,
                 slug: slugify(req.body.name, { lower: true }),
                 desc: req.body.desc,
+                telp: req.body.telp,
+                alamat: req.body.alamat,
                 image: req.file ? image : null,
                 status: Number(req.body.status),
             }

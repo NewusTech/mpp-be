@@ -14,11 +14,16 @@ module.exports = (sequelize, DataTypes) => {
       Instansi.hasMany(models.Antrian, {
         foreignKey: 'instansi_id',
       });
+      Instansi.hasMany(models.Surveyform, {
+        foreignKey: 'instansi_id',
+      });
     }
   }
   Instansi.init({
     name: DataTypes.STRING,
     slug: DataTypes.STRING,
+    alamat: DataTypes.STRING,
+    telp: DataTypes.STRING,
     desc: DataTypes.STRING,
     image: DataTypes.STRING,
     status: DataTypes.BOOLEAN,

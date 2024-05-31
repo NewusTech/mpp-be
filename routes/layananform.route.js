@@ -6,7 +6,7 @@ const express = require('express');
 const route = express.Router();
 
 //get from by layanan
-route.get('/user/layanan/form/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.getformbylayanan); 
+route.get('/user/layanan/form/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananformController.getformbylayanan); 
 
 route.post('/user/layananform/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayananform);
 route.put('/user/layananform/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayananform); 

@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     layanan_id: DataTypes.INTEGER,
     userinfo_id: DataTypes.INTEGER,
     status: DataTypes.BOOLEAN,
+    qrcode: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Antrian',

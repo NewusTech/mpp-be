@@ -1,12 +1,7 @@
-//kode dari file instansi.route.js
-
-//import controller user.controller.js 
 const instansiController = require('../controllers/instansi.controller');
 
-//import middleware dari auth.middleware.js
 const mid = require('../middlewares/auth.middleware');
 
-//express
 const express = require('express');
 const route = express.Router();
 

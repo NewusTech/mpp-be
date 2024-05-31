@@ -1,7 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layanan } = require('../models');
-require('dotenv').config()
+const { Artikel } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -18,13 +17,13 @@ cloudinary.config({
 
 module.exports = {
 
-    //membuat layanan
-    createlayanan: async (req, res) => {
+    //membuat artikel
+    createartikel: async (req, res) => {
         try {
 
             //membuat schema untuk validasi
             const schema = {
-                name: {
+                title: {
                     type: "string",
                     min: 3,
                 },
@@ -35,14 +34,6 @@ module.exports = {
                 },
                 image: {
                     type: "string",
-                    optional: true
-                },
-                status: {
-                    type: "number",
-                    optional: true
-                },
-                instansi_id: {
-                    type: "number",
                     optional: true
                 },
             }
@@ -59,34 +50,32 @@ module.exports = {
                 const uniqueFilename = `image_${timestamp}`;
 
                 const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/layanan",
+                    folder: "mpp/artikel",
                     public_id: uniqueFilename,
                 });
 
                 image = result.secure_url;
             }
 
-            //buat object layanan
-            let layananCreateObj = {
-                name: req.body.name,
-                slug: slugify(req.body.name, { lower: true }),
+            //buat object artikel
+            let artikelCreateObj = {
+                title: req.body.title,
+                slug: req.body.title ? slugify(req.body.title, { lower: true }) : null,
                 desc: req.body.desc,
                 image: req.file ? image : null,
-                status: Number(req.body.status),
-                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
             }
 
             //validasi menggunakan module fastest-validator
-            const validate = v.validate(layananCreateObj, schema);
+            const validate = v.validate(artikelCreateObj, schema);
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
 
             //mendapatkan data data untuk pengecekan
-            let dataGets = await Layanan.findOne({
+            let dataGets = await Artikel.findOne({
                 where: {
-                    slug: layananCreateObj.slug
+                    slug: artikelCreateObj.slug
                 }
             }
             );
@@ -97,63 +86,62 @@ module.exports = {
                 return;
             }
 
-            //buat layanan
-            let layananCreate = await Layanan.create(layananCreateObj);
+            //buat artikel
+            let artikelCreate = await Artikel.create(artikelCreateObj);
 
             //response menggunakan helper response.formatter
-            res.status(201).json(response(201, 'success create layanan', layananCreate));
+            res.status(201).json(response(201, 'success create artikel', artikelCreate));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mendapatkan semua data layanan
-    getlayanan: async (req, res) => {
+     //mendapatkan semua data artikel
+     getartikel: async (req, res) => {
         try {
-
             const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
-            let layananGets;
+            let artikelGets;
             let totalCount;
 
             if (search) {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
+                [artikelGets, totalCount] = await Promise.all([
+                    Artikel.findAll({
                         where: {
                             [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
+                                { title: { [Op.iLike]: `%${search}%` } }
                             ]
                         },
                         limit: limit,
                         offset: offset
                     }),
-                    Layanan.count({
+                    Artikel.count({
                         where: {
                             [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
+                                { title: { [Op.iLike]: `%${search}%` } }
                             ]
                         }
                     })
                 ]);
             } else {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
+                [artikelGets, totalCount] = await Promise.all([
+                    Artikel.findAll({
                         limit: limit,
                         offset: offset
                     }),
-                    Layanan.count()
+                    Artikel.count()
                 ]);
             }
 
-            const pagination = generatePagination(totalCount, page, limit, '/api/user/layanan/get');
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/artikel/get');
 
             res.status(200).json({
                 status: 200,
-                message: 'success get instansi',
-                data: layananGets,
+                message: 'success get artikel',
+                data: artikelGets,
                 pagination: pagination
             });
 
@@ -163,107 +151,51 @@ module.exports = {
         }
     },
 
-    //mendapatkan semua data layanan by dinas
-    getlayananbydinas: async (req, res) => {
+    //mendapatkan data artikel berdasarkan id
+    getartikelById: async (req, res) => {
         try {
-
-            const instansi_id = req.params.instansi_id;
-            const search = req.query.search ?? null;
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const offset = (page - 1) * limit;
-            let layananGets;
-            let totalCount;
-
-            if (search || instansi_id) {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        where: {
-                            [Op.and]: [
-                                { name: { [Op.iLike]: `%${search}%` } },
-                                { instansi_id: instansi_id }
-                            ]
-                        },
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count({
-                        where: {
-                            [Op.and]: [
-                                { name: { [Op.iLike]: `%${search}%` } },
-                                { instansi_id: instansi_id }
-                            ]
-                        }
-                    })
-                ]);
-            } else {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count()
-                ]);
-            }
-
-            const pagination = generatePagination(totalCount, page, limit, `/api/user/layanan/dinas/get/${instansi_id}`);
-
-            res.status(200).json({
-                status: 200,
-                message: 'success get instansi',
-                data: layananGets,
-                pagination: pagination
-            });
-
-        } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
-            console.log(err);
-        }
-    },
-
-    //mendapatkan data layanan berdasarkan id
-    getlayananById: async (req, res) => {
-        try {
-            //mendapatkan data layanan berdasarkan id
-            let layananGet = await Layanan.findOne({
+            //mendapatkan data artikel berdasarkan id
+            let artikelGet = await Artikel.findOne({
                 where: {
                     id: req.params.id
                 },
             });
 
-            //cek jika layanan tidak ada
-            if (!layananGet) {
-                res.status(404).json(response(404, 'layanan not found'));
+            //cek jika artikel tidak ada
+            if (!artikelGet) {
+                res.status(404).json(response(404, 'artikel not found'));
                 return;
             }
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get layanan by id', layananGet));
+            res.status(200).json(response(200, 'success get artikel by id', artikelGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mengupdate layanan berdasarkan id
-    updatelayanan: async (req, res) => {
+    //mengupdate artikel berdasarkan id
+    updateartikel: async (req, res) => {
         try {
-            //mendapatkan data layanan untuk pengecekan
-            let layananGet = await Layanan.findOne({
+            //mendapatkan data artikel untuk pengecekan
+            let artikelGet = await Artikel.findOne({
                 where: {
                     id: req.params.id
                 }
             })
 
-            //cek apakah data layanan ada
-            if (!layananGet) {
-                res.status(404).json(response(404, 'layanan not found'));
+            //cek apakah data artikel ada
+            if (!artikelGet) {
+                res.status(404).json(response(404, 'artikel not found'));
                 return;
             }
 
+            const oldImagePublicId = artikelGet.image ? artikelGet.image.split('/').pop().split('.')[0] : null;
+
             //membuat schema untuk validasi
             const schema = {
-                name: {
+                title: {
                     type: "string",
                     min: 3,
                 },
@@ -276,13 +208,7 @@ module.exports = {
                     type: "string",
                     optional: true
                 },
-                status: {
-                    type: "number",
-                    optional: true
-                }
             }
-
-            const oldImagePublicId = layananGet.image ? layananGet.image.split('/').pop().split('.')[0] : null;
 
             let image = null;
 
@@ -296,49 +222,48 @@ module.exports = {
                 const uniqueFilename = `image_${timestamp}`;
 
                 const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/layanan",
+                    folder: "mpp/artikel",
                     public_id: uniqueFilename,
                 });
 
                 image = result.secure_url;
 
                 if (oldImagePublicId) {
-                    await cloudinary.uploader.destroy(`mpp/layanan/${oldImagePublicId}`);
+                    await cloudinary.uploader.destroy(`mpp/artikel/${oldImagePublicId}`);
                 }
             }
 
-            //buat object layanan
-            let layananUpdateObj = {
-                name: req.body.name,
-                slug: slugify(req.body.name, { lower: true }),
+            //buat object artikel
+            let artikelUpdateObj = {
+                title: req.body.title,
+                slug: req.body.title ? slugify(req.body.title, { lower: true }) : null,
                 desc: req.body.desc,
                 image: req.file ? image : null,
-                status: Number(req.body.status),
             }
 
             //validasi menggunakan module fastest-validator
-            const validate = v.validate(layananUpdateObj, schema);
+            const validate = v.validate(artikelUpdateObj, schema);
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
 
-            //update layanan
-            await Layanan.update(layananUpdateObj, {
+            //update artikel
+            await Artikel.update(artikelUpdateObj, {
                 where: {
                     id: req.params.id,
                 }
             })
 
-            //mendapatkan data layanan setelah update
-            let layananAfterUpdate = await Layanan.findOne({
+            //mendapatkan data artikel setelah update
+            let artikelAfterUpdate = await Artikel.findOne({
                 where: {
                     id: req.params.id,
                 }
             })
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success update layanan', layananAfterUpdate));
+            res.status(200).json(response(200, 'success update artikel', artikelAfterUpdate));
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
@@ -346,42 +271,41 @@ module.exports = {
         }
     },
 
-    //menghapus layanan berdasarkan id
-    deletelayanan: async (req, res) => {
+    //menghapus artikel berdasarkan id
+    deleteartikel: async (req, res) => {
         try {
 
-            //mendapatkan data layanan untuk pengecekan
-            let layananGet = await Layanan.findOne({
+            //mendapatkan data artikel untuk pengecekan
+            let artikelGet = await Artikel.findOne({
                 where: {
                     id: req.params.id
                 }
             })
 
-            //cek apakah data layanan ada
-            if (!layananGet) {
-                res.status(404).json(response(404, 'layanan not found'));
+            //cek apakah data artikel ada
+            if (!artikelGet) {
+                res.status(404).json(response(404, 'artikel not found'));
                 return;
             }
 
             // Hapus gambar terkait jika ada
-            if (layananGet.image) {
-                const oldImagePublicId = layananGet.image ? layananGet.image.split('/').pop().split('.')[0] : null;
+            if (artikelGet.image) {
+                const oldImagePublicId = artikelGet.image ? artikelGet.image.split('/').pop().split('.')[0] : null;
 
-                await cloudinary.uploader.destroy(`mpp/layanan/${oldImagePublicId}`);
+                await cloudinary.uploader.destroy(`mpp/artikel/${oldImagePublicId}`);
             }
 
-            await Layanan.destroy({
+            await Artikel.destroy({
                 where: {
                     id: req.params.id,
                 }
             })
 
-            res.status(200).json(response(200, 'success delete layanan'));
+            res.status(200).json(response(200, 'success delete artikel'));
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
-    },
-
+    }
 }

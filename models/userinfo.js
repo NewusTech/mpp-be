@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
       Userinfo.hasOne(models.User, {
         foreignKey: 'userinfo_id',
       });
+      Userinfo.hasMany(models.Surveyformnum, {
+        foreignKey: 'userinfo_id',
+      });
     }
   }
   Userinfo.init({

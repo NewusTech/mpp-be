@@ -2,7 +2,7 @@ const { response } = require('../helpers/response.formatter');
 
 const { Antrian, Instansi } = require('../models');
 
-const slugify = require('slugify');
+const QRCode = require('qrcode');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const moment = require('moment-timezone');
@@ -25,6 +25,8 @@ module.exports = {
                 instansi_id: { type: "number" },
                 layanan_id: { type: "number" },
             };
+
+            const userinfo_id = data.role === "User" ? data.userId : null;
 
             // Mendapatkan tanggal hari ini
             const today = new Date().toISOString().split('T')[0];
@@ -50,12 +52,23 @@ module.exports = {
                 code: codeBooking,
                 instansi_id: Number(req.body.instansi_id),
                 layanan_id: Number(req.body.layanan_id),
+                userinfo_id: userinfo_id ?? null,
                 status: 0
             };
 
             const validate = v.validate(antrianCreateObj, schema);
             if (validate.length > 0) {
                 return res.status(400).json({ status: 400, message: 'Validation failed', errors: validate });
+            }
+
+            if (userinfo_id) {
+                const qrCodeDataUri = await QRCode.toDataURL(codeBooking);
+                const result = await cloudinary.uploader.upload(qrCodeDataUri, {
+                    folder: "mpp/qrcode",
+                    public_id: codeBooking,
+                });
+
+                antrianCreateObj.qrcode = result.secure_url;
             }
 
             const newAntrian = await Antrian.create(antrianCreateObj);

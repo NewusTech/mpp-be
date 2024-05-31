@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     userinfo_id: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,
     isonline: DataTypes.INTEGER,
-    status: DataTypes.BOOLEAN,
+    status: DataTypes.SMALLINT,
   }, {
     sequelize,
     modelName: 'Layananformnum',

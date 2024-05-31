@@ -21,6 +21,9 @@ module.exports = {
       userinfo_id: {
         type: Sequelize.INTEGER
       },
+      qrcode: {
+        type: Sequelize.STRING,
+      },
       status: {
         type: Sequelize.BOOLEAN
       },
