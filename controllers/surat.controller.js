@@ -1,11 +1,8 @@
 const { response } = require('../helpers/response.formatter');
 const { Instansi, Layanan, Layanansurat } = require('../models');
-const Validator = require("fastest-validator");
 const cloudinary = require("cloudinary").v2;
 const PDFDocument = require('pdfkit');
-const ejs = require('ejs');
 const axios = require('axios');
-const stream = require('stream');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
@@ -37,7 +34,7 @@ module.exports = {
                 return res.status(404).send('Data tidak ditemukan');
             }
 
-            const doc = new PDFDocument({ size: 'A4' });
+            const doc = new PDFDocument({ size: 'A4', margin: 72 }); // 1 inch = 72 point
             let filename = `dinas.pdf`;
             filename = encodeURIComponent(filename) + '.pdf';
             res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
@@ -47,8 +44,8 @@ module.exports = {
             doc.pipe(res);
 
             // Set margin top dan left untuk teks
-            const marginLeft = 50;
-            const marginTop = 50;
+            const marginLeft = 72; // 3 cm dari kiri
+            const marginTop = 72; // 3 cm dari atas
 
             // Path logo
             if (layanan.Instansi.image) {
@@ -62,13 +59,15 @@ module.exports = {
             }
 
             // Add space for the logo
-            const textStartY = 0;
+            const textStartY = 72; // Mulai teks 72 poin di bawah margin atas
 
-            doc.fontSize(20).text(layanan.Instansi.name, marginLeft, textStartY, { align: 'left' });
-            doc.fontSize(13).text(layanan.Instansi.alamat, marginLeft, textStartY + 25, { align: 'left' });
+            doc.fontSize(16).text("PEMERINTAH KABUPATEN LAMPUNG TIMUR", { align: 'center' });
+            doc.fontSize(16).text(layanan.Instansi.name, marginLeft, textStartY + 20, { align: 'center' });
+            doc.moveDown();
+            doc.fontSize(11).text(layanan.Instansi.alamat, marginLeft, textStartY + 40, { align: 'center' });
             doc.moveDown(2);
 
-            const bodyStartY = textStartY + 50;
+            const bodyStartY = textStartY + 140;
             doc.moveDown();
 
             doc.fontSize(16).text(layanan.Layanansurat.header, marginLeft, bodyStartY, { align: 'left' });
