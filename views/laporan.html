@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Layanan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        img {
+            max-width: 50px;
+            max-height: 50px;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h3 class="center">Laporan Layanan</h3>
+    {{instansiInfo}}
+    {{tanggalInfo}}
+    <table>
+        <thead>
+            <tr>
+                <th class="center">Nama Layanan</th>
+                <th class="center">Menunggu</th>
+                <th class="center">Selesai</th>
+                <th class="center">Gagal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{reportTableRows}}
+            <tr>
+                <td><strong>Total</strong></td>
+                <td class="center"><strong>{{total_menunggu}}</strong></td>
+                <td class="center"><strong>{{total_selesai}}</strong></td>
+                <td class="center"><strong>{{total_gagal}}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>

@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
       Layananformnum.hasMany(models.Layananforminput, {
         foreignKey: 'layananformnum_id',
       });
+      Layananformnum.belongsTo(models.Userinfo, {
+        foreignKey: 'userinfo_id',
+      });
     }
   }
   Layananformnum.init({

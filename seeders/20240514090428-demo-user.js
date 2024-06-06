@@ -28,6 +28,14 @@ module.exports = {
         role_id: 3,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        userinfo_id: 4,
+        password: passwordHash.generate('123456'),
+        instansi_id: null,
+        role_id: 3,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ];
 

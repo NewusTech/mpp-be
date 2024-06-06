@@ -18,6 +18,12 @@ module.exports = {
       alamat: {
         type: Sequelize.STRING
       },
+      pj: {
+        type: Sequelize.STRING
+      },
+      nip_pj: {
+        type: Sequelize.STRING
+      },
       desc: {
         type: Sequelize.STRING
       },
@@ -26,6 +32,12 @@ module.exports = {
       },
       image: {
         type: Sequelize.STRING
+      },
+      active_online: {
+        type: Sequelize.BOOLEAN
+      },
+      active_offline: {
+        type: Sequelize.BOOLEAN
       },
       status: {
         type: Sequelize.BOOLEAN

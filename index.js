@@ -2,11 +2,14 @@ const baseConfig =  require('./config/base.config');
 
 const path = require('path');
 const express = require('express')
+const cors = require('cors');
 const error = require('./errorHandler/errorHandler')
 
 const app = express();
 const port = 3000;
 const urlApi = "/api";
+
+app.use(cors());
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

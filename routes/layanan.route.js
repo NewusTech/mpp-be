@@ -14,7 +14,17 @@ route.post('/user/layanan/create', [mid.checkRolesAndLogout(['Admin Instansi', '
 route.get('/user/layanan/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.getlayanan); 
 route.get('/user/layanan/dinas/get/:instansi_id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananController.getlayananbydinas); 
 route.get('/user/layanan/get/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananController.getlayananById); 
+
+//update layanan
 route.put('/user/layanan/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), layananController.updatelayanan); 
+
+//update active online and offline layanan -> multiple
+route.post('/user/layanan/updatestatus', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.updateMultipleLayanans); 
+
 route.delete('/user/layanan/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.deletelayanan);
+
+//history
+route.get('/user/layanan/report', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.reportlayanan); 
+route.get('/user/layanan/report-pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.pdfreportlayanan); 
 
 module.exports = route;

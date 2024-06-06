@@ -25,7 +25,11 @@ module.exports = (sequelize, DataTypes) => {
     alamat: DataTypes.STRING,
     telp: DataTypes.STRING,
     desc: DataTypes.STRING,
+    pj: DataTypes.STRING,
+    nip_pj: DataTypes.STRING,
     image: DataTypes.STRING,
+    active_online: DataTypes.BOOLEAN,
+    active_offline: DataTypes.BOOLEAN,
     status: DataTypes.BOOLEAN,
   }, {
     sequelize,

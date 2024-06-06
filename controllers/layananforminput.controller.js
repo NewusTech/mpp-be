@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, sequelize } = require('../models');
+const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, Userinfo, sequelize } = require('../models');
 require('dotenv').config()
 
 const Validator = require("fastest-validator");
@@ -187,10 +187,13 @@ module.exports = {
     //get history input form user
     gethistoryformuser: async (req, res) => {
         try {
-
+            const search = req.query.search ?? null;
+            const status = req.query.status ?? null;
             const userinfo_id = data.role === "User" ? data.userId : null;
             const instansi_id = Number(req.query.instansi_id);
             const layanan_id = Number(req.query.layanan_id);
+            const start_date = req.query.start_date;
+            let end_date = req.query.end_date;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
@@ -198,43 +201,89 @@ module.exports = {
             let totalCount;
 
             const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+
             if (userinfo_id) {
                 WhereClause.userinfo_id = userinfo_id;
+            }
+            if (status) {
+                WhereClause.status = status;
             }
             if (layanan_id) {
                 WhereClause.layanan_id = layanan_id;
             }
 
-            const WhereClause2 = {};
+            if (start_date && end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.between]: [new Date(start_date), new Date(end_date)]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: new Date(start_date)
+                };
+            } else if (end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.lte]: new Date(end_date)
+                };
+            }
+
             if (instansi_id) {
                 WhereClause2.instansi_id = instansi_id;
+            }
+
+            if (search) {
+                WhereClause3.name = {
+                    [Op.iLike]: `%${search}%`
+                };
             }
 
             [history, totalCount] = await Promise.all([
                 Layananformnum.findAll({
                     where: WhereClause,
-                    include: [{
-                        model: Layanan,
-                        attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
-                        include: [{
-                            model: Instansi,
+                    include: [
+                        {
+                            model: Layanan,
                             attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
-                        }],
-                        where: WhereClause2,
-                    }],
+                            include: [{
+                                model: Instansi,
+                                attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            attributes: ['name'] ,
+                            where: WhereClause3,
+                        }
+                    ],
                     limit: limit,
                     offset: offset
                 }),
                 Layananformnum.count({
                     where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            where: WhereClause3,
+                        }
+                    ],
                 })
             ]);
-
 
             let formattedData = history.map(data => {
                 return {
                     id: data.id,
                     userinfo_id: data.userinfo_id,
+                    name: data.Userinfo.name,
                     status: data.status,
                     layanan_id: data.layanan_id,
                     layanan_name: data.Layanan ? data.Layanan.name : null,
@@ -256,6 +305,66 @@ module.exports = {
 
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    updatestatuspengajuan: async (req, res) => {
+        try {
+
+            //mendapatkan data layanan untuk pengecekan
+            let layananGet = await Layananformnum.findOne({
+                where: {
+                    id: req.params.idlayanannum
+                }
+            })
+
+            console.log("req.params.idlayanannum", layananGet)
+
+            //cek apakah data layanan ada
+            if (!layananGet) {
+                res.status(404).json(response(404, 'layanan not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                status: {
+                    type: "number"
+                }
+            }
+
+            //buat object layanan
+            let layananUpdateObj = {
+                status: Number(req.body.status),
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(layananUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update layanan
+            await Layananformnum.update(layananUpdateObj, {
+                where: {
+                    id: req.params.idlayanannum,
+                }
+            })
+
+            //mendapatkan data layanan setelah update
+            let layananAfterUpdate = await Layananformnum.findOne({
+                where: {
+                    id: req.params.idlayanannum,
+                }
+            })
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update layanan', layananAfterUpdate));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },

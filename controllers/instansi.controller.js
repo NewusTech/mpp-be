@@ -25,8 +25,12 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 3 },
                 desc: { type: "string", min: 3, optional: true },
+                pj: { type: "string", min: 3, optional: true },
+                nip_pj: { type: "string", min: 3, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
                 image: { type: "string", optional: true },
+                active_offline: { type: "number", optional: true },
+                active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 }
             }
@@ -55,10 +59,14 @@ module.exports = {
                 name: req.body.name,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : null,
                 desc: req.body.desc,
+                pj: req.body.pj,
+                nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
+                active_online: req.body.active_online ? Number(req.body.active_online) : null,
+                status: req.body.status ? Number(req.body.status) : null,
                 alamat: req.body.alamat,
-                image: req.file ? image : null,
-                status: Number(req.body.status),
+                image: req.file ? image : null
             }
 
             //validasi menggunakan module fastest-validator
@@ -96,30 +104,36 @@ module.exports = {
     //mendapatkan semua data instansi
     getinstansi: async (req, res) => {
         try {
+            console.log(data)
             const search = req.query.search ?? null;
+            const active_offline = req.query.active_offline ?? null; 
+            const active_online = req.query.active_online ?? null; 
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let instansiGets;
             let totalCount;
-
+    
+            const whereCondition = {};
             if (search) {
+                whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
+            }
+            if (active_offline !== null) {
+                whereCondition.active_offline = active_offline === 'true';
+            }
+            if (active_online !== null) {
+                whereCondition.active_online = active_online === 'true';
+            }
+    
+            if (search || active_online !== null || active_offline !== null) {
                 [instansiGets, totalCount] = await Promise.all([
                     Instansi.findAll({
-                        where: {
-                            [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        },
+                        where: whereCondition,
                         limit: limit,
                         offset: offset
                     }),
                     Instansi.count({
-                        where: {
-                            [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        }
+                        where: whereCondition
                     })
                 ]);
             } else {
@@ -131,21 +145,22 @@ module.exports = {
                     Instansi.count()
                 ]);
             }
-
+    
             const pagination = generatePagination(totalCount, page, limit, '/api/user/instansi/get');
-
+    
             res.status(200).json({
                 status: 200,
                 message: 'success get instansi',
                 data: instansiGets,
                 pagination: pagination
             });
-
+    
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
+    
 
     //mendapatkan data instansi berdasarkan id
     getinstansiById: async (req, res) => {
@@ -193,8 +208,12 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 3 },
                 desc: { type: "string", min: 3, optional: true },
+                pj: { type: "string", min: 3, optional: true },
+                nip_pj: { type: "string", min: 3, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
                 image: { type: "string", optional: true },
+                active_offline: { type: "number", optional: true },
+                active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 }
             }
@@ -227,10 +246,14 @@ module.exports = {
                 name: req.body.name,
                 slug: slugify(req.body.name, { lower: true }),
                 desc: req.body.desc,
+                pj: req.body.pj,
+                nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
                 alamat: req.body.alamat,
                 image: req.file ? image : null,
-                status: Number(req.body.status),
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
+                active_online: req.body.active_online ? Number(req.body.active_online) : null,
+                status: req.body.status ? Number(req.body.status) : null,
             }
 
             //validasi menggunakan module fastest-validator

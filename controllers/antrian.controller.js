@@ -5,6 +5,7 @@ const { Antrian, Instansi } = require('../models');
 const QRCode = require('qrcode');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const { generatePagination } = require('../pagination/pagination');
 const moment = require('moment-timezone');
 const cloudinary = require("cloudinary").v2;
 
@@ -84,6 +85,13 @@ module.exports = {
         try {
             const { idInstansi } = req.params;
 
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+
+            let antrianHariIni;
+            let totalCount;
+
             // Validasi apakah instansi (dinas) ada
             const instansi = await Instansi.findByPk(idInstansi);
             if (!instansi) {
@@ -94,18 +102,41 @@ module.exports = {
             const startOfToday = moment().startOf('day').toDate();
             const endOfToday = moment().endOf('day').toDate();
 
-            // Query untuk mendapatkan antrian berdasarkan id dinas khusus hari ini
-            const antrianHariIni = await Antrian.findAll({
-                where: {
-                    instansi_id: idInstansi,
-                    createdAt: {
-                        [Op.between]: [startOfToday, endOfToday]
+            [antrianHariIni, totalCount] = await Promise.all([
+                Antrian.findAll({
+                    where: {
+                        instansi_id: idInstansi,
+                        createdAt: {
+                            [Op.between]: [startOfToday, endOfToday]
+                        }
+                    },
+                    include: [{
+                        model: Instansi,
+                        attributes: ['name'],
+                    }],
+                    limit: limit,
+                    offset: offset
+                }),
+                Antrian.count(
+                    {
+                        where: {
+                            instansi_id: idInstansi,
+                            createdAt: {
+                                [Op.between]: [startOfToday, endOfToday]
+                            }
+                        },
                     }
-                }
-            });
+                )
+            ]);
 
-            // Mengembalikan response
-            res.status(200).json({ status: 200, message: 'Success', data: antrianHariIni });
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.idInstansi}`);
+    
+            res.status(200).json({
+                status: 200,
+                message: 'success get instansi',
+                data: antrianHariIni,
+                pagination: pagination
+            });
         } catch (err) {
             console.error(err);
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });

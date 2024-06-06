@@ -17,6 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       Layanan.hasMany(models.Surveyformnum, {
         foreignKey: 'layanan_id',
       });
+      Layanan.hasMany(models.Layananformnum, {
+        foreignKey: 'layanan_id',
+      });
     }
   }
   Layanan.init({
@@ -25,6 +28,8 @@ module.exports = (sequelize, DataTypes) => {
     desc: DataTypes.STRING,
     image: DataTypes.STRING,
     instansi_id: DataTypes.INTEGER,
+    active_online: DataTypes.BOOLEAN,
+    active_offline: DataTypes.BOOLEAN,
     status: DataTypes.BOOLEAN,
   }, {
     sequelize,

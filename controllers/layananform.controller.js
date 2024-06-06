@@ -77,6 +77,68 @@ module.exports = {
         }
     },
 
+    createmultilayananform: async (req, res) => {
+        try {
+            // Define schema for validation
+            const schema = {
+                field: { type: "string", min: 1, optional: true },
+                tipedata: { type: "string", min: 1 },
+                maxinput: { type: "number", optional: true },
+                mininput: { type: "number", optional: true },
+                status: { type: "number", optional: true },
+                isrequired: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true },
+            };
+    
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+    
+            // Initialize arrays for validation errors and successfully created objects
+            let errors = [];
+            let createdForms = [];
+    
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Create the layananform object
+                let layananformCreateObj = {
+                    field: input.field,
+                    tipedata: input.tipedata,
+                    maxinput: Number(input.maxinput),
+                    mininput: Number(input.mininput),
+                    isrequired: Number(input.isrequired),
+                    status: Number(input.status),
+                    layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : null,
+                };
+    
+                // Validate the object
+                const validate = v.validate(layananformCreateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+    
+                // Create layananform in the database
+                let layananformCreate = await Layananform.create(layananformCreateObj);
+                createdForms.push(layananformCreate);
+            }
+    
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+    
+            // Respond with the successfully created objects
+            res.status(201).json(response(201, 'Successfully created layananform(s)', createdForms));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },    
+
     //mendapatkan semua form berdasarkan layanan
     getformbylayanan: async (req, res) => {
         try {
@@ -103,7 +165,6 @@ module.exports = {
                 return res.status(404).json(response(404, 'Layanan not found'));
             }
 
-            // Response menggunakan helper response.formatter
             res.status(200).json(response(200, 'Success get layanan with forms', layananData));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));

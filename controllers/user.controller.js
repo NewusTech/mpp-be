@@ -138,6 +138,10 @@ module.exports = {
                             {
                                 model: Role,
                                 attributes: ['id', 'name']
+                            },
+                            {
+                                model: Instansi,
+                                attributes: ['id', 'name']
                             }
                         ]
                     },
@@ -160,9 +164,10 @@ module.exports = {
             let token = jwt.sign({
                 userId: userinfo.id, // parsing id Userinfo
                 nik: userinfo.nik,
-                role: userinfo.User.Role.name
+                role: userinfo.User.Role.name,
+                instansi: userinfo?.User?.Instansi?.name ?? null
             }, baseConfig.auth_secret, { // auth secret
-                expiresIn: 86400 // expired 24 jam
+                expiresIn: 864000 // expired 24 jam
             });
 
             res.status(200).json(response(200, 'login success', { token: token }));

@@ -21,6 +21,12 @@ module.exports = {
       image: {
         type: Sequelize.STRING
       },
+      active_online: {
+        type: Sequelize.BOOLEAN
+      },
+      active_offline: {
+        type: Sequelize.BOOLEAN
+      },
       status: {
         type: Sequelize.BOOLEAN
       },

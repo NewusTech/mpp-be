@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
       Userinfo.hasMany(models.Surveyformnum, {
         foreignKey: 'userinfo_id',
       });
+      Userinfo.hasMany(models.Layananformnum, {
+        foreignKey: 'userinfo_id',
+      });
     }
   }
   Userinfo.init({

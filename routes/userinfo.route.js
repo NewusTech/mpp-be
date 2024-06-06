@@ -14,7 +14,7 @@ route.get('/user/alluserinfo/get', [mid.checkRolesAndLogout(['Super Admin'])], u
 route.get('/user/alluserinfo/get/:id', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.getuserById); 
 route.delete('/user/alluserinfo/delete/:id', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
 
-route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], upload.fields([
+route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.fields([
     { name: 'filektp', maxCount: 1 },
     { name: 'filekk', maxCount: 1 },
     { name: 'fileijazahsd', maxCount: 1 },

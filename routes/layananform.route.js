@@ -9,6 +9,7 @@ const route = express.Router();
 route.get('/user/layanan/form/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananformController.getformbylayanan); 
 
 route.post('/user/layananform/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayananform);
+route.post('/user/layananform/createmulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createmultilayananform);
 route.put('/user/layananform/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayananform); 
 route.delete('/user/layananform/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.deletelayananform);
 
