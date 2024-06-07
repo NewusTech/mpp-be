@@ -1,0 +1,20 @@
+# konfigurasi umum projek
+WEB_NAME = "MPP BE"
+BASE_URL = "http://localhost:3000"
+
+# auth secret untuk JWT
+AUTH_SECRET = "3#uRn&G##1s!9$tR0nG#"
+
+# konfigurasi database
+DB_USERNAME = "postgres"
+DB_PASSWORD = ""
+DB_HOST = "127.0.0.1"
+DB_DIALECT = "postgres"
+DB_NAME_DEVELOPMENT = "mpp"
+DB_NAME_TEST = 
+DB_NAME_PRODUCTION =
+
+# konfigurasi Cloudinary
+CLOUDINARY_NAME="dpprzvs5d"
+CLOUDINARY_KEY="327367176933518"
+CLOUDINARY_SECRET="XKCpTx6nzxfPxgJtKVle-rgFI84"
