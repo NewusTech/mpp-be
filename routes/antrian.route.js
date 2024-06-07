@@ -14,4 +14,6 @@ route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User', 'Super Admi
 route.get('/user/antrian/get/:idInstansi', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.getantrian); 
 route.delete('/user/antrian/delete', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.deleteantrian);
 
+route.get('/user/panggilantrian/get/:idInstansi', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.panggilAntrianBerikutnya); 
+
 module.exports = route;

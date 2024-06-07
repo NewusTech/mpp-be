@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     userinfo_id: DataTypes.INTEGER,
     status: DataTypes.BOOLEAN,
     qrcode: DataTypes.STRING,
+    audio: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Antrian',

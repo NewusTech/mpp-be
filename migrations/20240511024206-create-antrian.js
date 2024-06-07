@@ -24,6 +24,9 @@ module.exports = {
       qrcode: {
         type: Sequelize.STRING,
       },
+      audio: {
+        type: Sequelize.STRING,
+      },
       status: {
         type: Sequelize.BOOLEAN
       },

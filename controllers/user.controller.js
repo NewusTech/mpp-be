@@ -18,26 +18,18 @@ module.exports = {
 
             // Membuat schema untuk validasi
             const schema = {
-                name: {
-                    type: "string",
-                    min: 3,
-                },
-                nik: {
-                    type: "string",
-                    min: 3,
-                },
-                password: {
-                    type: "string",
-                    min: 3,
-                },
-                instansi_id: {
-                    type: "number",
-                    optional: true
-                },
-                role_id: {
-                    type: "number",
-                    optional: true
-                },
+                name: { type: "string", min: 3 },
+                nik: { type: "string", min: 3 },
+                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                telepon: { type: "string", min: 7, max: 15, optional: true },
+                password: { type: "string", min: 3 },
+                instansi_id: { type: "number", optional: true },
+                role_id: { type: "number", optional: true },
+                kec: { type: "string", min: 1, optional: true },
+                desa: { type: "string", min: 1, optional: true },
+                rt: { type: "string", min: 1, optional: true },
+                rw: { type: "string", min: 1, optional: true },
+                alamat: { type: "string", min: 3, optional: true },
             };
 
             // Validasi
@@ -47,6 +39,13 @@ module.exports = {
                 password: req.body.password,
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
+                email: req.body.email,
+                telepon: req.body.telepon,
+                kec: req.body.kec,
+                desa: req.body.desa,
+                rt: req.body.rt,
+                rw: req.body.rw,
+                alamat: req.body.alamat
             }, schema);
 
             if (validate.length > 0) {
@@ -71,6 +70,13 @@ module.exports = {
             let userinfoCreateObj = {
                 name: req.body.name,
                 nik: req.body.nik,
+                email: req.body.email,
+                telepon: req.body.telepon,
+                kec: req.body.kec,
+                desa: req.body.desa,
+                rt: req.body.rt,
+                rw: req.body.rw,
+                alamat: req.body.alamat
             };
 
             // Membuat entri baru di tabel userinfo
