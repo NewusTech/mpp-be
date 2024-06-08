@@ -6,7 +6,7 @@ module.exports = {
       {
         title: 'Mall Pelayanan Publik Lampung Timur Dibuka Tahun 2024',
         slug: 'mall-pelayanan-publik-lampung-timur-dibuka-tahun-2024',
-        image: 'https://res.cloudinary.com/dpprzvs5d/image/upload/v1717564425/mpp/artikel/image_20240605T051338723Z.jpg',
+        image: 'https://res.cloudinary.com/dpprzvs5d/image/upload/v1717821159/mpp/artikel/image_20240608T043237125Z.jpg',
         desc: 'Mall Pelayanan Publik Lampung Timur Dibuka Tahun 2024 dan dibuka untuk melayani warga Lampung Timur, sehingga mempermudah pelayanan baik online maupun offline',
         createdAt: new Date(),
         updatedAt: new Date()

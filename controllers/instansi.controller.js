@@ -162,13 +162,13 @@ module.exports = {
     },
     
 
-    //mendapatkan data instansi berdasarkan id
-    getinstansiById: async (req, res) => {
+    //mendapatkan data instansi berdasarkan slug
+    getinstansiBySlug: async (req, res) => {
         try {
-            //mendapatkan data instansi berdasarkan id
+            //mendapatkan data instansi berdasarkan slug
             let instansiGet = await Instansi.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 },
             });
 
@@ -179,20 +179,20 @@ module.exports = {
             }
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get instansi by id', instansiGet));
+            res.status(200).json(response(200, 'success get instansi by slug', instansiGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mengupdate instansi berdasarkan id
+    //mengupdate instansi berdasarkan slug
     updateinstansi: async (req, res) => {
         try {
             //mendapatkan data instansi untuk pengecekan
             let instansiGet = await Instansi.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -266,14 +266,14 @@ module.exports = {
             //update instansi
             await Instansi.update(instansiUpdateObj, {
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
             //mendapatkan data instansi setelah update
             let instansiAfterUpdate = await Instansi.findOne({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
@@ -286,14 +286,14 @@ module.exports = {
         }
     },
 
-    //menghapus instansi berdasarkan id
+    //menghapus instansi berdasarkan slug
     deleteinstansi: async (req, res) => {
         try {
 
             //mendapatkan data instansi untuk pengecekan
             let instansiGet = await Instansi.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -312,7 +312,7 @@ module.exports = {
 
             await Instansi.destroy({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 

@@ -91,7 +91,7 @@ module.exports = {
 
     getantrian: async (req, res) => {
         try {
-            const { idInstansi } = req.params;
+            const { slugdinas } = req.params;
 
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -101,7 +101,11 @@ module.exports = {
             let totalCount;
 
             // Validasi apakah instansi (dinas) ada
-            const instansi = await Instansi.findByPk(idInstansi);
+            const instansi = await Instansi.findOne({
+                where: {
+                    slug: slugdinas
+                }
+            });
             if (!instansi) {
                 return res.status(404).json({ status: 404, message: 'Instansi not found' });
             }
@@ -113,7 +117,6 @@ module.exports = {
             [antrianHariIni, totalCount] = await Promise.all([
                 Antrian.findAll({
                     where: {
-                        instansi_id: idInstansi,
                         createdAt: {
                             [Op.between]: [startOfToday, endOfToday]
                         }
@@ -121,6 +124,9 @@ module.exports = {
                     include: [{
                         model: Instansi,
                         attributes: ['name'],
+                        where: {
+                            slug: slugdinas,
+                        },
                     }],
                     limit: limit,
                     offset: offset
@@ -128,20 +134,25 @@ module.exports = {
                 Antrian.count(
                     {
                         where: {
-                            instansi_id: idInstansi,
                             createdAt: {
                                 [Op.between]: [startOfToday, endOfToday]
                             }
                         },
+                        include: [{
+                            model: Instansi,
+                            where: {
+                                slug: slugdinas,
+                            },
+                        }]
                     }
                 )
             ]);
 
-            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.idInstansi}`);
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.slugdinas}`);
 
             res.status(200).json({
                 status: 200,
-                message: 'success get instansi',
+                message: 'success get',
                 data: antrianHariIni,
                 pagination: pagination
             });
@@ -170,25 +181,19 @@ module.exports = {
                 });
     
                 await Promise.all(antrianAudio.map(async antrian => {
-                    console.log("11111111111111")
                     if (antrian.audio) {
-                        console.log("222222222222")
                         const publicId = antrian.audio.split('/').slice(-3).join('/').split('.')[0];
                         await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
                     }
                 }));
     
                 await Promise.all(antrianAudio.map(async antrian => {
-                    console.log("33333333333", antrian)
                     if (antrian.qrcode) {
-                        console.log("44444444444444")
                         const publicId = antrian.qrcode.split('/').pop().split('.')[0];
-                        console.log("Deleting publicId:", publicId);
                         await cloudinary.uploader.destroy(`mpp/qrcode/${publicId}`);
                     }
                 }));
     
-                console.log("555555555555555555")
                 const deleted = await Antrian.destroy({
                     where: {
                         instansi_id: data.instansi_id
@@ -235,14 +240,11 @@ module.exports = {
             await Promise.all(antrianAudio.map(async antrian => {
                 if (antrian.audio) {
                     const publicId = antrian.audio.split('/').slice(-3).join('/').split('.')[0];
-                    console.log("bawah", publicId);
                     await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
                 }
 
                 if (antrian.qrcode) {
-                    console.log("44444444444444")
                     const publicId = antrian.qrcode.split('/').pop().split('.')[0];
-                    console.log("Deleting publicId:", publicId);
                     await cloudinary.uploader.destroy(`mpp/qrcode/${publicId}`);
                 }
             }));
@@ -261,10 +263,14 @@ module.exports = {
     panggilAntrianBerikutnya: async (req, res) => {
         const transaction = await sequelize.transaction();
         try {
-            const { idInstansi } = req.params;
+            const { slugdinas } = req.params;
 
             // Validasi apakah instansi (dinas) ada
-            const instansi = await Instansi.findByPk(idInstansi);
+            const instansi = await Instansi.findOne({
+                where: {
+                    slug: slugdinas
+                }
+            });
             if (!instansi) {
                 await transaction.rollback();
                 return res.status(404).json({ status: 404, message: 'Instansi not found' });
@@ -273,9 +279,15 @@ module.exports = {
             // Cari antrian berikutnya yang belum dipanggil (statusnya false)
             const antrianBerikutnya = await Antrian.findOne({
                 where: {
-                    instansi_id: idInstansi,
                     status: false
                 },
+                include: [{
+                    model: Instansi,
+                    attributes: ['id'],
+                    where: {
+                        slug: slugdinas,
+                    },
+                }],
                 order: [
                     ['createdAt', 'ASC']
                 ],

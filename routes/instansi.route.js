@@ -12,8 +12,8 @@ const upload = multer({ storage: storage });
 
 route.post('/user/instansi/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), instansiController.createinstansi);
 route.get('/user/instansi/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], instansiController.getinstansi); 
-route.get('/user/instansi/get/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], instansiController.getinstansiById); 
-route.put('/user/instansi/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), instansiController.updateinstansi); 
-route.delete('/user/instansi/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], instansiController.deleteinstansi);
+route.get('/user/instansi/get/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], instansiController.getinstansiBySlug); 
+route.put('/user/instansi/update/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), instansiController.updateinstansi); 
+route.delete('/user/instansi/delete/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], instansiController.deleteinstansi);
 
 module.exports = route;
