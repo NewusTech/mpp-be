@@ -104,7 +104,6 @@ module.exports = {
     //mendapatkan semua data instansi
     getinstansi: async (req, res) => {
         try {
-            console.log(data)
             const search = req.query.search ?? null;
             const active_offline = req.query.active_offline ?? null; 
             const active_online = req.query.active_online ?? null; 
