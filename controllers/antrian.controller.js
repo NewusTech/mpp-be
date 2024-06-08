@@ -283,7 +283,7 @@ module.exports = {
                 },
                 include: [{
                     model: Instansi,
-                    attributes: ['id'],
+                    attributes: ['id', 'name'],
                     where: {
                         slug: slugdinas,
                     },
@@ -304,7 +304,7 @@ module.exports = {
             await antrianBerikutnya.save({ transaction });
 
             // Generate suara panggilan antrian
-            const panggilanAntrian = `Antrian ${antrianBerikutnya.code} silahkan ke loket`;
+            const panggilanAntrian = `Antrian ${antrianBerikutnya.code}, silahkan ke loket ${antrianBerikutnya.Instansi.name}`;
             const languageCode = 'id';
 
             // Fungsi untuk konversi teks menjadi suara dan mengunggah langsung ke Cloudinary

@@ -11,8 +11,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 route.post('/user/instansi/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), instansiController.createinstansi);
-route.get('/user/instansi/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], instansiController.getinstansi); 
-route.get('/user/instansi/get/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], instansiController.getinstansiBySlug); 
+route.get('/user/instansi/get', instansiController.getinstansi); 
+route.get('/user/instansi/get/:slug', instansiController.getinstansiBySlug); 
 route.put('/user/instansi/update/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), instansiController.updateinstansi); 
 route.delete('/user/instansi/delete/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], instansiController.deleteinstansi);
 
