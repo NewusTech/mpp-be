@@ -2,6 +2,8 @@ const userRoute = require('./user.route');
 const userinfoRoute = require('./userinfo.route');
 const roleRoute = require('./role.route');
 const artikelRoute = require('./artikel.route');
+const faqRoute = require('./faq.route');
+const facilitiesRoute = require('./facilities.route');
 const instansiRoute = require('./instansi.route');
 const antrianRoute = require('./antrian.route');
 const layananRoute = require('./layanan.route');
@@ -18,6 +20,8 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, userinfoRoute);
     app.use(urlApi, roleRoute);
     app.use(urlApi, artikelRoute);
+    app.use(urlApi, faqRoute);
+    app.use(urlApi, facilitiesRoute);
     app.use(urlApi, instansiRoute);
     app.use(urlApi, antrianRoute);
     app.use(urlApi, layananRoute);

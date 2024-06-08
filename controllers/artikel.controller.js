@@ -151,13 +151,13 @@ module.exports = {
         }
     },
 
-    //mendapatkan data artikel berdasarkan id
-    getartikelById: async (req, res) => {
+    //mendapatkan data artikel berdasarkan slug
+    getartikelBySlug: async (req, res) => {
         try {
-            //mendapatkan data artikel berdasarkan id
+            //mendapatkan data artikel berdasarkan slug
             let artikelGet = await Artikel.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 },
             });
 
@@ -168,20 +168,20 @@ module.exports = {
             }
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get artikel by id', artikelGet));
+            res.status(200).json(response(200, 'success get artikel by slug', artikelGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mengupdate artikel berdasarkan id
+    //mengupdate artikel berdasarkan slug
     updateartikel: async (req, res) => {
         try {
             //mendapatkan data artikel untuk pengecekan
             let artikelGet = await Artikel.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -251,14 +251,14 @@ module.exports = {
             //update artikel
             await Artikel.update(artikelUpdateObj, {
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
             //mendapatkan data artikel setelah update
             let artikelAfterUpdate = await Artikel.findOne({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
@@ -271,14 +271,14 @@ module.exports = {
         }
     },
 
-    //menghapus artikel berdasarkan id
+    //menghapus artikel berdasarkan slug
     deleteartikel: async (req, res) => {
         try {
 
             //mendapatkan data artikel untuk pengecekan
             let artikelGet = await Artikel.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -297,7 +297,7 @@ module.exports = {
 
             await Artikel.destroy({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 

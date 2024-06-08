@@ -152,7 +152,6 @@ module.exports = {
         }
     },
 
-
     //mendapatkan data user berdasarkan id
     //UTK ADMIN NGECEK DATA PEMOHON
     getuserById: async (req, res) => {

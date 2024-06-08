@@ -168,10 +168,12 @@ module.exports = {
 
             // membuat token jwt
             let token = jwt.sign({
-                userId: userinfo.id, // parsing id Userinfo
+                userId: userinfo.id,
+                user_akun_id: userinfo.User.id,
                 nik: userinfo.nik,
                 role: userinfo.User.Role.name,
-                instansi: userinfo?.User?.Instansi?.name ?? null
+                instansi: userinfo?.User?.Instansi?.name ?? null,
+                instansi_id: userinfo?.User?.Instansi?.id ?? null
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
@@ -219,15 +221,19 @@ module.exports = {
                         attributes: ['name', 'id'],
                         as: 'Role'
                     },
+                    {
+                        model: Userinfo,
+                        as: 'Userinfo'
+                    },
                 ],
-                attributes: { exclude: ['Instansi', 'Role'] }
+                attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
             });
 
             let formattedUsers = userGets.map(user => {
                 return {
                     id: user.id,
-                    name: user.name,
-                    nik: user.nik,
+                    name: user.Userinfo?.name,
+                    nik: user.Userinfo?.nik,
                     instansi_id: user.Instansi?.id,
                     instansi_name: user.Instansi?.name,
                     role_id: user.Role?.id,
@@ -265,8 +271,12 @@ module.exports = {
                         attributes: ['name', 'id'],
                         as: 'Role'
                     },
+                    {
+                        model: Userinfo,
+                        as: 'Userinfo'
+                    },
                 ],
-                attributes: { exclude: ['Instansi', 'Role'] }
+                attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
             });
 
             //cek jika user tidak ada
@@ -277,8 +287,75 @@ module.exports = {
 
             let formattedUsers = {
                 id: userGet.id,
-                name: userGet.name,
-                nik: userGet.nik,
+                name: userGet.Userinfo?.name,
+                nik: userGet.Userinfo?.nik,
+                instansi_id: userGet.Instansi?.id,
+                instansi_title: userGet.Instansi?.name,
+                role_id: userGet.Role?.id,
+                role_name: userGet.Role?.name,
+                createdAt: userGet.createdAt,
+                updatedAt: userGet.updatedAt
+            };
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get user by id', formattedUsers));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getforuser: async (req, res) => {
+        try {
+            //mendapatkan data user berdasarkan id
+            let userGet = await User.findOne({
+                where: {
+                    id: data.userId
+                },
+                include: [
+                    {
+                        model: Instansi,
+                        attributes: ['name', 'id'],
+                        as: 'Instansi'
+                    },
+                    {
+                        model: Role,
+                        attributes: ['name', 'id'],
+                        as: 'Role'
+                    },
+                    {
+                        model: Userinfo,
+                        as: 'Userinfo'
+                    },
+                ],
+                attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
+            });
+
+            //cek jika user tidak ada
+            if (!userGet) {
+                res.status(404).json(response(404, 'user not found'));
+                return;
+            }
+
+            let formattedUsers = {
+                id: userGet.id,
+                name: userGet.Userinfo?.name,
+                nik: userGet.Userinfo?.nik,
+                email: userGet.Userinfo?.email,
+                telepon: userGet.Userinfo?.telepon,
+                kec: userGet.Userinfo?.kec,
+                desa: userGet.Userinfo?.desa,
+                rt: userGet.Userinfo?.rt,
+                rw: userGet.Userinfo?.rw,
+                alamat: userGet.Userinfo?.alamat,
+                agama: userGet.Userinfo?.agama,
+                tempat_lahir: userGet.Userinfo?.tempat_lahir,
+                tgl_lahir: userGet.Userinfo?.tgl_lahir,
+                status_kawin: userGet.Userinfo?.status_kawin,
+                gender: userGet.Userinfo?.gender,
+                pekerjaan: userGet.Userinfo?.pekerjaan,
+                goldar: userGet.Userinfo?.goldar,
+                pendidikan: userGet.Userinfo?.pendidikan,
                 instansi_id: userGet.Instansi?.id,
                 instansi_title: userGet.Instansi?.name,
                 role_id: userGet.Role?.id,

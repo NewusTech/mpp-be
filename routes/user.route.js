@@ -7,10 +7,14 @@ const route = express.Router();
 
 route.post('/user/register', userController.createUser);
 route.post('/user/login', userController.loginUser);
-route.post('/user/logout', [mid.checkRolesAndLogout(['User'])], userController.logoutUser); 
+route.post('/user/logout', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], userController.logoutUser); 
 
-route.get('/user/alluser/get', [mid.checkRolesAndLogout(['User'])], userController.getuser); 
-route.get('/user/alluser/get/:id', [mid.checkRolesAndLogout(['User'])], userController.getuserById); 
-route.delete('/user/alluser/delete/:id', [mid.checkRolesAndLogout(['User'])], userController.deleteuser);
+// API UNTUK ADMIN / SUPER ADMIN
+route.get('/user/alluser/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], userController.getuser); 
+route.get('/user/alluser/get/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], userController.getuserById); 
+route.delete('/user/alluser/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], userController.deleteuser);
+
+//API BUAT USER
+route.get('/user/getforuser', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], userController.getforuser); 
 
 module.exports = route;
