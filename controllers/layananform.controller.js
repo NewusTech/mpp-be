@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layanan, Layananform } = require('../models');
+const { Layanan, Layananform, sequelize } = require('../models');
 require('dotenv').config()
 
 const { Op } = require('sequelize');
@@ -46,17 +46,30 @@ module.exports = {
                     type: "number",
                     optional: true
                 },
+                datajson: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "number" },
+                            key: { type: "string" }
+                        },
+                        required: ["id", "key"]
+                    },
+                    optional: true
+                }
             }
 
             //buat object layananform
             let layananformCreateObj = {
                 field: req.body.field,
                 tipedata: req.body.tipedata,
-                maxinput: Number(req.body.maxinput),
-                mininput: Number(req.body.mininput),
-                isrequired: Number(req.body.isrequired),
-                status: Number(req.body.status),
+                maxinput: req.body.maxinput ? Number(req.body.maxinput) : null,
+                mininput: req.body.mininput ? Number(req.body.mininput) : null,
+                isrequired: req.body.isrequired ? Number(req.body.isrequired) : null,
+                status: req.body.status ? Number(req.body.status) : null,
                 layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : null,
+                datajson: req.body.datajson || null
             }
 
             //validasi menggunakan module fastest-validator
@@ -78,72 +91,99 @@ module.exports = {
     },
 
     createmultilayananform: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
         try {
             // Define schema for validation
             const schema = {
-                field: { type: "string", min: 1, optional: true },
+                field: { type: "string", min: 1 },
                 tipedata: { type: "string", min: 1 },
                 maxinput: { type: "number", optional: true },
                 mininput: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 isrequired: { type: "number", optional: true },
                 layanan_id: { type: "number", optional: true },
+                datajson: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "number" },
+                            key: { type: "string" }
+                        },
+                        required: ["id", "key"]
+                    },
+                    optional: true
+                }
             };
-    
+
             // Check if the request body is an array
             if (!Array.isArray(req.body)) {
                 res.status(400).json(response(400, 'Request body must be an array of objects'));
                 return;
             }
-    
+
             // Initialize arrays for validation errors and successfully created objects
             let errors = [];
             let createdForms = [];
-    
+
             // Validate and process each object in the input array
             for (let input of req.body) {
                 // Create the layananform object
                 let layananformCreateObj = {
                     field: input.field,
                     tipedata: input.tipedata,
-                    maxinput: Number(input.maxinput),
-                    mininput: Number(input.mininput),
-                    isrequired: Number(input.isrequired),
-                    status: Number(input.status),
+                    maxinput: req.body.maxinput ? Number(req.body.maxinput) : null,
+                    mininput: req.body.mininput ? Number(req.body.mininput) : null,
+                    isrequired: req.body.isrequired ? Number(req.body.isrequired) : null,
+                    status: req.body.status ? Number(req.body.status) : null,
                     layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : null,
+                    datajson: input.datajson || null
                 };
-    
+
                 // Validate the object
                 const validate = v.validate(layananformCreateObj, schema);
                 if (validate.length > 0) {
                     errors.push({ input, errors: validate });
                     continue;
                 }
-    
+
                 // Create layananform in the database
-                let layananformCreate = await Layananform.create(layananformCreateObj);
+                let layananformCreate = await Layananform.create(layananformCreateObj, { transaction });
                 createdForms.push(layananformCreate);
             }
-    
+
             // If there are validation errors, respond with them
             if (errors.length > 0) {
                 res.status(400).json(response(400, 'Validation failed', errors));
                 return;
             }
-    
+
             // Respond with the successfully created objects
+            await transaction.commit();
             res.status(201).json(response(201, 'Successfully created layananform(s)', createdForms));
         } catch (err) {
+            await transaction.rollback();
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },    
+    },
 
     //mendapatkan semua form berdasarkan layanan
     getformbylayanan: async (req, res) => {
         try {
             const { layananid } = req.params;
-
+    
+            let formWhereCondition = {
+                tipedata: {
+                    [Op.ne]: "file"
+                }
+            };
+    
+            if (data.role === 'User') {
+                formWhereCondition.status = true;
+            }
+    
             let layananData = await Layanan.findOne({
                 where: {
                     id: layananid
@@ -152,19 +192,16 @@ module.exports = {
                 include: [{
                     model: Layananform,
                     attributes: { exclude: ['createdAt', 'updatedAt'] },
-                    where: {
-                        tipedata: {
-                            [Op.ne]: "file"
-                        },
-                        status: true
-                    }
-                }]
+                    where: formWhereCondition,
+                    required: false,
+                }],
+                order: [[{ model: Layananform }, 'id', 'ASC']]
             });
-
+    
             if (!layananData) {
                 return res.status(404).json(response(404, 'Layanan not found'));
             }
-
+    
             res.status(200).json(response(200, 'Success get layanan with forms', layananData));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
@@ -258,17 +295,30 @@ module.exports = {
                     type: "number",
                     optional: true
                 },
+                datajson: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "number" },
+                            key: { type: "string" }
+                        },
+                        required: ["id", "key"]
+                    },
+                    optional: true
+                }
             }
 
             //buat object layananform
             let layananformUpdateObj = {
                 field: req.body.field,
                 tipedata: req.body.tipedata,
-                maxinput: Number(req.body.maxinput),
-                mininput: Number(req.body.mininput),
-                isrequired: Number(req.body.isrequired),
-                status: Number(req.body.status),
+                maxinput: req.body.maxinput ? Number(req.body.maxinput) : null,
+                mininput: req.body.mininput ? Number(req.body.mininput) : null,
+                isrequired: req.body.isrequired ? Number(req.body.isrequired) : null,
+                status: req.body.status ? Number(req.body.status) : null,
                 layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : null,
+                datajson: req.body.datajson || null
             }
 
             //validasi menggunakan module fastest-validator
@@ -395,6 +445,14 @@ module.exports = {
         try {
             const { layananid } = req.params;
 
+            let formWhereCondition = {
+                tipedata: "file"
+            };
+    
+            if (data.role === 'User') {
+                formWhereCondition.status = true;
+            }
+
             let layananData = await Layanan.findOne({
                 where: {
                     id: layananid
@@ -403,11 +461,10 @@ module.exports = {
                 include: [{
                     model: Layananform,
                     attributes: { exclude: ['createdAt', 'updatedAt'] },
-                    where: {
-                        tipedata: "file",
-                        status: true
-                    }
-                }]
+                    where: formWhereCondition,
+                    required: false,
+                }],
+                order: [[{ model: Layananform }, 'id', 'ASC']]
             });
 
             if (!layananData) {

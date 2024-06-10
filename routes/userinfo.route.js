@@ -11,7 +11,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 route.get('/user/alluserinfo/get', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.getuserdata); 
-route.get('/user/alluserinfo/get/:id', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.getuserById); 
+route.get('/user/alluserinfo/get/:id', [mid.checkRolesAndLogout(['Super Admin', 'User'])], userinfoController.getuserById); 
 route.delete('/user/alluserinfo/delete/:id', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
 
 route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.fields([

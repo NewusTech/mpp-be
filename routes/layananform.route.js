@@ -14,7 +14,7 @@ route.put('/user/layananform/update/:id', [mid.checkRolesAndLogout(['Admin Insta
 route.delete('/user/layananform/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.deletelayananform);
 
 //get from docs by layanan
-route.get('/user/layanan/docs/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.getdocsbylayanan); 
+route.get('/user/layanan/docs/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananformController.getdocsbylayanan); 
 
 route.post('/user/layanandocs/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayanandocs);
 route.put('/user/layanandocs/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayanandocs); 

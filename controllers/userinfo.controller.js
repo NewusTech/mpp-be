@@ -328,22 +328,22 @@ module.exports = {
             //membuat schema untuk validasi
             const schema = {
                 name: { type: "string", min: 2 },
-                nik: { type: "string", length: 16 },
+                nik: { type: "string", length: 16, optional: true },
                 email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
                 kec: { type: "string", min: 1, optional: true },
                 desa: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
                 rw: { type: "string", min: 1, optional: true },
-                alamat: { type: "string", min: 3 },
-                agama: { type: "number" },
-                tempat_lahir: { type: "string", min: 2 },
-                tgl_lahir: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/ },
-                status_kawin: { type: "number" },
-                gender: { type: "number" },
-                pekerjaan: { type: "string" },
-                goldar: { type: "number" },
-                pendidikan: { type: "number" },
+                alamat: { type: "string", min: 3, optional: true },
+                agama: { type: "number", optional: true },
+                tempat_lahir: { type: "string", min: 2, optional: true },
+                tgl_lahir: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
+                status_kawin: { type: "number", optional: true },
+                gender: { type: "number", optional: true },
+                pekerjaan: { type: "string", optional: true },
+                goldar: { type: "number", optional: true },
+                pendidikan: { type: "number", optional: true },
             }
 
             //buat object userinfo
@@ -357,14 +357,14 @@ module.exports = {
                 rt: req.body.rt,
                 rw: req.body.rw,
                 alamat: req.body.alamat,
-                agama: Number(req.body.agama),
+                agama: req.body.agama ? Number(req.body.agama) : null,
                 tempat_lahir: req.body.tempat_lahir,
                 tgl_lahir: req.body.tgl_lahir,
-                status_kawin: Number(req.body.status_kawin),
-                gender: Number(req.body.gender),
+                status_kawin: req.body.status_kawin ? Number(req.body.status_kawin) : null,
+                gender: req.body.gender ? Number(req.body.gender) : null,
                 pekerjaan: req.body.pekerjaan,
-                goldar: Number(req.body.goldar),
-                pendidikan: Number(req.body.pendidikan),
+                goldar: req.body.goldar ? Number(req.body.goldar): null, 
+                pendidikan: req.body.pendidikan? Number(req.body.pendidikan) : null,
             };
 
             //validasi menggunakan module fastest-validator
