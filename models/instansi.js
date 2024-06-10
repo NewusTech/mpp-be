@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     slug: DataTypes.STRING,
     alamat: DataTypes.STRING,
     telp: DataTypes.STRING,
+    email: DataTypes.STRING,
     desc: DataTypes.STRING,
     pj: DataTypes.STRING,
     nip_pj: DataTypes.STRING,
@@ -31,6 +32,8 @@ module.exports = (sequelize, DataTypes) => {
     active_online: DataTypes.BOOLEAN,
     active_offline: DataTypes.BOOLEAN,
     status: DataTypes.BOOLEAN,
+    jam_buka: DataTypes.TIME,
+    jam_tutup: DataTypes.TIME,
   }, {
     sequelize,
     modelName: 'Instansi',

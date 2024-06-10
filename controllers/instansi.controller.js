@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi } = require('../models');
+const { Instansi, Layanan, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -32,7 +32,10 @@ module.exports = {
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
-                telp: { type: "string", optional: true, min: 7, max: 15 }
+                telp: { type: "string", optional: true, min: 7, max: 15 },
+                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                jam_buka: { type: "string", optional: true },
+                jam_tutup: { type: "string", optional: true }
             }
 
             let image = null;
@@ -62,11 +65,14 @@ module.exports = {
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
+                email: req.body.email,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
                 alamat: req.body.alamat,
-                image: req.file ? image : null
+                image: req.file ? image : null,
+                jam_buka: req.body.jam_buka,
+                jam_tutup: req.body.jam_tutup
             }
 
             //validasi menggunakan module fastest-validator
@@ -105,14 +111,14 @@ module.exports = {
     getinstansi: async (req, res) => {
         try {
             const search = req.query.search ?? null;
-            const active_offline = req.query.active_offline ?? null; 
-            const active_online = req.query.active_online ?? null; 
+            const active_offline = req.query.active_offline ?? null;
+            const active_online = req.query.active_online ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let instansiGets;
             let totalCount;
-    
+
             const whereCondition = {};
             if (search) {
                 whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
@@ -123,11 +129,12 @@ module.exports = {
             if (active_online !== null) {
                 whereCondition.active_online = active_online === 'true';
             }
-    
+
             if (search || active_online !== null || active_offline !== null) {
                 [instansiGets, totalCount] = await Promise.all([
                     Instansi.findAll({
                         where: whereCondition,
+                        include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
                         limit: limit,
                         offset: offset
                     }),
@@ -138,28 +145,37 @@ module.exports = {
             } else {
                 [instansiGets, totalCount] = await Promise.all([
                     Instansi.findAll({
+                        include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
                         limit: limit,
                         offset: offset
                     }),
                     Instansi.count()
                 ]);
             }
-    
+
+            const formattedInstansiGets = instansiGets.map(instansi => {
+                const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt } = instansi.toJSON();
+                const jmlLayanan = instansi.Layanans.length;
+                return {
+                    id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, jmlLayanan
+                };
+            });
+
             const pagination = generatePagination(totalCount, page, limit, '/api/user/instansi/get');
-    
+
             res.status(200).json({
                 status: 200,
                 message: 'success get instansi',
-                data: instansiGets,
+                data: formattedInstansiGets,
                 pagination: pagination
             });
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
-    
+
 
     //mendapatkan data instansi berdasarkan slug
     getinstansiBySlug: async (req, res) => {
@@ -169,6 +185,7 @@ module.exports = {
                 where: {
                     slug: req.params.slug
                 },
+                include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }]
             });
 
             //cek jika instansi tidak ada
@@ -177,8 +194,15 @@ module.exports = {
                 return;
             }
 
+            const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, Layanans } = instansiGet.toJSON();
+            const jmlLayanan = Layanans.length;
+            
+            const formattedInstansiGets = {
+                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, jmlLayanan
+            };
+
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get instansi by slug', instansiGet));
+            res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -214,7 +238,10 @@ module.exports = {
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
-                telp: { type: "string", optional: true, min: 7, max: 15 }
+                telp: { type: "string", optional: true, min: 7, max: 15 },
+                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                jam_buka: { type: "string", optional: true },
+                jam_tutup: { type: "string", optional: true }
             }
 
             let image = null;
@@ -248,11 +275,14 @@ module.exports = {
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
+                email: req.body.email,
                 alamat: req.body.alamat,
                 image: req.file ? image : null,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
+                jam_buka: req.body.jam_buka,
+                jam_tutup: req.body.jam_tutup
             }
 
             //validasi menggunakan module fastest-validator

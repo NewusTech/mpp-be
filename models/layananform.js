@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   Layananform.init({
     field: DataTypes.STRING,
     tipedata: DataTypes.STRING,
+    datajson: DataTypes.JSON,
     maxinput: DataTypes.INTEGER,
     mininput: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,

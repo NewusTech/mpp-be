@@ -15,6 +15,9 @@ module.exports = {
       tipedata: {
         type: Sequelize.STRING
       },
+      datajson: {
+        type: Sequelize.JSON
+      },
       maxinput: {
         type: Sequelize.INTEGER
       },

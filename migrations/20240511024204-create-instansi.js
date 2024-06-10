@@ -30,6 +30,9 @@ module.exports = {
       telp: {
         type: Sequelize.STRING
       },
+      email: {
+        type: Sequelize.STRING
+      },
       image: {
         type: Sequelize.STRING
       },
@@ -38,6 +41,12 @@ module.exports = {
       },
       active_offline: {
         type: Sequelize.BOOLEAN
+      },
+      jam_buka: {
+        type: Sequelize.TIME
+      },
+      jam_tutup: {
+        type: Sequelize.TIME // Tipe data untuk waktu
       },
       status: {
         type: Sequelize.BOOLEAN

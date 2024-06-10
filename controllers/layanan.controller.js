@@ -166,7 +166,7 @@ module.exports = {
             let layananGets;
             let totalCount;
 
-            if (search || instansi_id) {
+            if (search) {
                 [layananGets, totalCount] = await Promise.all([
                     Layanan.findAll({
                         where: {
@@ -190,6 +190,9 @@ module.exports = {
             } else {
                 [layananGets, totalCount] = await Promise.all([
                     Layanan.findAll({
+                        where: {
+                         instansi_id: instansi_id
+                        },
                         limit: limit,
                         offset: offset
                     }),
