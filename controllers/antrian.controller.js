@@ -80,10 +80,10 @@ module.exports = {
 
             if (userinfo_id) {
                 const qrCodeBuffer = await QRCode.toBuffer(codeBooking);
-                
+
                 const now = new Date();
-                const datetime = now.toISOString().replace(/[-:.]/g, ''); 
-    
+                const datetime = now.toISOString().replace(/[-:.]/g, '');
+
                 const codeBookingfix = `${codeBooking}_${datetime}`;
 
                 const uploadParams = {
@@ -190,39 +190,39 @@ module.exports = {
         let transaction;
         try {
             const { startDateTime, endDateTime, deleteAll } = req.body;
-    
+
             transaction = await sequelize.transaction();
-    
+
             if (deleteAll) {
-                 const antrianAudio = await Antrian.findAll({
+                const antrianAudio = await Antrian.findAll({
                     where: {
                         instansi_id: data.instansi_id
                     },
                     attributes: ['audio', 'qrcode'],
                     transaction
                 });
-    
+
                 const deleted = await Antrian.destroy({
                     where: {
                         instansi_id: data.instansi_id
                     },
                     transaction
                 });
-    
+
                 await transaction.commit();
-    
+
                 return res.status(200).json({ status: 200, message: `${deleted} antrian(s) deleted successfully` });
             }
-    
+
             // Validasi input untuk rentang tanggal
             if (!startDateTime) {
                 return res.status(400).json({ status: 400, message: 'Start date is required' });
             }
-    
+
             // Konversi input tanggal ke waktu UTC dengan awal dan akhir hari
             const startUTC = moment.tz(startDateTime, "UTC").startOf('day').toDate();
             const endUTC = endDateTime ? moment.tz(endDateTime, "UTC").endOf('day').toDate() : moment(startUTC).endOf('day').toDate();
-    
+
             // Menentukan rentang tanggal dan waktu dalam UTC
             const dateTimeRange = {
                 [Op.between]: [startUTC, endUTC]
@@ -235,7 +235,7 @@ module.exports = {
                 },
                 attributes: ['audio', 'qrcode'],
             });
-    
+
             // Hapus data antrian dalam rentang tanggal dan waktu tersebut
             const deleted = await Antrian.destroy({
                 where: {
@@ -244,15 +244,20 @@ module.exports = {
                 },
                 transaction
             });
-    
+
             await transaction.commit();
-    
+
             // Mengembalikan response
             res.status(200).json({ status: 200, message: `${deleted} antrian(s) deleted successfully` });
         } catch (err) {
             if (transaction) await transaction.rollback();
-            console.error(err);
-            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+
+            if (err.name === 'SequelizeForeignKeyConstraintError') {
+                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
+            } else {
+                res.status(500).json(response(500, 'Internal server error', err));
+                console.log(err);
+            }
         }
     },
 
@@ -310,17 +315,17 @@ module.exports = {
                         slow: false,
                         host: 'https://translate.google.com',
                     });
-            
+
                     const response = await axios({
                         url,
                         method: 'GET',
                         responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Node.js
                     });
-            
+
                     const now = new Date();
                     const datetime = now.toISOString().replace(/[-:.]/g, '');
                     const audioFileName = `antrian_audio_${uuidv4()}_${datetime}.mp3`;
-            
+
                     const uploadParams = {
                         Bucket: process.env.AWS_S3_BUCKET,
                         Key: `audio/${audioFileName}`,
@@ -328,12 +333,12 @@ module.exports = {
                         ContentType: 'audio/mpeg',
                         ACL: 'public-read',
                     };
-            
+
                     const command = new PutObjectCommand(uploadParams);
                     await s3Client.send(command);
 
                     const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-            
+
                     return fileUrl;
                 } catch (error) {
                     console.error('Error converting text to speech or uploading to S3:', error);

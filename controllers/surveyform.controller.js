@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Surveyform, Instansi } = require('../models');
+const { Surveyform, Instansi, sequelize } = require('../models');
 require('dotenv').config()
 
 const { Op } = require('sequelize');
@@ -52,6 +52,64 @@ module.exports = {
             res.status(201).json(response(201, 'success create surveyform', surveyformCreate));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    createmultisurveyform: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Define schema for validation
+            const schema = {
+                field: { type: "string", min: 1 },
+                status: { type: "number", optional: true },
+                instansi_id: { type: "number", optional: true }
+            };
+
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+
+            // Initialize arrays for validation errors and successfully created objects
+            let errors = [];
+            let createdForms = [];
+
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Create the surveyfrom object
+                let surveyfromCreateObj = {
+                    field: input.field,
+                    status: input.status ? Number(input.status) : null,
+                    instansi_id: input.instansi_id !== undefined ? Number(input.instansi_id) : null
+                };
+
+                // Validate the object
+                const validate = v.validate(surveyfromCreateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+
+                // Create surveyform in the database
+                let surveyformCreate = await Surveyform.create(surveyfromCreateObj, { transaction });
+                createdForms.push(surveyformCreate);
+            }
+
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+
+            // Respond with the successfully created objects
+            await transaction.commit();
+            res.status(201).json(response(201, 'Successfully created layananform(s)', createdForms));
+        } catch (err) {
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
     },
@@ -184,8 +242,12 @@ module.exports = {
             res.status(200).json(response(200, 'success delete surveyformGet'));
 
         } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
-            console.log(err);
+            if (err.name === 'SequelizeForeignKeyConstraintError') {
+                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
+            } else {
+                res.status(500).json(response(500, 'Internal server error', err));
+                console.log(err);
+            }
         }
     },
 
