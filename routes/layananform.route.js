@@ -17,6 +17,7 @@ route.delete('/user/layananform/delete/:id', [mid.checkRolesAndLogout(['Admin In
 route.get('/user/layanan/docs/:layananid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], layananformController.getdocsbylayanan); 
 
 route.post('/user/layanandocs/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayanandocs);
+route.post('/user/layanandocs/createmulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createmultilayanandocs);
 route.put('/user/layanandocs/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayanandocs); 
 
 //get semua from --> gak bakal kepake

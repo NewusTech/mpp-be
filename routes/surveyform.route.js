@@ -6,6 +6,7 @@ const express = require('express');
 const route = express.Router();
 
 route.post('/user/surveyform/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], surveyformController.createsurveyform);
+route.post('/user/surveyform/createmulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], surveyformController.createmultisurveyform);
 
 route.get('/user/survey/form/:instansiid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], surveyformController.getsurveybydinas); 
 

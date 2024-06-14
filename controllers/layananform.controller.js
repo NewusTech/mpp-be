@@ -142,10 +142,10 @@ module.exports = {
                 let layananformCreateObj = {
                     field: input.field,
                     tipedata: input.tipedata,
-                    maxinput: req.body.maxinput ? Number(req.body.maxinput) : null,
-                    mininput: req.body.mininput ? Number(req.body.mininput) : null,
-                    isrequired: req.body.isrequired ? Number(req.body.isrequired) : null,
-                    status: req.body.status ? Number(req.body.status) : null,
+                    maxinput: input.maxinput ? Number(input.maxinput) : null,
+                    mininput: input.mininput ? Number(input.mininput) : null,
+                    isrequired: input.isrequired ? Number(input.isrequired) : null,
+                    status: input.status ? Number(input.status) : null,
                     layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : null,
                     datajson: input.datajson || null
                 };
@@ -386,8 +386,12 @@ module.exports = {
             res.status(200).json(response(200, 'success delete layananformGet'));
 
         } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
-            console.log(err);
+            if (err.name === 'SequelizeForeignKeyConstraintError') {
+                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
+            } else {
+                res.status(500).json(response(500, 'Internal server error', err));
+                console.log(err);
+            }
         }
     },
 
@@ -445,6 +449,72 @@ module.exports = {
             res.status(201).json(response(201, 'success create layanandocs', layanandocsCreate));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    createmultilayanandocs: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Define schema for validation
+            const schema = {
+                field: { type: "string", min: 1 },
+                tipedata: { type: "string", min: 1 },
+                maxinput: { type: "number", optional: true },
+                mininput: { type: "number", optional: true },
+                status: { type: "number", optional: true },
+                isrequired: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true }
+            };
+
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+
+            // Initialize arrays for validation errors and successfully created objects
+            let errors = [];
+            let createdForms = [];
+
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Create the layananform object
+                let layananformCreateObj = {
+                    field: input.field,
+                    tipedata: input.tipedata,
+                    maxinput: input.maxinput ? Number(input.maxinput) : null,
+                    mininput: input.mininput ? Number(input.mininput) : null,
+                    isrequired: input.isrequired ? Number(input.isrequired) : null,
+                    status: input.status ? Number(input.status) : null,
+                    layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : null
+                };
+
+                // Validate the object
+                const validate = v.validate(layananformCreateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+
+                // Create layananform in the database
+                let layananformCreate = await Layananform.create(layananformCreateObj, { transaction });
+                createdForms.push(layananformCreate);
+            }
+
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+
+            // Respond with the successfully created objects
+            await transaction.commit();
+            res.status(201).json(response(201, 'Successfully created layananform(s)', createdForms));
+        } catch (err) {
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
     },
