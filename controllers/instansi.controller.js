@@ -7,12 +7,14 @@ const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -38,23 +40,23 @@ module.exports = {
                 jam_tutup: { type: "string", optional: true }
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/instansi/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/instansi",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
+
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object instansi
@@ -70,7 +72,7 @@ module.exports = {
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
                 alamat: req.body.alamat,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : null,
                 jam_buka: req.body.jam_buka,
                 jam_tutup: req.body.jam_tutup
             }
@@ -196,7 +198,7 @@ module.exports = {
 
             const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, Layanans } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
-            
+
             const formattedInstansiGets = {
                 id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, jmlLayanan
             };
@@ -225,8 +227,6 @@ module.exports = {
                 return;
             }
 
-            const oldImagePublicId = instansiGet.image ? instansiGet.image.split('/').pop().split('.')[0] : null;
-
             //membuat schema untuk validasi
             const schema = {
                 name: { type: "string", min: 3 },
@@ -244,27 +244,22 @@ module.exports = {
                 jam_tutup: { type: "string", optional: true }
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/instansi/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/instansi",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
 
-                image = result.secure_url;
-
-                if (oldImagePublicId) {
-                    await cloudinary.uploader.destroy(`mpp/instansi/${oldImagePublicId}`);
-                }
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object instansi
@@ -277,7 +272,7 @@ module.exports = {
                 telp: req.body.telp,
                 email: req.body.email,
                 alamat: req.body.alamat,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : instansiGet.image,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
@@ -330,13 +325,6 @@ module.exports = {
             if (!instansiGet) {
                 res.status(404).json(response(404, 'instansi not found'));
                 return;
-            }
-
-            // Hapus gambar terkait jika ada
-            if (instansiGet.image) {
-                const oldImagePublicId = instansiGet.image ? instansiGet.image.split('/').pop().split('.')[0] : null;
-
-                await cloudinary.uploader.destroy(`mpp/instansi/${oldImagePublicId}`);
             }
 
             await Instansi.destroy({

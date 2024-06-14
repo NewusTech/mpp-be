@@ -19,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
   Layananformnum.init({
     userinfo_id: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,
+    fileoutput: DataTypes.STRING,
+    pesan: DataTypes.STRING,
+    tgl_selesai: DataTypes.DATEONLY,
     isonline: DataTypes.INTEGER,
     status: DataTypes.SMALLINT,
   }, {

@@ -49,8 +49,8 @@ module.exports = {
         }
     },
 
-     //mendapatkan semua data faq
-     getfaq: async (req, res) => {
+    //mendapatkan semua data faq
+    getfaq: async (req, res) => {
         try {
             let faqGets;
             const search = req.query.search ?? null;

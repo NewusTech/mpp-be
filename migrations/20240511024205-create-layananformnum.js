@@ -18,6 +18,15 @@ module.exports = {
       isonline: {
         type: Sequelize.BOOLEAN
       },
+      fileoutput: {
+        type: Sequelize.STRING
+      },
+      pesan: {
+        type: Sequelize.STRING
+      },
+      tgl_selesai: {
+        type: Sequelize.DATEONLY
+      },
       status: {
         type: Sequelize.SMALLINT
       },

@@ -9,15 +9,28 @@ const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const moment = require('moment-timezone');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { v4: uuidv4 } = require('uuid');
+
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+});
 
 const { Sequelize, Op } = require('sequelize');
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
-});
+function numberToAlphabeticCode(number) {
+    let code = '';
+    while (number > 0) {
+        let remainder = (number - 1) % 26;
+        code = String.fromCharCode(65 + remainder) + code;
+        number = Math.floor((number - 1) / 26);
+    }
+    return code;
+}
 
 module.exports = {
 
@@ -49,7 +62,8 @@ module.exports = {
             });
 
             const newNumber = existingAntrian.length + 1;
-            const codeBooking = `${instansi.name.charAt(0)}${String(newNumber).padStart(3, '0')}`;
+            const instansiCode = numberToAlphabeticCode(req.body.instansi_id);
+            const codeBooking = `${instansiCode}${String(newNumber).padStart(3, '0')}`;
 
             const antrianCreateObj = {
                 code: codeBooking,
@@ -65,19 +79,28 @@ module.exports = {
             }
 
             if (userinfo_id) {
-                const qrCodeDataUri = await QRCode.toDataURL(codeBooking);
+                const qrCodeBuffer = await QRCode.toBuffer(codeBooking);
                 
                 const now = new Date();
-                const datetime = now.toISOString().replace(/[-:.]/g, ''); // Format: YYYYMMDDTHHMMSS
+                const datetime = now.toISOString().replace(/[-:.]/g, ''); 
     
                 const codeBookingfix = `${codeBooking}_${datetime}`;
 
-                const result = await cloudinary.uploader.upload(qrCodeDataUri, {
-                    folder: "mpp/qrcode",
-                    public_id: codeBookingfix,
-                });
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/qrcode/${codeBookingfix}`,
+                    Body: qrCodeBuffer,
+                    ACL: 'public-read',
+                    ContentType: 'image/png'
+                };
 
-                antrianCreateObj.qrcode = result.secure_url;
+                const command = new PutObjectCommand(uploadParams);
+
+                await s3Client.send(command);
+
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+                antrianCreateObj.qrcode = imageKey;
             }
 
             const newAntrian = await Antrian.create(antrianCreateObj);
@@ -180,20 +203,6 @@ module.exports = {
                     transaction
                 });
     
-                await Promise.all(antrianAudio.map(async antrian => {
-                    if (antrian.audio) {
-                        const publicId = antrian.audio.split('/').slice(-3).join('/').split('.')[0];
-                        await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
-                    }
-                }));
-    
-                await Promise.all(antrianAudio.map(async antrian => {
-                    if (antrian.qrcode) {
-                        const publicId = antrian.qrcode.split('/').pop().split('.')[0];
-                        await cloudinary.uploader.destroy(`mpp/qrcode/${publicId}`);
-                    }
-                }));
-    
                 const deleted = await Antrian.destroy({
                     where: {
                         instansi_id: data.instansi_id
@@ -236,18 +245,6 @@ module.exports = {
                 },
                 transaction
             });
-
-            await Promise.all(antrianAudio.map(async antrian => {
-                if (antrian.audio) {
-                    const publicId = antrian.audio.split('/').slice(-3).join('/').split('.')[0];
-                    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
-                }
-
-                if (antrian.qrcode) {
-                    const publicId = antrian.qrcode.split('/').pop().split('.')[0];
-                    await cloudinary.uploader.destroy(`mpp/qrcode/${publicId}`);
-                }
-            }));
     
             await transaction.commit();
     
@@ -308,45 +305,45 @@ module.exports = {
             const languageCode = 'id';
 
             // Fungsi untuk konversi teks menjadi suara dan mengunggah langsung ke Cloudinary
-            const generateAndUploadAudio = async (text, language, publicId) => {
+            const generateAndUploadAudio = async (text, language) => {
                 try {
                     const url = await tts.getAudioUrl(text, {
                         lang: language || 'id',
                         slow: false,
                         host: 'https://translate.google.com',
                     });
-
+            
                     const response = await axios({
                         url,
                         method: 'GET',
-                        responseType: 'stream'
+                        responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Node.js
                     });
+            
+                    const now = new Date();
+                    const datetime = now.toISOString().replace(/[-:.]/g, '');
+                    const audioFileName = `antrian_audio_${uuidv4()}_${datetime}.mp3`;
+            
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `audio/${audioFileName}`,
+                        Body: response.data, // Buffer dari response arraybuffer
+                        ContentType: 'audio/mpeg',
+                        ACL: 'public-read',
+                    };
+            
+                    const command = new PutObjectCommand(uploadParams);
+                    await s3Client.send(command);
 
-                    return new Promise((resolve, reject) => {
-                        const stream = cloudinary.uploader.upload_stream({
-                            resource_type: 'video', // For audio files
-                            folder: 'mpp/antrian_audio',
-                            public_id: publicId
-                        }, (error, result) => {
-                            if (error) {
-                                reject(error);
-                            } else {
-                                resolve(result.secure_url);
-                            }
-                        });
-
-                        response.data.pipe(stream);
-                    });
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+            
+                    return fileUrl;
                 } catch (error) {
-                    console.error('Error converting text to speech:', error);
+                    console.error('Error converting text to speech or uploading to S3:', error);
                     throw error;
                 }
             };
 
-            const now = new Date();
-            const datetime = now.toISOString().replace(/[-:.]/g, ''); // Format: YYYYMMDDTHHMMSS
-
-            const audioUrl = await generateAndUploadAudio(panggilanAntrian, languageCode, `antrian_${antrianBerikutnya.code}_${datetime}`);
+            const audioUrl = await generateAndUploadAudio(panggilanAntrian, languageCode);
 
             antrianBerikutnya.audio = audioUrl;
             await antrianBerikutnya.save({ transaction });

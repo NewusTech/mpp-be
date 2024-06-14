@@ -8,12 +8,14 @@ const v = new Validator();
 const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -250,14 +252,22 @@ module.exports = {
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
 
-                    const result = await cloudinary.uploader.upload(dataURI, {
-                        folder: folderPaths[key],
-                        public_id: uniqueFilename,
-                    });
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${folderPaths[key]}/${uniqueFilename}`,
+                        Body: buffer,
+                        ACL: 'public-read',
+                        ContentType: mimetype
+                    };
 
-                    imageUrls[key] = result.secure_url;
+                    const command = new PutObjectCommand(uploadParams);
+                    await s3Client.send(command);
+
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+                    imageUrls[key] = fileUrl;
                     // Menambahkan URL gambar ke objek userinfo
-                    userinfoObj[key] = result.secure_url;
+                    userinfoObj[key] = fileUrl;
                 }
             }
 
@@ -295,7 +305,7 @@ module.exports = {
             };
 
             // Membuat user baru
-            let userCreate = await User.create(userCreateObj);
+            await User.create(userCreateObj);
 
             //response menggunakan helper response.formatter
             await transaction.commit();
@@ -447,10 +457,6 @@ module.exports = {
 
             for (const key in files) {
                 if (files[key] && files[key][0]) {
-                    if (oldImageUrls[key]) {
-                        const oldPublicId = oldImageUrls[key].split('/').slice(-1)[0].split('.')[0];
-                        await cloudinary.uploader.destroy(`${folderPaths[key]}/${oldPublicId}`);
-                    }
 
                     const file = files[key][0];
                     const { mimetype, buffer, originalname } = file;
@@ -461,11 +467,20 @@ module.exports = {
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
 
-                    const result = await cloudinary.uploader.upload(dataURI, {
-                        folder: folderPaths[key],
-                        public_id: uniqueFilename,
-                    });
-                    uploadResults[key] = result.secure_url;
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${folderPaths[key]}/${uniqueFilename}`,
+                        Body: buffer,
+                        ACL: 'public-read',
+                        ContentType: mimetype
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+                    await s3Client.send(command);
+
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+                    uploadResults[key] = fileUrl;
                 }
             }
 
@@ -474,11 +489,6 @@ module.exports = {
             for (const key in folderPaths) {
                 if (uploadResults[key]) {
                     userinfoUpdateObj[key] = uploadResults[key];
-                    // Hapus foto lama dari Cloudinary
-                    if (oldImageUrls[key]) {
-                        const oldPublicId = oldImageUrls[key].split('/').slice(-1)[0].split('.')[0];
-                        await cloudinary.uploader.destroy(`${folderPaths[key]}/${oldPublicId}`);
-                    }
                 } else {
                     // Jika file tidak diperbarui, gunakan URL lama
                     userinfoUpdateObj[key] = oldImageUrls[key];
@@ -556,16 +566,6 @@ module.exports = {
                 fileijazahsma: userinfoGet.fileijazahsma,
                 fileijazahlain: userinfoGet.fileijazahlain,
             };
-
-            for (const key in oldImageUrls) {
-                const imageUrl = oldImageUrls[key];
-                if (imageUrl) {
-                    const publicId = oldImageUrls[key].split('/').slice(-1)[0].split('.')[0]; // Mengambil bagian dari URL sebelum format dan nama file
-                    console.log("kontok", publicId)
-
-                    await cloudinary.uploader.destroy(`${folderPaths[key]}/${publicId}`);
-                }
-            }
 
             await Userinfo.destroy({
                 where: {

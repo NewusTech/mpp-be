@@ -8,12 +8,14 @@ const v = new Validator();
 
 const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -55,21 +57,27 @@ module.exports = {
             const files = req.files;
             let fileUploadPromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
-                const base64 = Buffer.from(buffer).toString('base64');
-                const dataURI = `data:${mimetype};base64,${base64}`;
 
                 const now = new Date();
                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: folderPaths.fileinput,
-                    public_id: uniqueFilename,
-                });
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `${folderPaths.fileinput}/${uniqueFilename}`,
+                    Body: buffer,
+                    ACL: 'public-read',
+                    ContentType: mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
+
+                const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
 
                 // Extract index from fieldname (e.g., 'datafile[0][data]' -> 0)
                 const index = parseInt(fieldname.match(/\d+/)[0], 10);
-                datafile[index].data = result.secure_url;
+                datafile[index].data = fileUrl;
             });
 
             await Promise.all(fileUploadPromises);
@@ -119,7 +127,7 @@ module.exports = {
 
             let formatteddata = inputformData.map(datafilter => {
                 let data_key = null;
-    
+
                 if (datafilter.Layananform.tipedata === 'radio' && datafilter.Layananform.datajson) {
                     const selectedOption = datafilter.Layananform.datajson.find(option => option.id == datafilter.data);
                     if (selectedOption) {
@@ -134,7 +142,7 @@ module.exports = {
                         return option ? option.key : null;
                     }).filter(key => key !== null);
                 }
-    
+
                 return {
                     id: datafilter.id,
                     data: datafilter.data,
@@ -162,16 +170,23 @@ module.exports = {
             const idlayanannum = req.params.idlayanannum;
 
             // Update data entries
-            const updateDataPromises = datainput.map(item =>
-                Layananforminput.update(
-                    { data: item.data, layananform_id: item.layananform_id },
-                    { where: { id: item.id, layananformnum_id: idlayanannum }, transaction }
-                )
-            );
+            let updateDataPromises = [];
+            if (datainput && Array.isArray(datainput)) {
+                updateDataPromises = datainput.map(item =>
+                    Layananforminput.update(
+                        { data: item.data, layananform_id: item.layananform_id },
+                        { where: { id: item.id, layananformnum_id: idlayanannum }, transaction }
+                    ).catch(err => {
+                        console.error('Error updating data:', err);
+                        return null; // Return null or any other value you prefer in case of an error
+                    })
+                );
+            }
+
 
             // Handle file uploads to Cloudinary and update corresponding database entries
             const files = req.files;
-            const folderPaths = { fileinput: "mpp/file_pemohon" };
+            const folderPath = { fileinput: "mpp/file_pemohon" };
 
             let fileUpdatePromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
@@ -182,17 +197,25 @@ module.exports = {
                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: folderPaths.fileinput,
-                    public_id: uniqueFilename,
-                });
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `${folderPath}/${uniqueFilename}`,
+                    Body: buffer,
+                    ACL: 'public-read',
+                    ContentType: mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
+
+                const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
 
                 // Extract index from fieldname (e.g., 'datafile[0][data]' -> 0)
                 const index = parseInt(fieldname.match(/\d+/)[0], 10);
 
                 // Assuming datafile[index].id is available in req.body to identify the correct record
                 await Layananforminput.update(
-                    { data: result.secure_url },
+                    { data: fileUrl },
                     { where: { id: req.body.datafile[index].id, layananformnum_id: idlayanannum }, transaction }
                 );
             });
@@ -204,6 +227,73 @@ module.exports = {
         } catch (err) {
             await transaction.rollback();
             res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    updatestatuspengajuan: async (req, res) => {
+        try {
+
+            //mendapatkan data layanan untuk pengecekan
+            let layananGet = await Layananformnum.findOne({
+                where: {
+                    id: req.params.idlayanannum
+                }
+            })
+
+            //cek apakah data layanan ada
+            if (!layananGet) {
+                res.status(404).json(response(404, 'layanan not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                status: {
+                    type: "number"
+                },
+                pesan: {
+                    type: "string",
+                    optional: true
+                }
+            }
+
+            //buat object layanan
+            let layananUpdateObj = {
+                status: Number(req.body.status),
+                pesan: req.body.pesan,
+            }
+
+            if (layananUpdateObj.status === 3) {
+                layananUpdateObj.tgl_selesai = Date.now();
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(layananUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update layanan
+            await Layananformnum.update(layananUpdateObj, {
+                where: {
+                    id: req.params.idlayanannum,
+                }
+            })
+
+            //mendapatkan data layanan setelah update
+            let layananAfterUpdate = await Layananformnum.findOne({
+                where: {
+                    id: req.params.idlayanannum,
+                }
+            })
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update layanan', layananAfterUpdate));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
@@ -314,7 +404,8 @@ module.exports = {
                     layanan_image: data.Layanan ? data.Layanan.image : null,
                     instansi_id: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.id : null,
                     instansi_name: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.name : null,
-                    instansi_image: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.image : null
+                    instansi_image: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.image : null,
+                    createdAt: data.createdAt,
                 };
             });
 
@@ -333,64 +424,57 @@ module.exports = {
         }
     },
 
-    updatestatuspengajuan: async (req, res) => {
+    gethistorybyid: async (req, res) => {
         try {
+            const userinfo_id = data.role === "User" ? data.userId : null;
 
-            //mendapatkan data layanan untuk pengecekan
-            let layananGet = await Layananformnum.findOne({
+            let Layananformnumget = await Layananformnum.findOne({
                 where: {
-                    id: req.params.idlayanannum
-                }
-            })
+                    id: req.params.idforminput
+                },
+                include: [
+                    {
+                        model: Layanan,
+                        attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                        include: [{
+                            model: Instansi,
+                            attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                        }],
+                    },
+                    {
+                        model: Userinfo,
+                        attributes: ['name'],
+                    }
+                ],
+            });
 
-            console.log("req.params.idlayanannum", layananGet)
-
-            //cek apakah data layanan ada
-            if (!layananGet) {
-                res.status(404).json(response(404, 'layanan not found'));
+            if (!Layananformnumget) {
+                res.status(404).json(response(404, 'data not found'));
                 return;
             }
 
-            //membuat schema untuk validasi
-            const schema = {
-                status: {
-                    type: "number"
-                }
-            }
+            let formattedData = {
+                id: Layananformnumget.id,
+                userinfo_id: Layananformnumget.userinfo_id,
+                name: Layananformnumget.Userinfo ? Layananformnumget.Userinfo.name : null,
+                status: Layananformnumget.status,
+                pesan: Layananformnumget.pesan,
+                layanan_id: Layananformnumget.layanan_id,
+                layanan_name: Layananformnumget.Layanan ? Layananformnumget.Layanan.name : null,
+                layanan_image: Layananformnumget.Layanan ? Layananformnumget.Layanan.image : null,
+                instansi_id: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.id : null,
+                instansi_name: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.name : null,
+                instansi_image: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.image : null,
+                createdAt: Layananformnumget.createdAt,
+                tgl_selesai: Layananformnumget.tgl_selesai,
+            };
 
-            //buat object layanan
-            let layananUpdateObj = {
-                status: Number(req.body.status),
-            }
-
-            //validasi menggunakan module fastest-validator
-            const validate = v.validate(layananUpdateObj, schema);
-            if (validate.length > 0) {
-                res.status(400).json(response(400, 'validation failed', validate));
-                return;
-            }
-
-            //update layanan
-            await Layananformnum.update(layananUpdateObj, {
-                where: {
-                    id: req.params.idlayanannum,
-                }
-            })
-
-            //mendapatkan data layanan setelah update
-            let layananAfterUpdate = await Layananformnum.findOne({
-                where: {
-                    id: req.params.idlayanannum,
-                }
-            })
-
-            //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success update layanan', layananAfterUpdate));
+            res.status(200).json(response(200, 'success get', formattedData));
 
         } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
+            res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },
+    }
 
 }

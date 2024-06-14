@@ -3,10 +3,6 @@ const { response } = require('../helpers/response.formatter');
 const { Surveyforminput, Surveyformnum, Surveyform, Layanan, Userinfo, sequelize } = require('../models');
 require('dotenv').config()
 
-const Validator = require("fastest-validator");
-const v = new Validator();
-
-const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 
 module.exports = {
