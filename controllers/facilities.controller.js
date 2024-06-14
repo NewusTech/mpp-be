@@ -1,18 +1,16 @@
 const { response } = require('../helpers/response.formatter');
-
 const { Facilities } = require('../models');
-
-const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
-const { Op } = require('sequelize');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -29,28 +27,28 @@ module.exports = {
                 },
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/facilities/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/facilities",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
+
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object Facilities
             let FacilitiesCreateObj = {
-                image: req.file ? image : null,
+                image: req.file ? imageKey : null,
             }
 
             //validasi menggunakan module fastest-validator
@@ -143,8 +141,6 @@ module.exports = {
                 return;
             }
 
-            const oldImagePublicId = FacilitiesGet.image ? FacilitiesGet.image.split('/').pop().split('.')[0] : null;
-
             //membuat schema untuk validasi
             const schema = {
                 image: {
@@ -153,32 +149,27 @@ module.exports = {
                 },
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/facilities/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/Facilities",
-                    public_id: uniqueFilename,
-                });
-
-                image = result.secure_url;
-
-                if (oldImagePublicId) {
-                    await cloudinary.uploader.destroy(`mpp/facilities/${oldImagePublicId}`);
-                }
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
+                
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object Facilities
             let FacilitiesUpdateObj = {
-                image: req.file ? image : null,
+                image: req.file ? imageKey : FacilitiesGet.image,
             }
 
             //validasi menggunakan module fastest-validator
@@ -226,13 +217,6 @@ module.exports = {
             if (!FacilitiesGet) {
                 res.status(404).json(response(404, 'Facilities not found'));
                 return;
-            }
-
-            // Hapus gambar terkait jika ada
-            if (FacilitiesGet.image) {
-                const oldImagePublicId = FacilitiesGet.image ? FacilitiesGet.image.split('/').pop().split('.')[0] : null;
-
-                await cloudinary.uploader.destroy(`mpp/Facilities/${oldImagePublicId}`);
             }
 
             await Facilities.destroy({

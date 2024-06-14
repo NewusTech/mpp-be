@@ -1,18 +1,19 @@
 const { response } = require('../helpers/response.formatter');
 
 const { Artikel } = require('../models');
-
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -38,23 +39,23 @@ module.exports = {
                 },
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/artikel/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/artikel",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
+
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object artikel
@@ -62,7 +63,7 @@ module.exports = {
                 title: req.body.title,
                 slug: req.body.title ? slugify(req.body.title, { lower: true }) : null,
                 desc: req.body.desc,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : null,
             }
 
             //validasi menggunakan module fastest-validator
@@ -77,8 +78,7 @@ module.exports = {
                 where: {
                     slug: artikelCreateObj.slug
                 }
-            }
-            );
+            });
 
             //cek apakah slug sudah terdaftar
             if (dataGets) {
@@ -97,8 +97,8 @@ module.exports = {
         }
     },
 
-     //mendapatkan semua data artikel
-     getartikel: async (req, res) => {
+    //mendapatkan semua data artikel
+    getartikel: async (req, res) => {
         try {
             const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
@@ -191,8 +191,6 @@ module.exports = {
                 return;
             }
 
-            const oldImagePublicId = artikelGet.image ? artikelGet.image.split('/').pop().split('.')[0] : null;
-
             //membuat schema untuk validasi
             const schema = {
                 title: {
@@ -210,27 +208,23 @@ module.exports = {
                 },
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/artikel/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/artikel",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
 
-                if (oldImagePublicId) {
-                    await cloudinary.uploader.destroy(`mpp/artikel/${oldImagePublicId}`);
-                }
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object artikel
@@ -238,7 +232,7 @@ module.exports = {
                 title: req.body.title,
                 slug: req.body.title ? slugify(req.body.title, { lower: true }) : null,
                 desc: req.body.desc,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : artikelGet.image,
             }
 
             //validasi menggunakan module fastest-validator
@@ -286,13 +280,6 @@ module.exports = {
             if (!artikelGet) {
                 res.status(404).json(response(404, 'artikel not found'));
                 return;
-            }
-
-            // Hapus gambar terkait jika ada
-            if (artikelGet.image) {
-                const oldImagePublicId = artikelGet.image ? artikelGet.image.split('/').pop().split('.')[0] : null;
-
-                await cloudinary.uploader.destroy(`mpp/artikel/${oldImagePublicId}`);
             }
 
             await Artikel.destroy({

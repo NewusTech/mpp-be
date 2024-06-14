@@ -11,12 +11,14 @@ const fs = require('fs');
 const path = require('path');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
-const cloudinary = require("cloudinary").v2;
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
 });
 
 module.exports = {
@@ -36,23 +38,23 @@ module.exports = {
                 instansi_id: { type: "number", optional: true }
             }
 
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/layanan/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/layanan",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
+
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object layanan
@@ -60,7 +62,7 @@ module.exports = {
                 name: req.body.name,
                 slug: slugify(req.body.name, { lower: true }),
                 desc: req.body.desc,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : null,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
@@ -118,6 +120,7 @@ module.exports = {
                                 { name: { [Op.iLike]: `%${search}%` } }
                             ]
                         },
+                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
                         limit: limit,
                         offset: offset
                     }),
@@ -126,12 +129,13 @@ module.exports = {
                             [Op.or]: [
                                 { name: { [Op.iLike]: `%${search}%` } }
                             ]
-                        }
+                        },
                     })
                 ]);
             } else {
                 [layananGets, totalCount] = await Promise.all([
                     Layanan.findAll({
+                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
                         limit: limit,
                         offset: offset
                     }),
@@ -139,12 +143,20 @@ module.exports = {
                 ]);
             }
 
+            const modifiedLayananGets = layananGets.map(layanan => {
+                const { Instansi, ...otherData } = layanan.dataValues;
+                return {
+                    ...otherData,
+                    instansi_name: Instansi.name
+                };
+            });
+
             const pagination = generatePagination(totalCount, page, limit, '/api/user/layanan/get');
 
             res.status(200).json({
                 status: 200,
                 message: 'success get instansi',
-                data: layananGets,
+                data: modifiedLayananGets,
                 pagination: pagination
             });
 
@@ -175,6 +187,7 @@ module.exports = {
                                 { instansi_id: instansi_id }
                             ]
                         },
+                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
                         limit: limit,
                         offset: offset
                     }),
@@ -191,21 +204,34 @@ module.exports = {
                 [layananGets, totalCount] = await Promise.all([
                     Layanan.findAll({
                         where: {
-                         instansi_id: instansi_id
+                            instansi_id: instansi_id
                         },
+                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
                         limit: limit,
                         offset: offset
                     }),
-                    Layanan.count()
+                    Layanan.count({
+                        where: {
+                            instansi_id: instansi_id
+                        },
+                    })
                 ]);
             }
+
+            const modifiedLayananGets = layananGets.map(layanan => {
+                const { Instansi, ...otherData } = layanan.dataValues;
+                return {
+                    ...otherData,
+                    instansi_name: Instansi.name
+                };
+            });
 
             const pagination = generatePagination(totalCount, page, limit, `/api/user/layanan/dinas/get/${instansi_id}`);
 
             res.status(200).json({
                 status: 200,
                 message: 'success get instansi',
-                data: layananGets,
+                data: modifiedLayananGets,
                 pagination: pagination
             });
 
@@ -223,6 +249,7 @@ module.exports = {
                 where: {
                     id: req.params.id
                 },
+                include: [{ model: Instansi, attributes: ['id', 'name'] }]
             });
 
             //cek jika layanan tidak ada
@@ -231,8 +258,14 @@ module.exports = {
                 return;
             }
 
+            const { Instansi: instansiObj, ...otherData } = layananGet.dataValues;
+            const modifiedLayananGet = {
+                ...otherData,
+                instansi_name: instansiObj.name
+            };
+
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get layanan by id', layananGet));
+            res.status(200).json(response(200, 'success get layanan by id', modifiedLayananGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -265,29 +298,23 @@ module.exports = {
                 status: { type: "number", optional: true },
             }
 
-            const oldImagePublicId = layananGet.image ? layananGet.image.split('/').pop().split('.')[0] : null;
-
-            let image = null;
-
             if (req.file) {
-                const { mimetype, buffer, originalname } = req.file;
-                const base64 = Buffer.from(buffer).toString("base64");
-                const dataURI = `data:${mimetype};base64,${base64}`;
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
 
-                const now = new Date();
-                const timestamp = now.toISOString().replace(/[-:.]/g, '');
-                const uniqueFilename = `image_${timestamp}`;
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/layanan/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
 
-                const result = await cloudinary.uploader.upload(dataURI, {
-                    folder: "mpp/layanan",
-                    public_id: uniqueFilename,
-                });
+                const command = new PutObjectCommand(uploadParams);
 
-                image = result.secure_url;
+                await s3Client.send(command);
 
-                if (oldImagePublicId) {
-                    await cloudinary.uploader.destroy(`mpp/layanan/${oldImagePublicId}`);
-                }
+                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
             //buat object layanan
@@ -295,7 +322,7 @@ module.exports = {
                 name: req.body.name,
                 slug: slugify(req.body.name, { lower: true }),
                 desc: req.body.desc,
-                image: req.file ? image : null,
+                image: req.file ? imageKey : layananGet.image,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
                 active_online: req.body.active_online ? Number(req.body.active_online) : null,
                 status: req.body.status ? Number(req.body.status) : null,
@@ -346,13 +373,6 @@ module.exports = {
             if (!layananGet) {
                 res.status(404).json(response(404, 'layanan not found'));
                 return;
-            }
-
-            // Hapus gambar terkait jika ada
-            if (layananGet.image) {
-                const oldImagePublicId = layananGet.image ? layananGet.image.split('/').pop().split('.')[0] : null;
-
-                await cloudinary.uploader.destroy(`mpp/layanan/${oldImagePublicId}`);
             }
 
             await Layanan.destroy({
@@ -431,9 +451,9 @@ module.exports = {
                 const statusCounts = { menunggu: 0, selesai: 0, gagal: 0 };
 
                 layanan.Layananformnums.forEach(formnum => {
-                    if (formnum.status === 0 || formnum.status === 1) statusCounts.menunggu++;
-                    if (formnum.status === 2) statusCounts.selesai++;
-                    if (formnum.status === 3) statusCounts.gagal++;
+                    if (formnum.status === 0 || formnum.status === 1 || formnum.status === 2) statusCounts.menunggu++;
+                    if (formnum.status === 3) statusCounts.selesai++;
+                    if (formnum.status === 4) statusCounts.gagal++;
                 });
 
                 total_menunggu += statusCounts.menunggu;
@@ -528,9 +548,9 @@ module.exports = {
                 const statusCounts = { menunggu: 0, selesai: 0, gagal: 0 };
 
                 layanan.Layananformnums.forEach(formnum => {
-                    if (formnum.status === 0 || formnum.status === 1) statusCounts.menunggu++;
-                    if (formnum.status === 2) statusCounts.selesai++;
-                    if (formnum.status === 3) statusCounts.gagal++;
+                    if (formnum.status === 0 || formnum.status === 1 || formnum.status === 2) statusCounts.menunggu++;
+                    if (formnum.status === 3) statusCounts.selesai++;
+                    if (formnum.status === 4) statusCounts.gagal++;
                 });
 
                 total_menunggu += statusCounts.menunggu;
@@ -629,16 +649,16 @@ module.exports = {
                 active_online: { type: "boolean", optional: true },
                 active_offline: { type: "boolean", optional: true }
             };
-    
+
             // Check if the request body is an array
             if (!Array.isArray(req.body)) {
                 res.status(400).json(response(400, 'Request body must be an array of objects'));
                 return;
             }
-    
+
             let errors = [];
             let updatedLayanans = [];
-    
+
             // Validate and process each object in the input array
             for (let input of req.body) {
                 // Create the layanan update object
@@ -647,14 +667,14 @@ module.exports = {
                     active_online: input.active_online,
                     active_offline: input.active_offline
                 };
-    
+
                 // Validate the object
                 const validate = v.validate(layananUpdateObj, schema);
                 if (validate.length > 0) {
                     errors.push({ input, errors: validate });
                     continue;
                 }
-    
+
                 // Update layanan in the database
                 await Layanan.update(
                     {
@@ -665,18 +685,18 @@ module.exports = {
                         where: { id: input.id }
                     }
                 );
-    
+
                 // Fetch the updated layanan
                 let updatedLayanan = await Layanan.findOne({ where: { id: input.id } });
                 updatedLayanans.push(updatedLayanan);
             }
-    
+
             // If there are validation errors, respond with them
             if (errors.length > 0) {
                 res.status(400).json(response(400, 'Validation failed', errors));
                 return;
             }
-    
+
             // Respond with the successfully updated objects
             res.status(200).json(response(200, 'Successfully updated layanans', updatedLayanans));
         } catch (err) {

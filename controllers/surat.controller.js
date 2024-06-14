@@ -1,17 +1,10 @@
 const { response } = require('../helpers/response.formatter');
 const { Instansi, Layanan, Layanansurat, Layananformnum, Userinfo, sequelize } = require('../models');
-const cloudinary = require("cloudinary").v2;
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const Validator = require("fastest-validator");
 const v = new Validator();
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
-});
 
 module.exports = {
 

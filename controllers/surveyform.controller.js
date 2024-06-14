@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layanan, Surveyform, Instansi } = require('../models');
+const { Surveyform, Instansi } = require('../models');
 require('dotenv').config()
 
 const { Op } = require('sequelize');
