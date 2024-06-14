@@ -194,7 +194,6 @@ module.exports = {
             transaction = await sequelize.transaction();
     
             if (deleteAll) {
-                 // Menghapus audio di Cloudinary
                  const antrianAudio = await Antrian.findAll({
                     where: {
                         instansi_id: data.instansi_id
@@ -304,7 +303,6 @@ module.exports = {
             const panggilanAntrian = `Antrian ${antrianBerikutnya.code}, silahkan ke loket ${antrianBerikutnya.Instansi.name}`;
             const languageCode = 'id';
 
-            // Fungsi untuk konversi teks menjadi suara dan mengunggah langsung ke Cloudinary
             const generateAndUploadAudio = async (text, language) => {
                 try {
                     const url = await tts.getAudioUrl(text, {

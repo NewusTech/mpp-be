@@ -53,7 +53,6 @@ module.exports = {
                 layananformnum_id: createdLayananformnum.id
             }));
 
-            // Upload files to Cloudinary and update datafile with URLs
             const files = req.files;
             let fileUploadPromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
@@ -183,8 +182,6 @@ module.exports = {
                 );
             }
 
-
-            // Handle file uploads to Cloudinary and update corresponding database entries
             const files = req.files;
             const folderPath = { fileinput: "mpp/file_pemohon" };
 
