@@ -40,6 +40,8 @@ module.exports = {
             const schema = {
                 instansi_id: { type: "number" },
                 layanan_id: { type: "number" },
+                tanggal: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
+                waktu: { type: "string", optional: true },
             };
 
             const userinfo_id = data.role === "User" ? data.userId : null;
@@ -70,6 +72,8 @@ module.exports = {
                 instansi_id: Number(req.body.instansi_id),
                 layanan_id: Number(req.body.layanan_id),
                 userinfo_id: userinfo_id ?? null,
+                tanggal: req.body.tanggal ?? null,
+                waktu: req.body.waktu ?? null,
                 status: 0
             };
 

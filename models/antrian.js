@@ -24,6 +24,8 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.BOOLEAN,
     qrcode: DataTypes.STRING,
     audio: DataTypes.STRING,
+    tanggal: DataTypes.DATEONLY,
+    waktu: DataTypes.TIME,
   }, {
     sequelize,
     modelName: 'Antrian',

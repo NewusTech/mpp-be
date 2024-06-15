@@ -30,7 +30,7 @@ module.exports = {
             };
 
             const idlayanan = req.params.idlayanan;
-            const iduser = data.userId;
+            const iduser = data.role === "User" ? data.userId : req.body.userId;
 
             if (!iduser) {
                 throw new Error('User ID is required');
@@ -295,11 +295,78 @@ module.exports = {
         }
     },
 
+    //upload surat hasil permohonan
+    uploadfilehasil: async (req, res) => {
+        try {
+
+            let dataGet = await Layananformnum.findOne({
+                where: {
+                    id: req.params.idlayanannum
+                }
+            })
+
+            if (!dataGet) {
+                res.status(404).json(response(404, 'data not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                fileoutput: { type: "string", optional: true }
+            }
+
+            if (req.file) {
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `mpp/fileoutput/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
+
+                dataKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+            }
+
+            //buat object instansi
+            let fileUpdateObj = {
+                fileoutput: req.file ? dataKey : null,
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(fileUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update instansi
+            await Layananformnum.update(fileUpdateObj, {
+                where: {
+                    id: req.params.idlayanannum,
+                }
+            })
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update'));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
     //get history input form user
     gethistoryformuser: async (req, res) => {
         try {
             const search = req.query.search ?? null;
             const status = req.query.status ?? null;
+            const isonline = req.query.isonline ?? null;
             const userinfo_id = data.role === "User" ? data.userId : null;
             const instansi_id = Number(req.query.instansi_id);
             const layanan_id = Number(req.query.layanan_id);
@@ -315,6 +382,9 @@ module.exports = {
             const WhereClause2 = {};
             const WhereClause3 = {};
 
+            if (isonline) {
+                WhereClause.isonline = isonline;
+            }
             if (userinfo_id) {
                 WhereClause.userinfo_id = userinfo_id;
             }
@@ -396,6 +466,7 @@ module.exports = {
                     userinfo_id: data.userinfo_id,
                     name: data.Userinfo.name,
                     status: data.status,
+                    isonline: data.isonline,
                     layanan_id: data.layanan_id,
                     layanan_name: data.Layanan ? data.Layanan.name : null,
                     layanan_image: data.Layanan ? data.Layanan.image : null,
