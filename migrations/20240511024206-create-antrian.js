@@ -27,6 +27,12 @@ module.exports = {
       audio: {
         type: Sequelize.STRING,
       },
+      tanggal: {
+        type: Sequelize.DATEONLY
+      },
+      waktu: {
+        type: Sequelize.TIME
+      },
       status: {
         type: Sequelize.BOOLEAN
       },
