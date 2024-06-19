@@ -11,6 +11,7 @@ route.get('/user/layanan/form/:layananid', [mid.checkRolesAndLogout(['Admin Inst
 route.post('/user/layananform/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayananform);
 route.post('/user/layananform/createmulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createmultilayananform);
 route.put('/user/layananform/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayananform); 
+route.put('/user/layananform/updatemulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatemultilayananform); 
 route.delete('/user/layananform/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.deletelayananform);
 
 //get from docs by layanan
@@ -19,6 +20,7 @@ route.get('/user/layanan/docs/:layananid', [mid.checkRolesAndLogout(['Admin Inst
 route.post('/user/layanandocs/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createlayanandocs);
 route.post('/user/layanandocs/createmulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.createmultilayanandocs);
 route.put('/user/layanandocs/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatelayanandocs); 
+route.put('/user/layanandocs/updatemulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.updatemultilayanandocs); 
 
 //get semua from --> gak bakal kepake
 route.get('/user/layananform/get', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananformController.getlayananform); 

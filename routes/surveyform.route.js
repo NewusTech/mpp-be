@@ -11,6 +11,8 @@ route.post('/user/surveyform/createmulti', [mid.checkRolesAndLogout(['Admin Inst
 route.get('/user/survey/form/:instansiid', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], surveyformController.getsurveybydinas); 
 
 route.put('/user/surveyform/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], surveyformController.updatesurveyform); 
+route.put('/user/surveyform/updatemulti', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], surveyformController.updatemultisurveyform); 
+
 route.delete('/user/surveyform/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], surveyformController.deletesurveyform);
 
 module.exports = route;
