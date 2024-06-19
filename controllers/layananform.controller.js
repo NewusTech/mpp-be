@@ -6,15 +6,6 @@ require('dotenv').config()
 const { Op } = require('sequelize');
 const Validator = require("fastest-validator");
 const v = new Validator();
-const { S3Client } = require("@aws-sdk/client-s3");
-
-const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    }
-});
 
 module.exports = {
 
@@ -360,6 +351,113 @@ module.exports = {
         }
     },
 
+    updatemultilayananform: async (req, res) => {
+        const transaction = await sequelize.transaction();
+    
+        try {
+            // Define schema for validation
+            const schema = {
+                id: { type: "number", min: 1 },
+                field: { type: "string", min: 1 },
+                tipedata: { type: "string", min: 1, optional: true },
+                maxinput: { type: "number", optional: true },
+                mininput: { type: "number", optional: true },
+                status: { type: "number", optional: true },
+                isrequired: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true },
+                datajson: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "number" },
+                            key: { type: "string" }
+                        },
+                        required: ["id", "key"]
+                    },
+                    optional: true
+                }
+            };
+    
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+    
+            // Initialize arrays for validation errors and successfully updated objects
+            let errors = [];
+            let updatedForms = [];
+    
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Check if the layananform exists
+                let layananformGet = await Layananform.findOne({
+                    where: {
+                        id: input.id
+                    }
+                });
+    
+                if (!layananformGet) {
+                    errors.push({ input, errors: ['layananform not found'] });
+                    continue;
+                }
+    
+                // Create the layananform update object
+                let layananformUpdateObj = {
+                    id: input.id,
+                    field: input.field,
+                    tipedata: input.tipedata,
+                    maxinput: input.maxinput ? Number(input.maxinput) : undefined,
+                    mininput: input.mininput ? Number(input.mininput) : undefined,
+                    isrequired: input.isrequired ? Number(input.isrequired) : undefined,
+                    status: input.status ? Number(input.status) : undefined,
+                    layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : undefined,
+                    datajson: input.datajson || null
+                };
+    
+                // Validate the object
+                const validate = v.validate(layananformUpdateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+    
+                // Update layananform in the database
+                await Layananform.update(layananformUpdateObj, {
+                    where: {
+                        id: input.id,
+                    },
+                    transaction
+                });
+    
+                // Get the updated layananform
+                let layananformAfterUpdate = await Layananform.findOne({
+                    where: {
+                        id: input.id,
+                    }
+                });
+    
+                updatedForms.push(layananformAfterUpdate);
+            }
+    
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+    
+            // Respond with the successfully updated objects
+            await transaction.commit();
+            res.status(200).json(response(200, 'Successfully updated layananform(s)', updatedForms));
+        } catch (err) {
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+    
+
     //menghapus layananform berdasarkan id
     deletelayananform: async (req, res) => {
         try {
@@ -637,5 +735,97 @@ module.exports = {
             console.log(err);
         }
     },
+
+    updatemultilayanandocs: async (req, res) => {
+        const transaction = await sequelize.transaction(); // Assuming sequelize is properly configured
+    
+        try {
+            // Define schema for validation
+            const schema = {
+                field: { type: "string", min: 1 },
+                tipedata: { type: "string", min: 1, optional: true },
+                status: { type: "number", optional: true },
+                isrequired: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true }
+            };
+    
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+    
+            // Initialize arrays for validation errors and successfully updated objects
+            let errors = [];
+            let updatedDocuments = [];
+    
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Check if the layanandocs exists
+                let layanandocsGet = await Layananform.findOne({
+                    where: {
+                        id: input.id
+                    }
+                });
+    
+                if (!layanandocsGet) {
+                    errors.push({ input, errors: ['layanandocs not found'] });
+                    continue;
+                }
+    
+                // Create the layanandocs update object
+                let layanandocsUpdateObj = {
+                    id: input.id,
+                    field: input.field,
+                    tipedata: input.tipedata,
+                    isrequired: input.isrequired !== undefined ? Number(input.isrequired) : undefined,
+                    status: input.status !== undefined ? Number(input.status) : undefined,
+                    layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : undefined
+                };
+    
+                // Filter out undefined values to avoid unnecessary updates
+                layanandocsUpdateObj = Object.fromEntries(Object.entries(layanandocsUpdateObj).filter(([_, v]) => v !== undefined));
+    
+                // Validate the object
+                const validate = v.validate(layanandocsUpdateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+    
+                // Update layanandocs in the database
+                await Layananform.update(layanandocsUpdateObj, {
+                    where: {
+                        id: input.id,
+                    },
+                    transaction
+                });
+    
+                // Get the updated layanandocs
+                let layanandocsAfterUpdate = await Layananform.findOne({
+                    where: {
+                        id: input.id,
+                    }
+                });
+    
+                updatedDocuments.push(layanandocsAfterUpdate);
+            }
+    
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+    
+            // Commit transaction and respond with the successfully updated objects
+            await transaction.commit();
+            res.status(200).json(response(200, 'Successfully updated layanandocs', updatedDocuments));
+        } catch (err) {
+            // Rollback transaction on error
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.error(err);
+        }
+    }
 
 }

@@ -273,9 +273,9 @@ module.exports = {
                 email: req.body.email,
                 alamat: req.body.alamat,
                 image: req.file ? imageKey : instansiGet.image,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
-                active_online: req.body.active_online ? Number(req.body.active_online) : null,
-                status: req.body.status ? Number(req.body.status) : null,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : undefined,
+                active_online: req.body.active_online ? Number(req.body.active_online) : undefined,
+                status: req.body.status ? Number(req.body.status) : undefined,
                 jam_buka: req.body.jam_buka,
                 jam_tutup: req.body.jam_tutup
             }

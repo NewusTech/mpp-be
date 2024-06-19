@@ -216,6 +216,88 @@ module.exports = {
         }
     },
 
+    updatemultisurveyform: async (req, res) => {
+        try {
+            // Define schema for validation
+            const schema = {
+                field: { type: "string", min: 1 },
+                status: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true }
+            };
+    
+            // Check if the request body is an array
+            if (!Array.isArray(req.body)) {
+                res.status(400).json(response(400, 'Request body must be an array of objects'));
+                return;
+            }
+    
+            // Initialize arrays for validation errors and successfully updated objects
+            let errors = [];
+            let updatedSurveyforms = [];
+    
+            // Validate and process each object in the input array
+            for (let input of req.body) {
+                // Check if the surveyform exists
+                let surveyformGet = await Surveyform.findOne({
+                    where: {
+                        id: input.id
+                    }
+                });
+    
+                if (!surveyformGet) {
+                    errors.push({ input, errors: ['surveyform not found'] });
+                    continue;
+                }
+    
+                // Create the surveyform update object
+                let surveyformUpdateObj = {
+                    id: input.id,
+                    field: input.field,
+                    status: input.status !== undefined ? Number(input.status) : undefined,
+                    layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : undefined
+                };
+    
+                // Filter out undefined values to avoid unnecessary updates
+                surveyformUpdateObj = Object.fromEntries(Object.entries(surveyformUpdateObj).filter(([_, v]) => v !== undefined));
+    
+                // Validate the object
+                const validate = v.validate(surveyformUpdateObj, schema);
+                if (validate.length > 0) {
+                    errors.push({ input, errors: validate });
+                    continue;
+                }
+    
+                // Update surveyform in the database
+                await Surveyform.update(surveyformUpdateObj, {
+                    where: {
+                        id: input.id,
+                    }
+                });
+    
+                // Get the updated surveyform
+                let surveyformAfterUpdate = await Surveyform.findOne({
+                    where: {
+                        id: input.id,
+                    }
+                });
+    
+                updatedSurveyforms.push(surveyformAfterUpdate);
+            }
+    
+            // If there are validation errors, respond with them
+            if (errors.length > 0) {
+                res.status(400).json(response(400, 'Validation failed', errors));
+                return;
+            }
+    
+            // Respond with the successfully updated objects
+            res.status(200).json(response(200, 'Successfully updated surveyforms', updatedSurveyforms));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.error(err);
+        }
+    },
+
     //menghapus surveyform berdasarkan id
     deletesurveyform: async (req, res) => {
         try {

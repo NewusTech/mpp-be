@@ -438,7 +438,7 @@ module.exports = {
                         },
                         {
                             model: Userinfo,
-                            attributes: ['name'],
+                            attributes: ['name', 'nik'],
                             where: WhereClause3,
                         }
                     ],
@@ -465,6 +465,7 @@ module.exports = {
                     id: data.id,
                     userinfo_id: data.userinfo_id,
                     name: data.Userinfo.name,
+                    nik: data.Userinfo.nik,
                     status: data.status,
                     isonline: data.isonline,
                     layanan_id: data.layanan_id,
