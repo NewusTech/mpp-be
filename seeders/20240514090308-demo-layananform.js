@@ -4,7 +4,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Layananforms = [
       {
-        field: 'Nama / Instansi',
+        field: 'Nama Pelapor',
         tipedata: 'string',
         maxinput: 120,
         mininput: 3,
@@ -15,7 +15,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Lokasi',
+        field: 'Identitas Tersangka',
         tipedata: 'string',
         maxinput: null,
         mininput: 3,
@@ -26,8 +26,8 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Perkiraan Peserta',
-        tipedata: 'number',
+        field: 'Deskripsi fisik',
+        tipedata: 'textarea',
         maxinput: null,
         mininput: 1,
         status: true,
@@ -37,7 +37,18 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Foto Lokasi',
+        field: 'Perkiraan Kerugian',
+        tipedata: 'number',
+        maxinput: null,
+        mininput: null,
+        status: true,
+        isrequired: true,
+        layanan_id:1,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        field: 'Barang Bukti',
         tipedata: 'file',
         maxinput: null,
         mininput: null,
@@ -48,7 +59,18 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Alamat Domisili Tujuan',
+        field: 'Tanggal Kejadian',
+        tipedata: 'date',
+        maxinput: null,
+        mininput: null,
+        status: true,
+        isrequired: true,
+        layanan_id:1,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        field: 'Nama Majelis Taklim',
         tipedata: 'string',
         maxinput: 120,
         mininput: 3,
@@ -59,30 +81,8 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Alasan',
-        tipedata: 'string',
-        maxinput: null,
-        mininput: 3,
-        status: false,
-        isrequired: true,
-        layanan_id:2,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        field: 'Umur',
-        tipedata: 'number',
-        maxinput: null,
-        mininput: 17,
-        status: true,
-        isrequired: true,
-        layanan_id:2,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        field: 'Tanggal Pindah',
-        tipedata: 'date',
+        field: 'Surat Permohonan',
+        tipedata: 'file',
         maxinput: null,
         mininput: null,
         status: true,

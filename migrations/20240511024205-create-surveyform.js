@@ -12,6 +12,9 @@ module.exports = {
       field: {
         type: Sequelize.STRING
       },
+      desc: {
+        type: Sequelize.TEXT
+      },
       status: {
         type: Sequelize.BOOLEAN
       },

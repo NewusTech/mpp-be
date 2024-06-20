@@ -44,6 +44,8 @@ module.exports = {
                 waktu: { type: "string", optional: true },
             };
 
+            console.log(data)
+
             const userinfo_id = data.role === "User" ? data.userId : null;
 
             // Mendapatkan tanggal hari ini
@@ -92,7 +94,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `mpp/qrcode/${codeBookingfix}`,
+                    Key: `dir_mpp/qrcode/${codeBookingfix}`,
                     Body: qrCodeBuffer,
                     ACL: 'public-read',
                     ContentType: 'image/png'

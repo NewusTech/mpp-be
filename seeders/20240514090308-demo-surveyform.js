@@ -11,7 +11,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Apakah pelayanan dinas kesehatan di MPP sangat baik?',
+        field: 'Apakah pelayanan polres di MPP sangat baik?',
         status: true,
         instansi_id:1,
         createdAt: new Date(),
@@ -25,7 +25,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        field: 'Apakah pelayanan disdukcapil di MPP sangat baik?',
+        field: 'Apakah pelayanan pengadilan agama di MPP sangat baik?',
         status: false,
         instansi_id:2,
         createdAt: new Date(),

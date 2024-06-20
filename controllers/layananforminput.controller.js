@@ -26,7 +26,7 @@ module.exports = {
 
         try {
             const folderPaths = {
-                fileinput: "mpp/file_pemohon",
+                fileinput: "dir_mpp/file_pemohon",
             };
 
             const idlayanan = req.params.idlayanan;
@@ -183,7 +183,7 @@ module.exports = {
             }
 
             const files = req.files;
-            const folderPath = { fileinput: "mpp/file_pemohon" };
+            const folderPath = { fileinput: "dir_mpp/file_pemohon" };
 
             let fileUpdatePromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
@@ -321,7 +321,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `mpp/fileoutput/${uniqueFileName}`,
+                    Key: `dir_mpp/fileoutput/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype

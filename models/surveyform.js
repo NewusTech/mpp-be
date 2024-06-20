@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Surveyform.init({
     field: DataTypes.STRING,
+    desc: DataTypes.TEXT,
     instansi_id: DataTypes.INTEGER,
     status: DataTypes.BOOLEAN,
   }, {

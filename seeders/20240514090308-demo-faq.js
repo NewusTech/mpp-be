@@ -4,14 +4,32 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Faqs = [
       {
-        question: 'Bagaimana Cara Menggunakan MPP Online?',
-        answer: 'Tinggal download dan pake, jangan katro',
+        question: 'Apa itu Mal Pelayanan Publik?',
+        answer: 'Mal Pelayanan Publik adalah pusat layanan terpadu yang menyediakan berbagai layanan administrasi dan perizinan dari berbagai instansi pemerintah di satu lokasi untuk memudahkan masyarakat',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        question: 'Apakah user harus download aplikasi untuk menggunakan MPP online?',
-        answer: 'Jika user tidak ingin download apk MPP online, user dapat menggunakan versi web di link www.xxx.com',
+        question: 'Bagaimana cara mengakses layanan di Mal Pelayanan Publik?',
+        answer: 'Anda bisa datang langsung ke lokasi Mal Pelayanan Publik atau mengakses beberapa layanan secara online melalui website resmi atau aplikasi mpp digital lampung timur.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        question: 'Apa jam operasional Mal Pelayanan Publik?',
+        answer: 'Jam operasional mal pelayanan publik dari Senin hingga Jumat, pukul 08.00 - 16.00',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        question: 'Apa saja dokumen yang perlu dibawa saat mengakses layanan?',
+        answer: 'Dokumen yang dibutuhkan tergantung pada jenis layanan yang Anda akses. Informasi lebih rinci tersedia di website ini atau di meja informasi Mal Pelayanan Publik.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        question: 'Apakah layanan di Mal Pelayanan Publik aman dan terpercaya?',
+        answer: 'Ya, semua layanan di Mal Pelayanan Publik dijamin keamanannya dan dikelola oleh instansi resmi pemerintah.',
         createdAt: new Date(),
         updatedAt: new Date()
       },

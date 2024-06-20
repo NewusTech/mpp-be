@@ -11,8 +11,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 route.get('/user/alluserinfo/get', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.getuserdata); 
-route.get('/user/alluserinfo/get/:id', [mid.checkRolesAndLogout(['Super Admin', 'User'])], userinfoController.getuserById); 
-route.delete('/user/alluserinfo/delete/:id', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
+route.get('/user/alluserinfo/get/:slug', [mid.checkRolesAndLogout(['Super Admin', 'User'])], userinfoController.getuserByslug); 
+route.delete('/user/alluserinfo/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
 
 route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.fields([
     { name: 'filektp', maxCount: 1 },
@@ -22,8 +22,8 @@ route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 
     { name: 'fileijazahsma', maxCount: 1 },
     { name: 'fileijazahlain', maxCount: 1 }
 ]), userinfoController.createuserinfo); 
-route.put('/user/userinfo/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], userinfoController.updateuserinfo);
-route.put('/user/userinfo/updatedocs/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], upload.fields([
+route.put('/user/userinfo/update/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], userinfoController.updateuserinfo);
+route.put('/user/userinfo/updatedocs/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], upload.fields([
     { name: 'filektp', maxCount: 1 },
     { name: 'filekk', maxCount: 1 },
     { name: 'fileijazahsd', maxCount: 1 },
