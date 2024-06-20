@@ -154,13 +154,13 @@ module.exports = {
         }
     },
 
-    //mendapatkan data user berdasarkan id
+    //mendapatkan data user berdasarkan slug
     //UTK ADMIN NGECEK DATA PEMOHON
-    getuserById: async (req, res) => {
+    getuserByslug: async (req, res) => {
         try {
             let userGet = await Userinfo.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 },
             });
 
@@ -169,7 +169,7 @@ module.exports = {
                 return;
             }
 
-            res.status(200).json(response(200, 'success get user by id', userGet));
+            res.status(200).json(response(200, 'success get user by slug', userGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -183,12 +183,12 @@ module.exports = {
 
         try {
             const folderPaths = {
-                filektp: "mpp/datauser/filektp",
-                filekk: "mpp/datauser/filekk",
-                fileijazahsd: "mpp/datauser/fileijazahsd",
-                fileijazahsmp: "mpp/datauser/fileijazahsmp",
-                fileijazahsma: "mpp/datauser/fileijazahsma",
-                fileijazahlain: "mpp/datauser/fileijazahlain",
+                filektp: "dir_mpp/datauser/filektp",
+                filekk: "dir_mpp/datauser/filekk",
+                fileijazahsd: "dir_mpp/datauser/fileijazahsd",
+                fileijazahsmp: "dir_mpp/datauser/fileijazahsmp",
+                fileijazahsma: "dir_mpp/datauser/fileijazahsma",
+                fileijazahlain: "dir_mpp/datauser/fileijazahlain",
             };
 
             //membuat schema untuk validasi
@@ -325,7 +325,7 @@ module.exports = {
             //mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -387,14 +387,14 @@ module.exports = {
             //update userinfo
             await Userinfo.update(userinfoUpdateObj, {
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
             //mendapatkan data userinfo setelah update
             let userinfoAfterUpdate = await Userinfo.findOne({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
@@ -412,18 +412,18 @@ module.exports = {
     updateuserdocs: async (req, res) => {
         try {
             const folderPaths = {
-                filektp: "mpp/datauser/filektp",
-                filekk: "mpp/datauser/filekk",
-                fileijazahsd: "mpp/datauser/fileijazahsd",
-                fileijazahsmp: "mpp/datauser/fileijazahsmp",
-                fileijazahsma: "mpp/datauser/fileijazahsma",
-                fileijazahlain: "mpp/datauser/fileijazahlain",
+                filektp: "dir_mpp/datauser/filektp",
+                filekk: "dir_mpp/datauser/filekk",
+                fileijazahsd: "dir_mpp/datauser/fileijazahsd",
+                fileijazahsmp: "dir_mpp/datauser/fileijazahsmp",
+                fileijazahsma: "dir_mpp/datauser/fileijazahsma",
+                fileijazahlain: "dir_mpp/datauser/fileijazahlain",
             };
 
             //mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -498,14 +498,14 @@ module.exports = {
             //update userinfo
             await Userinfo.update(userinfoUpdateObj, {
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
             //mendapatkan data userinfo setelah update
             let userinfoAfterUpdate = await Userinfo.findOne({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
@@ -518,14 +518,14 @@ module.exports = {
         }
     },
 
-    //menghapus user berdasarkan id
+    //menghapus user berdasarkan slug
     deleteuser: async (req, res) => {
         try {
 
             //mendapatkan data user untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -538,7 +538,7 @@ module.exports = {
             //mendapatkan data akun user
             let userGet = await User.findOne({
                 where: {
-                    userinfo_id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -549,27 +549,9 @@ module.exports = {
                 return;
             }
 
-            const folderPaths = {
-                filektp: "mpp/datauser/filektp",
-                filekk: "mpp/datauser/filekk",
-                fileijazahsd: "mpp/datauser/fileijazahsd",
-                fileijazahsmp: "mpp/datauser/fileijazahsmp",
-                fileijazahsma: "mpp/datauser/fileijazahsma",
-                fileijazahlain: "mpp/datauser/fileijazahlain",
-            };
-
-            const oldImageUrls = {
-                filektp: userinfoGet.filektp,
-                filekk: userinfoGet.filekk,
-                fileijazahsd: userinfoGet.fileijazahsd,
-                fileijazahsmp: userinfoGet.fileijazahsmp,
-                fileijazahsma: userinfoGet.fileijazahsma,
-                fileijazahlain: userinfoGet.fileijazahlain,
-            };
-
             await Userinfo.destroy({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 

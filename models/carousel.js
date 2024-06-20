@@ -3,18 +3,15 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Artikel extends Model {
+  class Carousel extends Model {
     static associate(models) {
     }
   }
-  Artikel.init({
-    title: DataTypes.STRING,
-    slug: DataTypes.STRING,
-    desc: DataTypes.TEXT,
+  Carousel.init({
     image: DataTypes.STRING,
   }, {
     sequelize,
-    modelName: 'Artikel',
+    modelName: 'Carousel',
   });
-  return Artikel;
+  return Carousel;
 };

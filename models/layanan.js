@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   Layanan.init({
     name: DataTypes.STRING,
     slug: DataTypes.STRING,
-    desc: DataTypes.STRING,
+    desc: DataTypes.TEXT,
     image: DataTypes.STRING,
     instansi_id: DataTypes.INTEGER,
     active_online: DataTypes.BOOLEAN,

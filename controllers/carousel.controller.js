@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Facilities } = require('../models');
+const { Carousel } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
@@ -15,8 +15,8 @@ const s3Client = new S3Client({
 
 module.exports = {
 
-    //membuat Facilities
-    createFacilities: async (req, res) => {
+    //membuat Carousel
+    createCarousel: async (req, res) => {
         try {
 
             //membuat schema untuk validasi
@@ -33,7 +33,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/facilities/${uniqueFileName}`,
+                    Key: `dir_mpp/carousel/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -46,52 +46,52 @@ module.exports = {
                 imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
-            //buat object Facilities
-            let FacilitiesCreateObj = {
+            //buat object Carousel
+            let CarouselCreateObj = {
                 image: req.file ? imageKey : null,
             }
 
             //validasi menggunakan module fastest-validator
-            const validate = v.validate(FacilitiesCreateObj, schema);
+            const validate = v.validate(CarouselCreateObj, schema);
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
 
-            //buat Facilities
-            let FacilitiesCreate = await Facilities.create(FacilitiesCreateObj);
+            //buat Carousel
+            let CarouselCreate = await Carousel.create(CarouselCreateObj);
 
             //response menggunakan helper response.formatter
-            res.status(201).json(response(201, 'success create Facilities', FacilitiesCreate));
+            res.status(201).json(response(201, 'success create Carousel', CarouselCreate));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mendapatkan semua data Facilities
-    getFacilities: async (req, res) => {
+    //mendapatkan semua data Carousel
+    getCarousel: async (req, res) => {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
-            let FacilitiesGets;
+            let CarouselGets;
             let totalCount;
 
-            [FacilitiesGets, totalCount] = await Promise.all([
-                Facilities.findAll({
+            [CarouselGets, totalCount] = await Promise.all([
+                Carousel.findAll({
                     limit: limit,
                     offset: offset
                 }),
-                Facilities.count()
+                Carousel.count()
             ]);
 
-            const pagination = generatePagination(totalCount, page, limit, '/api/user/facilities/get');
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/carousel/get');
 
             res.status(200).json({
                 status: 200,
-                message: 'success get Facilities',
-                data: FacilitiesGets,
+                message: 'success get Carousel',
+                data: CarouselGets,
                 pagination: pagination
             });
 
@@ -101,43 +101,43 @@ module.exports = {
         }
     },
 
-    //mendapatkan data Facilities berdasarkan id
-    getFacilitiesById: async (req, res) => {
+    //mendapatkan data Carousel berdasarkan id
+    getCarouselById: async (req, res) => {
         try {
-            //mendapatkan data Facilities berdasarkan id
-            let FacilitiesGet = await Facilities.findOne({
+            //mendapatkan data Carousel berdasarkan id
+            let CarouselGet = await Carousel.findOne({
                 where: {
                     id: req.params.id
                 },
             });
 
-            //cek jika Facilities tidak ada
-            if (!FacilitiesGet) {
-                res.status(404).json(response(404, 'Facilities not found'));
+            //cek jika Carousel tidak ada
+            if (!CarouselGet) {
+                res.status(404).json(response(404, 'Carousel not found'));
                 return;
             }
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get Facilities by id', FacilitiesGet));
+            res.status(200).json(response(200, 'success get Carousel by id', CarouselGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
 
-    //mengupdate Facilities berdasarkan id
-    updateFacilities: async (req, res) => {
+    //mengupdate Carousel berdasarkan id
+    updateCarousel: async (req, res) => {
         try {
-            //mendapatkan data Facilities untuk pengecekan
-            let FacilitiesGet = await Facilities.findOne({
+            //mendapatkan data Carousel untuk pengecekan
+            let CarouselGet = await Carousel.findOne({
                 where: {
                     id: req.params.id
                 }
             })
 
-            //cek apakah data Facilities ada
-            if (!FacilitiesGet) {
-                res.status(404).json(response(404, 'Facilities not found'));
+            //cek apakah data Carousel ada
+            if (!CarouselGet) {
+                res.status(404).json(response(404, 'Carousel not found'));
                 return;
             }
 
@@ -155,7 +155,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/facilities/${uniqueFileName}`,
+                    Key: `dir_mpp/carousel/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -167,34 +167,34 @@ module.exports = {
                 imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
-            //buat object Facilities
-            let FacilitiesUpdateObj = {
-                image: req.file ? imageKey : FacilitiesGet.image,
+            //buat object Carousel
+            let CarouselUpdateObj = {
+                image: req.file ? imageKey : CarouselGet.image,
             }
 
             //validasi menggunakan module fastest-validator
-            const validate = v.validate(FacilitiesUpdateObj, schema);
+            const validate = v.validate(CarouselUpdateObj, schema);
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
 
-            //update Facilities
-            await Facilities.update(FacilitiesUpdateObj, {
+            //update Carousel
+            await Carousel.update(CarouselUpdateObj, {
                 where: {
                     id: req.params.id,
                 }
             })
 
-            //mendapatkan data Facilities setelah update
-            let FacilitiesAfterUpdate = await Facilities.findOne({
+            //mendapatkan data Carousel setelah update
+            let CarouselAfterUpdate = await Carousel.findOne({
                 where: {
                     id: req.params.id,
                 }
             })
 
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success update Facilities', FacilitiesAfterUpdate));
+            res.status(200).json(response(200, 'success update Carousel', CarouselAfterUpdate));
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
@@ -202,30 +202,30 @@ module.exports = {
         }
     },
 
-    //menghapus Facilities berdasarkan id
-    deleteFacilities: async (req, res) => {
+    //menghapus Carousel berdasarkan id
+    deleteCarousel: async (req, res) => {
         try {
 
-            //mendapatkan data Facilities untuk pengecekan
-            let FacilitiesGet = await Facilities.findOne({
+            //mendapatkan data Carousel untuk pengecekan
+            let CarouselGet = await Carousel.findOne({
                 where: {
                     id: req.params.id
                 }
             })
 
-            //cek apakah data Facilities ada
-            if (!FacilitiesGet) {
-                res.status(404).json(response(404, 'Facilities not found'));
+            //cek apakah data Carousel ada
+            if (!CarouselGet) {
+                res.status(404).json(response(404, 'Carousel not found'));
                 return;
             }
 
-            await Facilities.destroy({
+            await Carousel.destroy({
                 where: {
                     id: req.params.id,
                 }
             })
 
-            res.status(200).json(response(200, 'success delete Facilities'));
+            res.status(200).json(response(200, 'success delete Carousel'));
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));

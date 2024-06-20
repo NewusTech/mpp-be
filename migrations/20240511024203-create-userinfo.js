@@ -15,6 +15,10 @@ module.exports = {
       nik: {
         type: Sequelize.STRING
       },
+      slug: {
+        type: Sequelize.STRING,
+        unique: true
+      },
       email: {
         type: Sequelize.STRING
       },

@@ -12,6 +12,10 @@ module.exports = {
       password: {
         type: Sequelize.STRING
       },
+      slug: {
+        type: Sequelize.STRING,
+        unique: true
+      },
       role_id: {
         type: Sequelize.INTEGER
       },

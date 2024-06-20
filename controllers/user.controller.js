@@ -66,6 +66,9 @@ module.exports = {
                 return;
             }
 
+            const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
+            const slug = `${req.body.name}-${timestamp}`;
+
             // Membuat object untuk create userinfo
             let userinfoCreateObj = {
                 name: req.body.name,
@@ -76,7 +79,8 @@ module.exports = {
                 desa: req.body.desa,
                 rt: req.body.rt,
                 rw: req.body.rw,
-                alamat: req.body.alamat
+                alamat: req.body.alamat,
+                slug: slug
             };
 
             // Membuat entri baru di tabel userinfo
@@ -87,7 +91,8 @@ module.exports = {
                 password: passwordHash.generate(req.body.password),
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
-                userinfo_id: userinfoCreate.id // Menggunakan ID dari entri userinfo yang baru dibuat
+                userinfo_id: userinfoCreate.id,
+                slug: slug
             };
 
             // Membuat user baru
@@ -252,13 +257,13 @@ module.exports = {
         }
     },
 
-    //mendapatkan data user berdasarkan id
-    getuserById: async (req, res) => {
+    //mendapatkan data user berdasarkan slug
+    getuserByslug: async (req, res) => {
         try {
-            //mendapatkan data user berdasarkan id
+            //mendapatkan data user berdasarkan slug
             let userGet = await User.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 },
                 include: [
                     {
@@ -372,14 +377,14 @@ module.exports = {
         }
     },
 
-    //menghapus user berdasarkan id
+    //menghapus user berdasarkan slug
     deleteuser: async (req, res) => {
         try {
 
             //mendapatkan data user untuk pengecekan
             let userGet = await User.findOne({
                 where: {
-                    id: req.params.id
+                    slug: req.params.slug
                 }
             })
 
@@ -391,7 +396,7 @@ module.exports = {
 
             await User.destroy({
                 where: {
-                    id: req.params.id,
+                    slug: req.params.slug,
                 }
             })
 
