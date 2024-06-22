@@ -1,7 +1,7 @@
 const { response } = require('../helpers/response.formatter');
 
 const { Kecamatan } = require('../models');
-
+const { generatePagination } = require('../pagination/pagination');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op } = require('sequelize');
@@ -12,24 +12,45 @@ module.exports = {
     getkecamatan: async (req, res) => {
         try {
             let kecamatanGets;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
             const search = req.query.search ?? null;
 
             if (search) {
-                [kecamatanGets] = await Promise.all([
+                [kecamatanGets, totalCount] = await Promise.all([
                     Kecamatan.findAll({
                         where: {
                            name: { [Op.iLike]: `%${search}%` } 
                         },
+                        limit: limit,
+                        offset: offset
                     }),
+                    Kecamatan.count({
+                        where: {
+                            name: { [Op.iLike]: `%${search}%` } 
+                         },
+                    })
                 ]);
             } else {
-                [kecamatanGets] = await Promise.all([
+                [kecamatanGets, totalCount] = await Promise.all([
                     Kecamatan.findAll({
+                        limit: limit,
+                        offset: offset
                     }),
+                    Kecamatan.count({
+                    })
                 ]);
             }
 
-            res.status(200).json(response(200, 'success get DATA', kecamatanGets));
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/desa/get');
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get artikel',
+                data: kecamatanGets,
+                pagination: pagination
+            });
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
