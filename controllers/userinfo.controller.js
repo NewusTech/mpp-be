@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Userinfo, Role, Instansi, sequelize } = require('../models');
+const { User, Userinfo, Role, Instansi, Kecamatan, Desa, sequelize } = require('../models');
 
 const passwordHash = require('password-hash');
 const Validator = require("fastest-validator");
@@ -50,21 +50,33 @@ module.exports = {
                                 { name: { [Op.iLike]: `%${search}%` } }
                             ]
                         },
-                        include: [{
-                            model: User,
-                            where: userWhereClause,
-                            attributes: ['id'],
-                            include: [
-                                {
-                                    model: Role,
-                                    attributes: ['id', 'name'],
-                                },
-                                {
-                                    model: Instansi,
-                                    attributes: ['id', 'name'],
-                                }
-                            ],
-                        }],
+                        include: [
+                            {
+                                model: User,
+                                where: userWhereClause,
+                                attributes: ['id'],
+                                include: [
+                                    {
+                                        model: Role,
+                                        attributes: ['id', 'name'],
+                                    },
+                                    {
+                                        model: Instansi,
+                                        attributes: ['id', 'name'],
+                                    }
+                                ],
+                            },
+                            {
+                                model: Kecamatan,
+                                attributes: ['name', 'id'],
+                                as: 'Kecamatan'
+                            },
+                            {
+                                model: Desa,
+                                attributes: ['name', 'id'],
+                                as: 'Desa'
+                            }
+                        ],
                         limit: limit,
                         offset: offset
                     }),
@@ -82,21 +94,33 @@ module.exports = {
                     Userinfo.findAll({
                         limit: limit,
                         offset: offset,
-                        include: [{
-                            model: User,
-                            where: userWhereClause,
-                            attributes: ['id'],
-                            include: [
-                                {
-                                    model: Role,
-                                    attributes: ['id', 'name'],
-                                },
-                                {
-                                    model: Instansi,
-                                    attributes: ['id', 'name'],
-                                }
-                            ],
-                        }],
+                        include: [
+                            {
+                                model: User,
+                                where: userWhereClause,
+                                attributes: ['id'],
+                                include: [
+                                    {
+                                        model: Role,
+                                        attributes: ['id', 'name'],
+                                    },
+                                    {
+                                        model: Instansi,
+                                        attributes: ['id', 'name'],
+                                    }
+                                ],
+                            },
+                            {
+                                model: Kecamatan,
+                                attributes: ['name', 'id'],
+                                as: 'Kecamatan'
+                            },
+                            {
+                                model: Desa,
+                                attributes: ['name', 'id'],
+                                as: 'Desa'
+                            }
+                        ],
                     }),
                     Userinfo.count()
                 ]);
@@ -108,11 +132,14 @@ module.exports = {
                 return {
                     id: user.id,
                     name: user.name,
+                    slug: user.slug,
                     nik: user.nik,
                     email: user.email,
                     telepon: user.telepon,
-                    kec: user.kec,
-                    desa: user.desa,
+                    kecamatan_id: user.kecamatan_id,
+                    kecamatan_name: user.Kecamatan?.name,
+                    desa_id: user.desa_id,
+                    desa_name: user.Desa?.name,
                     rt: user.rt,
                     rw: user.rw,
                     alamat: user.alamat,
@@ -136,7 +163,7 @@ module.exports = {
                     Instansi: user.User.Instansi ? user.User.Instansi.name : null
                 };
             });
-            
+
             res.status(200).json({
                 status: 200,
                 message: 'success get user',
@@ -162,6 +189,18 @@ module.exports = {
                 where: {
                     slug: req.params.slug
                 },
+                include: [
+                    {
+                        model: Kecamatan,
+                        attributes: ['name', 'id'],
+                        as: 'Kecamatan'
+                    },
+                    {
+                        model: Desa,
+                        attributes: ['name', 'id'],
+                        as: 'Desa'
+                    }
+                ]
             });
 
             if (!userGet) {
@@ -197,8 +236,8 @@ module.exports = {
                 nik: { type: "string", length: 16 },
                 email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
-                kec: { type: "string", min: 1, optional: true },
-                desa: { type: "string", min: 1, optional: true },
+                kecamatan_id: { type: "string", min: 1, optional: true },
+                desa_id: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
                 rw: { type: "string", min: 1, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
@@ -216,14 +255,17 @@ module.exports = {
                 fileijazahlain: { type: "string", optional: true },
             }
 
+            const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
+            const slug = `${req.body.name}-${timestamp}`;
+
             //buat object userinfo
             let userinfoObj = {
                 name: req.body.name,
                 nik: req.body.nik,
                 email: req.body.email,
                 telepon: req.body.telepon,
-                kec: req.body.kec,
-                desa: req.body.desa,
+                kecamatan_id: req.body.kecamatan_id,
+                desa_id: req.body.desa_id,
                 rt: req.body.rt,
                 rw: req.body.rw,
                 alamat: req.body.alamat,
@@ -235,6 +277,7 @@ module.exports = {
                 pekerjaan: req.body.pekerjaan,
                 goldar: req.body.goldar ? Number(req.body.goldar) : null,
                 pendidikan: req.body.pendidikan ? Number(req.body.pendidikan) : null,
+                slug: slug
             };
 
             // Process image upload
@@ -301,7 +344,8 @@ module.exports = {
             let userCreateObj = {
                 password: passwordHash.generate(generatedPassword),
                 role_id: 3,
-                userinfo_id: userinfoCreate.id
+                userinfo_id: userinfoCreate.id,
+                slug: slug
             };
 
             // Membuat user baru
@@ -341,8 +385,8 @@ module.exports = {
                 nik: { type: "string", length: 16, optional: true },
                 email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
-                kec: { type: "string", min: 1, optional: true },
-                desa: { type: "string", min: 1, optional: true },
+                kecamatan_id: { type: "string", min: 1, optional: true },
+                desa_id: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
                 rw: { type: "string", min: 1, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
@@ -362,19 +406,19 @@ module.exports = {
                 nik: req.body.nik,
                 email: req.body.email,
                 telepon: req.body.telepon,
-                kec: req.body.kec,
-                desa: req.body.desa,
+                kecamatan_id: req.body.kecamatan_id,
+                desa_id: req.body.desa_id,
                 rt: req.body.rt,
                 rw: req.body.rw,
                 alamat: req.body.alamat,
-                agama: req.body.agama ? Number(req.body.agama) : null,
+                agama: req.body.agama ? Number(req.body.agama) : undefined,
                 tempat_lahir: req.body.tempat_lahir,
                 tgl_lahir: req.body.tgl_lahir,
-                status_kawin: req.body.status_kawin ? Number(req.body.status_kawin) : null,
-                gender: req.body.gender ? Number(req.body.gender) : null,
+                status_kawin: req.body.status_kawin ? Number(req.body.status_kawin) : undefined,
+                gender: req.body.gender ? Number(req.body.gender) : undefined,
                 pekerjaan: req.body.pekerjaan,
-                goldar: req.body.goldar ? Number(req.body.goldar): null, 
-                pendidikan: req.body.pendidikan? Number(req.body.pendidikan) : null,
+                goldar: req.body.goldar ? Number(req.body.goldar) : undefined,
+                pendidikan: req.body.pendidikan ? Number(req.body.pendidikan) : undefined,
             };
 
             //validasi menggunakan module fastest-validator

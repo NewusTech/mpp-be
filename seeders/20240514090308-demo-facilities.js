@@ -4,11 +4,6 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Facilities = [
       {
-        image: 'https://newus-bucket.s3.ap-southeast-2.amazonaws.com/dir_mpp/facilities/1718851658163-1718752849720-images.jpg',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
         image: 'https://newus-bucket.s3.ap-southeast-2.amazonaws.com/dir_mpp/facilities/1718851667106-1718753258499-images (1).jpg',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -27,7 +22,7 @@ module.exports = {
         image: 'https://newus-bucket.s3.ap-southeast-2.amazonaws.com/dir_mpp/facilities/1718851681734-1718758724794-0d33b9d52afdce1204157ad6ce4327c2_mpp-kudus-e.jpg',
         createdAt: new Date(),
         updatedAt: new Date()
-      }
+      },
     ];
 
     await queryInterface.bulkInsert('Facilities', Facilities, {});

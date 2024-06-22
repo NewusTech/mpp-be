@@ -138,7 +138,8 @@ module.exports = {
                         where: whereCondition,
                         include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
                         limit: limit,
-                        offset: offset
+                        offset: offset,
+                        order: [['id', 'ASC']]
                     }),
                     Instansi.count({
                         where: whereCondition
@@ -149,7 +150,8 @@ module.exports = {
                     Instansi.findAll({
                         include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
                         limit: limit,
-                        offset: offset
+                        offset: offset,
+                        order: [['id', 'ASC']]
                     }),
                     Instansi.count()
                 ]);

@@ -189,6 +189,19 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date()
       },
+      {
+        name: 'Dinas PTSP',
+        slug: 'dinas-ptsp',
+        alamat: 'Sukadana Ilir, Sukadana, East Lampung Regency, Lampung',
+        desc: 'Dinas PTSP (Pelayanan Terpadu Satu Pintu) adalah lembaga pemerintah yang mengelola perizinan dan pelayanan publik secara terpadu dan efisien',
+        active_offline: true,
+        active_online: true,
+        status: true,
+        jam_buka: "08:00:00",
+        jam_tutup: "16:00:00",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
     ];
 
     await queryInterface.bulkInsert('Instansis', Instansis, {});

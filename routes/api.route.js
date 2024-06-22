@@ -5,6 +5,7 @@ const artikelRoute = require('./artikel.route');
 const dashboardRoute = require('./dashboard.route');
 const statistikRoute = require('./statistik.route');
 const faqRoute = require('./faq.route');
+const kecamatanRoute = require('./kecamatan.route');
 const visimisiRoute = require('./visimisi.route');
 const facilitiesRoute = require('./facilities.route');
 const carouselRoute = require('./carousel.route');
@@ -25,6 +26,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, roleRoute);
     app.use(urlApi, artikelRoute);
     app.use(urlApi, faqRoute);
+    app.use(urlApi, kecamatanRoute);
     app.use(urlApi, visimisiRoute);
     app.use(urlApi, dashboardRoute);
     app.use(urlApi, statistikRoute);
