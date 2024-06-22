@@ -4,8 +4,8 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Visimisis = [
       {
-        visi: 'Terwujudnya Pelayanan Publik Prima berbasis teknologi informasi dan komunikasi',
-        misi: 'Memberikan pelayanan secara transparan, cepat, mudah, murah, aman dan nyama',
+        visi: '<p>Terwujudnya Pelayanan Publik Prima berbasis teknologi informasi dan komunikasi</p>',
+        misi: '<p>Memberikan pelayanan secara transparan, cepat, mudah, murah, aman dan nyama</p>',
         createdAt: new Date(),
         updatedAt: new Date()
       },

@@ -7,7 +7,7 @@ module.exports = {
         layanan_id:1,
         header: "Laporan Polisi Model C",
         body: "Surat ini dibuat untuk membuat laporan dengan benar dan baik serta sesuai dengan prosudur yang ditetapkan dalam undang-undang.",
-        footer: "Demikian surat ini dibut dan semoga yang bersangkutan dapat mengerjakan tanggung jawab ini dengan sebaik-baiknya. Atas perhatian dan kerja samanya, kami sampaikan terima kasih.",
+        footer: "Demikian surat ini dibuat dan semoga yang bersangkutan dapat mengerjakan tanggung jawab ini dengan sebaik-baiknya. Atas perhatian dan kerja samanya, kami sampaikan terima kasih.",
         createdAt: new Date(),
         updatedAt: new Date()
       },

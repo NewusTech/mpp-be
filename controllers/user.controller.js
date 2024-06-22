@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Instansi, Role, Userinfo, sequelize } = require('../models');
+const { User, Token, Instansi, Role, Userinfo, Kecamatan, Desa, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -25,8 +25,8 @@ module.exports = {
                 password: { type: "string", min: 3 },
                 instansi_id: { type: "number", optional: true },
                 role_id: { type: "number", optional: true },
-                kec: { type: "string", min: 1, optional: true },
-                desa: { type: "string", min: 1, optional: true },
+                kecamatan_id: { type: "string", min: 1, optional: true },
+                desa_id: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
                 rw: { type: "string", min: 1, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
@@ -37,12 +37,12 @@ module.exports = {
                 name: req.body.name,
                 nik: req.body.nik,
                 password: req.body.password,
-                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
-                role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
+                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
+                role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : undefined,
                 email: req.body.email,
                 telepon: req.body.telepon,
-                kec: req.body.kec,
-                desa: req.body.desa,
+                kecamatan_id: req.body.kecamatan_id,
+                desa_id: req.body.desa_id,
                 rt: req.body.rt,
                 rw: req.body.rw,
                 alamat: req.body.alamat
@@ -75,8 +75,8 @@ module.exports = {
                 nik: req.body.nik,
                 email: req.body.email,
                 telepon: req.body.telepon,
-                kec: req.body.kec,
-                desa: req.body.desa,
+                kecamatan_id: req.body.kecamatan_id,
+                desa_id: req.body.desa_id,
                 rt: req.body.rt,
                 rw: req.body.rw,
                 alamat: req.body.alamat,
@@ -89,8 +89,8 @@ module.exports = {
             // Membuat object untuk create user
             let userCreateObj = {
                 password: passwordHash.generate(req.body.password),
-                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
-                role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : null,
+                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
+                role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : undefined,
                 userinfo_id: userinfoCreate.id,
                 slug: slug
             };
@@ -177,8 +177,8 @@ module.exports = {
                 user_akun_id: userinfo.User.id,
                 nik: userinfo.nik,
                 role: userinfo.User.Role.name,
-                instansi: userinfo?.User?.Instansi?.name ?? null,
-                instansi_id: userinfo?.User?.Instansi?.id ?? null
+                instansi: userinfo?.User?.Instansi?.name ?? undefined,
+                instansi_id: userinfo?.User?.Instansi?.id ?? undefined
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
@@ -228,7 +228,19 @@ module.exports = {
                     },
                     {
                         model: Userinfo,
-                        as: 'Userinfo'
+                        as: 'Userinfo',
+                        include: [
+                            {
+                                model: Kecamatan,
+                                attributes: ['name', 'id'],
+                                as: 'Kecamatan'
+                            },
+                            {
+                                model: Desa,
+                                attributes: ['name', 'id'],
+                                as: 'Desa'
+                            }
+                        ]
                     },
                 ],
                 attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
@@ -237,12 +249,18 @@ module.exports = {
             let formattedUsers = userGets.map(user => {
                 return {
                     id: user.id,
+                    slug: user.slug,
                     name: user.Userinfo?.name,
                     nik: user.Userinfo?.nik,
                     instansi_id: user.Instansi?.id,
                     instansi_name: user.Instansi?.name,
                     role_id: user.Role?.id,
                     role_name: user.Role?.name,
+                    kecamatan_id: user.Userinfo?.Kecamatan?.id,
+                    kecamatan_name: user.Userinfo?.Kecamatan?.name,
+                    desa_id: user.Userinfo?.Desa?.id,
+                    desa_name: user.Userinfo?.Desa?.name,
+                    nik: user.Userinfo?.nik,
                     createdAt: user.createdAt,
                     updatedAt: user.updatedAt
                 };
@@ -278,7 +296,19 @@ module.exports = {
                     },
                     {
                         model: Userinfo,
-                        as: 'Userinfo'
+                        as: 'Userinfo',
+                        include: [
+                            {
+                                model: Kecamatan,
+                                attributes: ['name', 'id'],
+                                as: 'Kecamatan'
+                            },
+                            {
+                                model: Desa,
+                                attributes: ['name', 'id'],
+                                as: 'Desa'
+                            }
+                        ]
                     },
                 ],
                 attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
@@ -298,6 +328,10 @@ module.exports = {
                 instansi_title: userGet.Instansi?.name,
                 role_id: userGet.Role?.id,
                 role_name: userGet.Role?.name,
+                kecamatan_id: userGet.Userinfo?.Kecamatan?.id,
+                kecamatan_name: userGet.Userinfo?.Kecamatan?.name,
+                desa_id: userGet.Userinfo?.Desa?.id,
+                desa_name: userGet.Userinfo?.Desa?.name,
                 createdAt: userGet.createdAt,
                 updatedAt: userGet.updatedAt
             };
@@ -330,7 +364,19 @@ module.exports = {
                     },
                     {
                         model: Userinfo,
-                        as: 'Userinfo'
+                        as: 'Userinfo',
+                        include: [
+                            {
+                                model: Kecamatan,
+                                attributes: ['name', 'id'],
+                                as: 'Kecamatan'
+                            },
+                            {
+                                model: Desa,
+                                attributes: ['name', 'id'],
+                                as: 'Desa'
+                            }
+                        ]
                     },
                 ],
                 attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
@@ -345,11 +391,14 @@ module.exports = {
             let formattedUsers = {
                 id: userGet.id,
                 name: userGet.Userinfo?.name,
+                slug: userGet.Userinfo?.slug,
                 nik: userGet.Userinfo?.nik,
                 email: userGet.Userinfo?.email,
                 telepon: userGet.Userinfo?.telepon,
-                kec: userGet.Userinfo?.kec,
-                desa: userGet.Userinfo?.desa,
+                kecamatan_id: userGet.Userinfo?.Kecamatan?.id,
+                kecamatan_name: userGet.Userinfo?.Kecamatan?.name,
+                desa_id: userGet.Userinfo?.Desa?.id,
+                desa_name: userGet.Userinfo?.Desa?.name,
                 rt: userGet.Userinfo?.rt,
                 rw: userGet.Userinfo?.rw,
                 alamat: userGet.Userinfo?.alamat,

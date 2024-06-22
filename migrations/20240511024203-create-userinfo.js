@@ -25,11 +25,11 @@ module.exports = {
       telepon: {
         type: Sequelize.STRING
       },
-      kec: {
-        type: Sequelize.STRING
+      kecamatan_id: {
+        type: Sequelize.INTEGER
       },
-      desa: {
-        type: Sequelize.STRING
+      desa_id: {
+        type: Sequelize.INTEGER
       },
       rt: {
         type: Sequelize.STRING
@@ -89,6 +89,26 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      }
+    });
+
+    await queryInterface.addConstraint('Userinfos', {
+      fields: ['kecamatan_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_kecamatan_idd',
+      references: {
+        table: 'Kecamatans',
+        field: 'id'
+      }
+    });
+
+    await queryInterface.addConstraint('Userinfos', {
+      fields: ['desa_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_desa_idd',
+      references: {
+        table: 'Desas',
+        field: 'id'
       }
     });
 

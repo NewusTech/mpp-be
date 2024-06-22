@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
       Userinfo.hasMany(models.Layananformnum, {
         foreignKey: 'userinfo_id',
       });
+      Userinfo.belongsTo(models.Kecamatan, {
+        foreignKey: 'kecamatan_id',
+      });
+      Userinfo.belongsTo(models.Desa, {
+        foreignKey: 'desa_id',
+      });
     }
   }
   Userinfo.init({
@@ -22,8 +28,8 @@ module.exports = (sequelize, DataTypes) => {
     slug: DataTypes.STRING,
     email: DataTypes.STRING,
     telepon: DataTypes.STRING,
-    kec: DataTypes.STRING,
-    desa: DataTypes.STRING,
+    kecamatan_id: DataTypes.INTEGER,
+    desa_id: DataTypes.INTEGER,
     rt: DataTypes.STRING,
     rw: DataTypes.STRING,
     alamat: DataTypes.STRING,
