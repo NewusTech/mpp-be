@@ -25,7 +25,8 @@ module.exports = {
             let layananID = {
                 userinfo_id: Number(iduser),
                 layanan_id: Number(idlayanan),
-                date: req.body.date
+                date: req.body.date ?? null,
+                kritiksaran: req.body.kritiksaran ?? null
             };
 
             const createdSurveyformnum = await Surveyformnum.create(layananID, { transaction });
@@ -49,23 +50,32 @@ module.exports = {
     //get survey form user
     getdetailsurveyform: async (req, res) => {
         try {
-            const idsurveynum = req.params.idsurveynum
-
+            const idsurveynum = req.params.idsurveynum;
+    
             let inputsurveyData = await Surveyforminput.findAll({
                 where: {
                     surveyformnum_id: idsurveynum
                 },
-                include: [{
-                    model: Surveyform,
-                    attributes: { exclude: ['createdAt', 'updatedAt'] },
-                }]
+                include: [
+                    {
+                        model: Surveyform,
+                        attributes: { exclude: ['createdAt', 'updatedAt'] },
+                    },
+                    {
+                        model: Surveyformnum,
+                        attributes: ['kritiksaran'],
+                    }
+                ]
             });
-
-            if (!inputsurveyData || inputsurveyData < 1) {
+    
+            if (!inputsurveyData || inputsurveyData.length < 1) {
                 res.status(404).json(response(404, 'data not found'));
                 return;
             }
-
+    
+            // Assuming all records will have the same 'kritiksaran' since they share 'surveyformnum_id'
+            const kritiksaran = inputsurveyData[0].Surveyformnum.kritiksaran;
+    
             let formatteddata = inputsurveyData.map(datafilter => {
                 return {
                     id: datafilter.id,
@@ -75,8 +85,8 @@ module.exports = {
                     surveyform_name: datafilter.Surveyform.field,
                 };
             });
-
-            res.status(200).json(response(200, 'success get data', formatteddata));
+    
+            res.status(200).json(response(200, 'success get data', { kritiksaran, formatteddata }));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);

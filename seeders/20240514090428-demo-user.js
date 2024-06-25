@@ -58,6 +58,15 @@ module.exports = {
         role_id: 5,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        userinfo_id: 7,
+        password: passwordHash.generate('123456'),
+        slug: "Ida-20240620041615213",
+        instansi_id: null,
+        role_id: 5,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ];
 

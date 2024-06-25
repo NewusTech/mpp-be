@@ -154,6 +154,34 @@ module.exports = {
         fileijazahlain: null,
         createdAt: new Date(),
         updatedAt: new Date()
+      },
+      {
+        name: 'Ida Tanggobuntung',
+        nik: '1871030405990021',
+        slug: "Ida-20240620041615213",
+        email: 'ida@gmail.com',
+        telepon: '089797977013',
+        alamat: 'Jl. Bumi Abadi No. 14',
+        kecamatan_id: 1,
+        desa_id: 3,
+        rt: "001",
+        rw: "000",
+        agama: 1,
+        tempat_lahir: 'Bandar Lampung',
+        tgl_lahir: '1999-08-08',
+        status_kawin: 2,
+        gender: 1,
+        pekerjaan: "Hacker Akhirat",
+        goldar: 1,
+        pendidikan: 1,
+        filektp: null,
+        filekk: null,
+        fileijazahsd: null,
+        fileijazahsmp: null,
+        fileijazahsma: null,
+        fileijazahlain: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ];
 

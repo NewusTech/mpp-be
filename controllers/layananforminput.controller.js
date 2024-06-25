@@ -107,24 +107,34 @@ module.exports = {
     //get input form user
     getdetailinputform: async (req, res) => {
         try {
-            const idlayanannum = req.params.idlayanannum
+            const idlayanannum = req.params.idlayanannum;
 
-            let inputformData = await Layananforminput.findAll({
+            // Fetch Layananformnum details
+            let layananformnumData = await Layananformnum.findOne({
                 where: {
-                    layananformnum_id: idlayanannum
+                    id: idlayanannum
                 },
-                include: [{
-                    model: Layananform,
-                    attributes: { exclude: ['createdAt', 'updatedAt', "status"] },
-                }]
+                include: [
+                    {
+                        model: Layananforminput,
+                        include: [{
+                            model: Layananform,
+                            attributes: { exclude: ['createdAt', 'updatedAt', "status"] },
+                        }]
+                    },
+                    {
+                        model: Userinfo,
+                    }
+                ]
             });
 
-            if (!inputformData || inputformData < 1) {
+            if (!layananformnumData) {
                 res.status(404).json(response(404, 'data not found'));
                 return;
             }
 
-            let formatteddata = inputformData.map(datafilter => {
+            // Format the Layananforminput data
+            let formattedInputData = layananformnumData.Layananforminputs.map(datafilter => {
                 let data_key = null;
 
                 if (datafilter.Layananform.tipedata === 'radio' && datafilter.Layananform.datajson) {
@@ -154,7 +164,19 @@ module.exports = {
                 };
             });
 
-            res.status(200).json(response(200, 'success get data', formatteddata));
+            // Embed the formatted Layananforminput data into the Layananformnum data
+            let result = {
+                id: layananformnumData.id,
+                layanan_id: layananformnumData.layanan_id,
+                tgl_selesai: layananformnumData.tgl_selesai,
+                userinfo_id: layananformnumData.userinfo_id,
+                userinfo: layananformnumData.Userinfo,
+                createdAt: layananformnumData.createdAt,
+                updatedAt: layananformnumData.updatedAt,
+                Layananforminputs: formattedInputData
+            };
+
+            res.status(200).json(response(200, 'success get data', result));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
@@ -467,6 +489,7 @@ module.exports = {
                     name: data.Userinfo.name,
                     nik: data.Userinfo.nik,
                     status: data.status,
+                    tgl_selesai: data.tgl_selesai,
                     isonline: data.isonline,
                     layanan_id: data.layanan_id,
                     layanan_name: data.Layanan ? data.Layanan.name : null,
@@ -528,6 +551,7 @@ module.exports = {
                 name: Layananformnumget.Userinfo ? Layananformnumget.Userinfo.name : null,
                 status: Layananformnumget.status,
                 pesan: Layananformnumget.pesan,
+                tgl_selesai: data.tgl_selesai,
                 layanan_id: Layananformnumget.layanan_id,
                 layanan_name: Layananformnumget.Layanan ? Layananformnumget.Layanan.name : null,
                 layanan_image: Layananformnumget.Layanan ? Layananformnumget.Layanan.image : null,
