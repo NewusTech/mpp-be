@@ -15,6 +15,9 @@ module.exports = {
       layanan_id: {
         type: Sequelize.INTEGER
       },
+      kritiksaran: {
+        type: Sequelize.STRING
+      },
       date: {
         type: Sequelize.DATEONLY
       },

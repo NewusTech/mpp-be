@@ -5,6 +5,7 @@ module.exports = {
     const Surveyforms = [
       {
         field: 'Apakah aplikasi MPP yang digunakan mudah dipahami dan tidak sulit untuk digunakan?',
+        desc: '4: Pelayanan Baik',
         status: true,
         instansi_id:1,
         createdAt: new Date(),

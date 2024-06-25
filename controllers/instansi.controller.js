@@ -62,17 +62,17 @@ module.exports = {
             //buat object instansi
             let instansiCreateObj = {
                 name: req.body.name,
-                slug: req.body.name ? slugify(req.body.name, { lower: true }) : null,
+                slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
                 email: req.body.email,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
-                active_online: req.body.active_online ? Number(req.body.active_online) : null,
-                status: req.body.status ? Number(req.body.status) : null,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : undefined,
+                active_online: req.body.active_online ? Number(req.body.active_online) : undefined,
+                status: req.body.status ? Number(req.body.status) : undefined,
                 alamat: req.body.alamat,
-                image: req.file ? imageKey : null,
+                image: req.file ? imageKey : undefined,
                 jam_buka: req.body.jam_buka,
                 jam_tutup: req.body.jam_tutup
             }

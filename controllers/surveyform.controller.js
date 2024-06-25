@@ -21,6 +21,10 @@ module.exports = {
                     type: "string",
                     min: 1,
                 },
+                desc: {
+                    type: "string",
+                    optional: true
+                },
                 status: {
                     type: "number",
                     optional: true
@@ -34,8 +38,9 @@ module.exports = {
             //buat object surveyform
             let surveyformCreateObj = {
                 field: req.body.field,
+                desc: req.body.desc ?? undefined,
                 status: Number(req.body.status),
-                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
+                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
             }
 
             //validasi menggunakan module fastest-validator
@@ -64,7 +69,8 @@ module.exports = {
             const schema = {
                 field: { type: "string", min: 1 },
                 status: { type: "number", optional: true },
-                instansi_id: { type: "number", optional: true }
+                instansi_id: { type: "number", optional: true },
+                desc: { type: "string", optional: true }
             };
 
             // Check if the request body is an array
@@ -82,6 +88,7 @@ module.exports = {
                 // Create the surveyfrom object
                 let surveyfromCreateObj = {
                     field: input.field,
+                    desc: input.desc,
                     status: input.status ? Number(input.status) : null,
                     instansi_id: input.instansi_id !== undefined ? Number(input.instansi_id) : null
                 };
@@ -147,6 +154,28 @@ module.exports = {
         }
     },
 
+    getsurveybyidsurvey: async (req, res) => {
+        try {
+            const { idsurvey } = req.params;
+    
+            let surveyData = await Surveyform.findOne({
+                where: {
+                    id: idsurvey
+                },
+            });
+    
+            if (!surveyData) {
+                return res.status(404).json(response(404, 'Survey not found'));
+            }
+    
+            // Response using helper response.formatter
+            res.status(200).json(response(200, 'Success get survey', surveyData));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },    
+
     //mengupdate surveyform berdasarkan id
     updatesurveyform: async (req, res) => {
         try {
@@ -169,11 +198,12 @@ module.exports = {
                     type: "string",
                     min: 1,
                 },
-                status: {
-                    type: "number",
+                desc: {
+                    type: "string",
+                    min: 1,
                     optional: true
                 },
-                layanan_id: {
+                status: {
                     type: "number",
                     optional: true
                 },
@@ -181,9 +211,9 @@ module.exports = {
 
             //buat object surveyform
             let surveyformUpdateObj = {
+                desc: req.body.desc ?? undefined,
                 field: req.body.field,
-                status: Number(req.body.status),
-                layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : null,
+                status: Number(req.body.status)
             }
 
             //validasi menggunakan module fastest-validator
@@ -221,6 +251,7 @@ module.exports = {
             // Define schema for validation
             const schema = {
                 field: { type: "string", min: 1 },
+                desc: { type: "string", optional: true },
                 status: { type: "number", optional: true },
                 layanan_id: { type: "number", optional: true }
             };
@@ -253,6 +284,7 @@ module.exports = {
                 let surveyformUpdateObj = {
                     id: input.id,
                     field: input.field,
+                    desc: input.desc,
                     status: input.status !== undefined ? Number(input.status) : undefined,
                     layanan_id: input.layanan_id !== undefined ? Number(input.layanan_id) : undefined
                 };
