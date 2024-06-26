@@ -186,7 +186,8 @@ module.exports = {
     
             let layananData = await Layanan.findOne({
                 where: {
-                    id: layananid
+                    id: layananid,
+                    deletedAt: null
                 },
                 attributes: ['name', 'slug', 'desc', 'image'],
                 include: [{

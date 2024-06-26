@@ -7,6 +7,6 @@ const route = express.Router();
 
 route.get('/user/dashboard/webuser', dashboardController.web_user);
 route.get('/user/dashboard/superadmin', [mid.checkRolesAndLogout(['Super Admin'])], dashboardController.web_superadmin); 
-route.get('/user/dashboard/admindinas', [mid.checkRolesAndLogout(['Admin Instansi'])], dashboardController.web_admin); 
+route.get('/user/dashboard/admindinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi'])], dashboardController.web_admin); 
 
 module.exports = route;

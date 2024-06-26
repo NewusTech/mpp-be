@@ -35,7 +35,7 @@ module.exports = {
                     optional: true
                 },
             }
-            
+
             const userinfo_id = data.role === "User" ? data.userId : null;
 
             if (req.file) {
@@ -90,6 +90,7 @@ module.exports = {
     //mendapatkan semua data pengaduan
     getpengaduan: async (req, res) => {
         try {
+            const instansi_id = req.query.instansi_id ?? null;
             const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -97,34 +98,29 @@ module.exports = {
             let pengaduanGets;
             let totalCount;
 
-            if (search) {
-                [pengaduanGets, totalCount] = await Promise.all([
-                    Pengaduan.findAll({
-                        where: {
-                            [Op.or]: [
-                                { judul: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        },
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Pengaduan.count({
-                        where: {
-                            [Op.or]: [
-                                { judul: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        }
-                    })
-                ]);
-            } else {
-                [pengaduanGets, totalCount] = await Promise.all([
-                    Pengaduan.findAll({
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Pengaduan.count()
-                ]);
+            const whereCondition = {};
+
+            if (instansi_id) {
+                whereCondition.instansi_id = instansi_id;
             }
+            if (search) {
+                whereCondition[Op.or] = [{ judul: { [Op.iLike]: `%${search}%` } }];
+            }
+
+            [pengaduanGets, totalCount] = await Promise.all([
+                Pengaduan.findAll({
+                    where: whereCondition,
+                    limit: limit,
+                    offset: offset
+                }),
+                Pengaduan.count({
+                    where: {
+                        [Op.or]: [
+                            { judul: { [Op.iLike]: `%${search}%` } }
+                        ]
+                    }
+                })
+            ]);
 
             const pagination = generatePagination(totalCount, page, limit, '/api/user/pengaduan/get');
 

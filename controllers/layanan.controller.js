@@ -104,44 +104,35 @@ module.exports = {
     //mendapatkan semua data layanan
     getlayanan: async (req, res) => {
         try {
-
             const search = req.query.search ?? null;
+            const showDeleted = req.query.showDeleted === 'true' ?? false;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let layananGets;
             let totalCount;
 
+            const whereCondition = {};
             if (search) {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        where: {
-                            [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        },
-                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count({
-                        where: {
-                            [Op.or]: [
-                                { name: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        },
-                    })
-                ]);
-            } else {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count()
-                ]);
+                whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
             }
+            if (showDeleted) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
+            [layananGets, totalCount] = await Promise.all([
+                Layanan.findAll({
+                    where: whereCondition,
+                    include: [{ model: Instansi, attributes: ['id', 'name'] }],
+                    limit: limit,
+                    offset: offset
+                }),
+                Layanan.count({
+                    where: whereCondition
+                })
+            ]);
 
             const modifiedLayananGets = layananGets.map(layanan => {
                 const { Instansi, ...otherData } = layanan.dataValues;
@@ -155,7 +146,7 @@ module.exports = {
 
             res.status(200).json({
                 status: 200,
-                message: 'success get instansi',
+                message: 'success get layanan',
                 data: modifiedLayananGets,
                 pagination: pagination
             });
@@ -169,8 +160,8 @@ module.exports = {
     //mendapatkan semua data layanan by dinas
     getlayananbydinas: async (req, res) => {
         try {
-
             const instansi_id = req.params.instansi_id;
+            const showDeleted = req.query.showDeleted === 'true' ?? false;
             const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -178,45 +169,34 @@ module.exports = {
             let layananGets;
             let totalCount;
 
+            const whereCondition = {
+                instansi_id: instansi_id
+            };
+
             if (search) {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        where: {
-                            [Op.and]: [
-                                { name: { [Op.iLike]: `%${search}%` } },
-                                { instansi_id: instansi_id }
-                            ]
-                        },
-                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count({
-                        where: {
-                            [Op.and]: [
-                                { name: { [Op.iLike]: `%${search}%` } },
-                                { instansi_id: instansi_id }
-                            ]
-                        }
-                    })
-                ]);
-            } else {
-                [layananGets, totalCount] = await Promise.all([
-                    Layanan.findAll({
-                        where: {
-                            instansi_id: instansi_id
-                        },
-                        include: [{ model: Instansi, attributes: ['id', 'name'] }],
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Layanan.count({
-                        where: {
-                            instansi_id: instansi_id
-                        },
-                    })
-                ]);
+                whereCondition[Op.and] = [
+                    whereCondition,
+                    { name: { [Op.iLike]: `%${search}%` } }
+                ];
             }
+
+            if (showDeleted) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
+            [layananGets, totalCount] = await Promise.all([
+                Layanan.findAll({
+                    where: whereCondition,
+                    include: [{ model: Instansi, attributes: ['id', 'name'] }],
+                    limit: limit,
+                    offset: offset
+                }),
+                Layanan.count({
+                    where: whereCondition
+                })
+            ]);
 
             const modifiedLayananGets = layananGets.map(layanan => {
                 const { Instansi, ...otherData } = layanan.dataValues;
@@ -230,7 +210,7 @@ module.exports = {
 
             res.status(200).json({
                 status: 200,
-                message: 'success get instansi',
+                message: 'success get layanan by dinas',
                 data: modifiedLayananGets,
                 pagination: pagination
             });
@@ -244,11 +224,17 @@ module.exports = {
     //mendapatkan data layanan berdasarkan id
     getlayananById: async (req, res) => {
         try {
-            //mendapatkan data layanan berdasarkan id
+            const showDeleted  = req.query.showDeleted  ?? null;
+            const whereCondition = { id: req.params.id };
+
+            if (showDeleted  !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             let layananGet = await Layanan.findOne({
-                where: {
-                    id: req.params.id
-                },
+                where: whereCondition,
                 include: [{ model: Instansi, attributes: ['id', 'name'] }]
             });
 
@@ -278,7 +264,8 @@ module.exports = {
             //mendapatkan data layanan untuk pengecekan
             let layananGet = await Layanan.findOne({
                 where: {
-                    id: req.params.id
+                    id: req.params.id,
+                    deletedAt: null
                 }
             })
 
@@ -365,7 +352,8 @@ module.exports = {
             //mendapatkan data layanan untuk pengecekan
             let layananGet = await Layanan.findOne({
                 where: {
-                    id: req.params.id
+                    id: req.params.id,
+                    deletedAt: null
                 }
             })
 
@@ -375,21 +363,17 @@ module.exports = {
                 return;
             }
 
-            await Layanan.destroy({
+            await Layanan.update({ deletedAt: new Date() }, {
                 where: {
-                    id: req.params.id,
+                    id: req.params.id
                 }
-            })
+            });
 
             res.status(200).json(response(200, 'success delete layanan'));
 
         } catch (err) {
-            if (err.name === 'SequelizeForeignKeyConstraintError') {
-                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
-            } else {
-                res.status(500).json(response(500, 'Internal server error', err));
-                console.log(err);
-            }
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
         }
     },
 

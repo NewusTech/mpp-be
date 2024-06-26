@@ -4,9 +4,10 @@ const { User, Token, Instansi, Role, Userinfo, Kecamatan, Desa, sequelize } = re
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
-
+const { generatePagination } = require('../pagination/pagination');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const { Op } = require('sequelize');
 
 module.exports = {
 
@@ -138,7 +139,7 @@ module.exports = {
             // mendapatkan data user 
             let userinfo = await Userinfo.findOne({
                 where: {
-                    nik: nik
+                    nik: nik,
                 },
                 attributes: ['nik', 'id'],
                 include: [
@@ -154,7 +155,10 @@ module.exports = {
                                 model: Instansi,
                                 attributes: ['id', 'name']
                             }
-                        ]
+                        ],
+                        where: {
+                            deletedAt: null
+                        }
                     },
                 ],
             });
@@ -213,38 +217,61 @@ module.exports = {
     //mendapatkan semua data user
     getuser: async (req, res) => {
         try {
-            //mendapatkan data semua user
-            let userGets = await User.findAll({
-                include: [
-                    {
-                        model: Instansi,
-                        attributes: ['name', 'id'],
-                        as: 'Instansi'
-                    },
-                    {
-                        model: Role,
-                        attributes: ['name', 'id'],
-                        as: 'Role'
-                    },
-                    {
-                        model: Userinfo,
-                        as: 'Userinfo',
-                        include: [
-                            {
-                                model: Kecamatan,
-                                attributes: ['name', 'id'],
-                                as: 'Kecamatan'
-                            },
-                            {
-                                model: Desa,
-                                attributes: ['name', 'id'],
-                                as: 'Desa'
-                            }
-                        ]
-                    },
-                ],
-                attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] }
-            });
+            const showDeleted = req.query.showDeleted ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let userGets;
+            let totalCount;
+
+            const whereCondition = {};
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
+            [userGets, totalCount] = await Promise.all([
+                User.findAll({
+                    include: [
+                        {
+                            model: Instansi,
+                            attributes: ['name', 'id'],
+                            as: 'Instansi'
+                        },
+                        {
+                            model: Role,
+                            attributes: ['name', 'id'],
+                            as: 'Role'
+                        },
+                        {
+                            model: Userinfo,
+                            as: 'Userinfo',
+                            include: [
+                                {
+                                    model: Kecamatan,
+                                    attributes: ['name', 'id'],
+                                    as: 'Kecamatan'
+                                },
+                                {
+                                    model: Desa,
+                                    attributes: ['name', 'id'],
+                                    as: 'Desa'
+                                }
+                            ]
+                        },
+                    ],
+                    limit: limit,
+                    offset: offset,
+                    attributes: { exclude: ['Instansi', 'Role', 'Userinfo'] },
+                    order: [['id', 'ASC']],
+                    where: whereCondition,
+                }),
+                User.count({
+                    where: whereCondition
+                })
+            ]);
 
             let formattedUsers = userGets.map(user => {
                 return {
@@ -266,8 +293,14 @@ module.exports = {
                 };
             });
 
-            //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get user', formattedUsers));
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/alluser/get');
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: formattedUsers,
+                pagination: pagination
+            });
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
@@ -278,11 +311,17 @@ module.exports = {
     //mendapatkan data user berdasarkan slug
     getuserByslug: async (req, res) => {
         try {
-            //mendapatkan data user berdasarkan slug
+            const showDeleted = req.query.showDeleted ?? null;
+            const whereCondition = { slug: req.params.slug };
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             let userGet = await User.findOne({
-                where: {
-                    slug: req.params.slug
-                },
+                where: whereCondition,
                 include: [
                     {
                         model: Instansi,
@@ -346,11 +385,17 @@ module.exports = {
 
     getforuser: async (req, res) => {
         try {
-            //mendapatkan data user berdasarkan id
+            const showDeleted = req.query.showDeleted ?? null;
+            const whereCondition = { id: data.userId };
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             let userGet = await User.findOne({
-                where: {
-                    id: data.userId
-                },
+                where: whereCondition,
                 include: [
                     {
                         model: Instansi,
@@ -428,12 +473,14 @@ module.exports = {
 
     //menghapus user berdasarkan slug
     deleteuser: async (req, res) => {
+
         try {
 
             //mendapatkan data user untuk pengecekan
             let userGet = await User.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -443,22 +490,18 @@ module.exports = {
                 return;
             }
 
-            await User.destroy({
+            await User.update({ deletedAt: new Date() }, {
                 where: {
-                    slug: req.params.slug,
+                    slug: req.params.slug
                 }
-            })
+            });
 
             //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success delete user'));
 
         } catch (err) {
-            if (err.name === 'SequelizeForeignKeyConstraintError') {
-                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
-            } else {
-                res.status(500).json(response(500, 'Internal server error', err));
-                console.log(err);
-            }
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
         }
     },
 

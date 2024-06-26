@@ -46,7 +46,7 @@ module.exports = {
         type: Sequelize.TIME
       },
       jam_tutup: {
-        type: Sequelize.TIME // Tipe data untuk waktu
+        type: Sequelize.TIME
       },
       status: {
         type: Sequelize.BOOLEAN
@@ -57,6 +57,9 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE
+      },
+      deletedAt: {
         type: Sequelize.DATE
       }
     });

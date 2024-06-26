@@ -31,6 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     active_online: DataTypes.BOOLEAN,
     active_offline: DataTypes.BOOLEAN,
     status: DataTypes.BOOLEAN,
+    deletedAt: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Layanan',
