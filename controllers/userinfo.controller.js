@@ -29,11 +29,17 @@ module.exports = {
             const instansi = req.query.instansi ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
+            const showDeleted = req.query.showDeleted ?? null;
             const offset = (page - 1) * limit;
             let userGets;
             let totalCount;
 
             const userWhereClause = {};
+            if (showDeleted !== null) {
+                userWhereClause.deletedAt = { [Op.not]: null };
+            } else {
+                userWhereClause.deletedAt = null;
+            }
             if (role) {
                 userWhereClause.role_id = role;
             }
@@ -185,10 +191,18 @@ module.exports = {
     //UTK ADMIN NGECEK DATA PEMOHON
     getuserByslug: async (req, res) => {
         try {
+
+            const showDeleted = req.query.showDeleted ?? null;
+            const whereCondition = { slug: req.params.slug };
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             let userGet = await Userinfo.findOne({
-                where: {
-                    slug: req.params.slug
-                },
+                where: whereCondition,
                 include: [
                     {
                         model: Kecamatan,
@@ -369,7 +383,8 @@ module.exports = {
             //mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -432,6 +447,7 @@ module.exports = {
             await Userinfo.update(userinfoUpdateObj, {
                 where: {
                     slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -467,7 +483,8 @@ module.exports = {
             //mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -564,51 +581,66 @@ module.exports = {
 
     //menghapus user berdasarkan slug
     deleteuser: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
         try {
 
             //mendapatkan data user untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
-                    slug: req.params.slug
-                }
+                    slug: req.params.slug,
+                    deletedAt: null
+                },
+                transaction
             })
 
             //cek apakah data user ada
             if (!userinfoGet) {
+                await transaction.rollback();
                 res.status(404).json(response(404, 'data not found'));
                 return;
             }
 
-            //mendapatkan data akun user
-            let userGet = await User.findOne({
+            const models = Object.keys(sequelize.models);
+
+            // Array untuk menyimpan promise update untuk setiap model terkait
+            const updatePromises = [];
+
+            // Lakukan soft delete pada semua model terkait
+            models.forEach(async modelName => {
+                const Model = sequelize.models[modelName];
+                if (Model.associations && Model.associations.Userinfo && Model.rawAttributes.deletedAt) {
+                    updatePromises.push(
+                        Model.update({ deletedAt: new Date() }, {
+                            where: {
+                                userinfo_id: userinfoGet.id
+                            },
+                            transaction
+                        })
+                    );
+                }
+            });
+
+            // Jalankan semua promise update secara bersamaan
+            await Promise.all(updatePromises);
+
+            await Userinfo.update({ deletedAt: new Date() }, {
                 where: {
                     slug: req.params.slug
-                }
-            })
+                },
+                transaction
+            });
 
-            //cek apakah data akun user ada
-            //jika ada, tolak penghapusan
-            if (userGet) {
-                res.status(404).json(response(404, 'akun user masih aktif, tidak bisa menghapus data'));
-                return;
-            }
-
-            await Userinfo.destroy({
-                where: {
-                    slug: req.params.slug,
-                }
-            })
+            await transaction.commit();
 
             //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success delete user'));
 
         } catch (err) {
-            if (err.name === 'SequelizeForeignKeyConstraintError') {
-                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
-            } else {
-                res.status(500).json(response(500, 'Internal server error', err));
-                console.log(err);
-            }
+            // Rollback transaksi jika terjadi kesalahan
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
         }
     },
 

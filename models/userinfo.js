@@ -46,7 +46,8 @@ module.exports = (sequelize, DataTypes) => {
     fileijazahsd: DataTypes.STRING,
     fileijazahsmp: DataTypes.STRING,
     fileijazahsma: DataTypes.STRING,
-    fileijazahlain: DataTypes.STRING
+    fileijazahlain: DataTypes.STRING,
+    deletedAt: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Userinfo',

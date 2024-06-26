@@ -67,6 +67,9 @@ module.exports = {
                         ],
                         attributes: ['id', 'name'],
                     }],
+                    where: {
+                        deletedAt: null
+                    },
                     limit: limit,
                     offset: offset,
                     attributes: ['id', 'name'],

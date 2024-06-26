@@ -12,8 +12,8 @@ const upload = multer({ storage: storage });
 
 route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User', 'Super Admin', 'Admin Instansi', 'Staff Instansi'])], antrianController.createantrian);
 route.get('/user/antrian/get/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Staff Instansi', 'Bupati'])], antrianController.getantrian); 
-route.delete('/user/antrian/delete', [mid.checkRolesAndLogout(['Admin Instansi'])], antrianController.deleteantrian);
+route.delete('/user/antrian/delete', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.deleteantrian);
 
-route.get('/user/panggilantrian/get/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.panggilAntrianBerikutnya); 
+route.get('/user/panggilantrian/get/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Staff Instansi'])], antrianController.panggilAntrianBerikutnya); 
 
 module.exports = route;

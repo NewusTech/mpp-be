@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Artikel } = require('../models');
+const { Artikel, Instansi } = require('../models');
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -24,19 +24,10 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                title: {
-                    type: "string",
-                    min: 3,
-                },
-                desc: {
-                    type: "string",
-                    min: 3,
-                    optional: true
-                },
-                image: {
-                    type: "string",
-                    optional: true
-                },
+                title: { type: "string", min: 3 },
+                desc: { type: "string", min: 3, optional: true },
+                image: { type: "string", optional: true },
+                instansi_id: { type: "number", optional: true }
             }
 
             if (req.file) {
@@ -64,6 +55,7 @@ module.exports = {
                 slug: req.body.title ? slugify(req.body.title, { lower: true }) : null,
                 desc: req.body.desc,
                 image: req.file ? imageKey : null,
+                instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
             }
 
             //validasi menggunakan module fastest-validator
@@ -100,51 +92,52 @@ module.exports = {
     //mendapatkan semua data artikel
     getartikel: async (req, res) => {
         try {
+            const instansi_id = req.query.instansi_id ?? null;
             const search = req.query.search ?? null;
+            const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let artikelGets;
             let totalCount;
+    
+            const whereCondition = {};
 
-            if (search) {
-                [artikelGets, totalCount] = await Promise.all([
-                    Artikel.findAll({
-                        where: {
-                            [Op.or]: [
-                                { title: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        },
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Artikel.count({
-                        where: {
-                            [Op.or]: [
-                                { title: { [Op.iLike]: `%${search}%` } }
-                            ]
-                        }
-                    })
-                ]);
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
             } else {
-                [artikelGets, totalCount] = await Promise.all([
-                    Artikel.findAll({
-                        limit: limit,
-                        offset: offset
-                    }),
-                    Artikel.count()
-                ]);
+                whereCondition.deletedAt = null;
             }
 
+            if (instansi_id) {
+                whereCondition.instansi_id = instansi_id;
+            }
+    
+            if (search) {
+                whereCondition[Op.or] = [{ title: { [Op.iLike]: `%${search}%` } }];
+            }
+    
+            [artikelGets, totalCount] = await Promise.all([
+                Artikel.findAll({
+                    where: whereCondition,
+                    include: [{ model: Instansi, attributes: ['id', 'name', 'desc', 'image'] }],
+                    limit: limit,
+                    offset: offset
+                }),
+                Artikel.count({
+                    where: whereCondition
+                })
+            ]);
+    
             const pagination = generatePagination(totalCount, page, limit, '/api/user/artikel/get');
-
+    
             res.status(200).json({
                 status: 200,
                 message: 'success get artikel',
                 data: artikelGets,
                 pagination: pagination
             });
-
+    
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -154,11 +147,19 @@ module.exports = {
     //mendapatkan data artikel berdasarkan slug
     getartikelBySlug: async (req, res) => {
         try {
+            const showDeleted = req.query.showDeleted ?? null;
+            const whereCondition = { slug: req.params.slug };
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             //mendapatkan data artikel berdasarkan slug
             let artikelGet = await Artikel.findOne({
-                where: {
-                    slug: req.params.slug
-                },
+                where: whereCondition,
+                include: [{ model: Instansi, attributes: ['id', 'name', 'desc', 'image'] }],
             });
 
             //cek jika artikel tidak ada
@@ -181,7 +182,8 @@ module.exports = {
             //mendapatkan data artikel untuk pengecekan
             let artikelGet = await Artikel.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -193,19 +195,9 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                title: {
-                    type: "string",
-                    min: 3,
-                },
-                desc: {
-                    type: "string",
-                    min: 3,
-                    optional: true
-                },
-                image: {
-                    type: "string",
-                    optional: true
-                },
+                title: { type: "string", min: 3 },
+                desc: { type: "string", min: 3, optional: true },
+                image: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -272,7 +264,8 @@ module.exports = {
             //mendapatkan data artikel untuk pengecekan
             let artikelGet = await Artikel.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -282,11 +275,11 @@ module.exports = {
                 return;
             }
 
-            await Artikel.destroy({
+            await Artikel.update({ deletedAt: new Date() }, {
                 where: {
-                    slug: req.params.slug,
+                    slug: req.params.slug
                 }
-            })
+            });
 
             res.status(200).json(response(200, 'success delete artikel'));
 

@@ -35,6 +35,25 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date()
       },
+      {
+        title: 'Polres Buka Pelayanan di MPP',
+        slug: 'polres-buka-pelayanan-di-mpp',
+        desc: 'Polres buka pelayan publik di Mal Pelayan Publik Lampung Timur sehingga masyarakat dapat mengakses layanan polres di MPP digital.',
+        instansi_id: 1,
+        image: 'https://newus-bucket.s3.ap-southeast-2.amazonaws.com/dir_mpp/artikel/1719369105357-a73f7f630795b06cd59d9d997c81f9bf1709792893.jpg',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        title: 'Kemenag Buka Pelayanan di MPP',
+        slug: 'kemenag-buka-pelayanan-di-mpp',
+        desc: 'Kemenag buka pelayan publik di Mal Pelayan Publik Lampung Timur sehingga masyarakat dapat mengakses layanan polres di MPP digital.',
+        instansi_id: 2,
+        image: 'https://newus-bucket.s3.ap-southeast-2.amazonaws.com/dir_mpp/artikel/1719369522211-29-09-21-09-37-40-.jpeg',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+
     ];
 
     await queryInterface.bulkInsert('Artikels', Artikels, {});

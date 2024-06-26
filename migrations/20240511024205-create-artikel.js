@@ -21,6 +21,9 @@ module.exports = {
       image: {
         type: Sequelize.STRING
       },
+      instansi_id: {
+        type: Sequelize.INTEGER
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -28,6 +31,19 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      },
+      deletedAt: {
+        type: Sequelize.DATE
+      }
+    });
+
+    await queryInterface.addConstraint('Artikels', {
+      fields: ['instansi_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_instansi_id2',
+      references: {
+        table: 'Instansis',
+        field: 'id'
       }
     });
 

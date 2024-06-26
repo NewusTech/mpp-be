@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
       Instansi.hasMany(models.Layanan, {
         foreignKey: 'instansi_id',
       });
+      Instansi.hasMany(models.Artikel, {
+        foreignKey: 'instansi_id',
+      });
       Instansi.hasMany(models.Antrian, {
         foreignKey: 'instansi_id',
       });
@@ -34,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.BOOLEAN,
     jam_buka: DataTypes.TIME,
     jam_tutup: DataTypes.TIME,
+    deletedAt: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Instansi',

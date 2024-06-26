@@ -115,6 +115,7 @@ module.exports = {
             const search = req.query.search ?? null;
             const active_offline = req.query.active_offline ?? null;
             const active_online = req.query.active_online ?? null;
+            const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
@@ -131,37 +132,30 @@ module.exports = {
             if (active_online !== null) {
                 whereCondition.active_online = active_online === 'true';
             }
-
-            if (search || active_online !== null || active_offline !== null) {
-                [instansiGets, totalCount] = await Promise.all([
-                    Instansi.findAll({
-                        where: whereCondition,
-                        include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
-                        limit: limit,
-                        offset: offset,
-                        order: [['id', 'ASC']]
-                    }),
-                    Instansi.count({
-                        where: whereCondition
-                    })
-                ]);
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
             } else {
-                [instansiGets, totalCount] = await Promise.all([
-                    Instansi.findAll({
-                        include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
-                        limit: limit,
-                        offset: offset,
-                        order: [['id', 'ASC']]
-                    }),
-                    Instansi.count()
-                ]);
+                whereCondition.deletedAt = null;
             }
 
+            [instansiGets, totalCount] = await Promise.all([
+                Instansi.findAll({
+                    where: whereCondition,
+                    include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'ASC']]
+                }),
+                Instansi.count({
+                    where: whereCondition
+                })
+            ]);
+
             const formattedInstansiGets = instansiGets.map(instansi => {
-                const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt } = instansi.toJSON();
+                const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt } = instansi.toJSON();
                 const jmlLayanan = instansi.Layanans.length;
                 return {
-                    id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, jmlLayanan
+                    id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
                 };
             });
 
@@ -184,11 +178,17 @@ module.exports = {
     //mendapatkan data instansi berdasarkan slug
     getinstansiBySlug: async (req, res) => {
         try {
-            //mendapatkan data instansi berdasarkan slug
+            const showDeleted = req.query.showDeleted ?? null;
+            const whereCondition = { slug: req.params.slug };
+
+            if (showDeleted !== null) {
+                whereCondition.deletedAt = { [Op.not]: null };
+            } else {
+                whereCondition.deletedAt = null;
+            }
+
             let instansiGet = await Instansi.findOne({
-                where: {
-                    slug: req.params.slug
-                },
+                where: whereCondition,
                 include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }]
             });
 
@@ -198,11 +198,11 @@ module.exports = {
                 return;
             }
 
-            const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, Layanans } = instansiGet.toJSON();
+            const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, jmlLayanan
+                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
             };
 
             //response menggunakan helper response.formatter
@@ -219,7 +219,8 @@ module.exports = {
             //mendapatkan data instansi untuk pengecekan
             let instansiGet = await Instansi.findOne({
                 where: {
-                    slug: req.params.slug
+                    slug: req.params.slug,
+                    deletedAt: null
                 }
             })
 
@@ -312,38 +313,67 @@ module.exports = {
         }
     },
 
-    //menghapus instansi berdasarkan slug
     deleteinstansi: async (req, res) => {
-        try {
+        const transaction = await sequelize.transaction();
 
-            //mendapatkan data instansi untuk pengecekan
+        try {
+            // Cari instansi yang belum dihapus (deletedAt === null)
             let instansiGet = await Instansi.findOne({
                 where: {
-                    slug: req.params.slug
-                }
-            })
+                    slug: req.params.slug,
+                    deletedAt: null
+                },
+                transaction
+            });
 
-            //cek apakah data instansi ada
+            // Jika instansi tidak ditemukan, kirim respons 404
             if (!instansiGet) {
+                await transaction.rollback();
                 res.status(404).json(response(404, 'instansi not found'));
                 return;
             }
 
-            await Instansi.destroy({
-                where: {
-                    slug: req.params.slug,
+            // Ambil semua model terkait dengan Instansi
+            const models = Object.keys(sequelize.models);
+
+            // Array untuk menyimpan promise update untuk setiap model terkait
+            const updatePromises = [];
+
+            // Lakukan soft delete pada semua model terkait
+            models.forEach(async modelName => {
+                const Model = sequelize.models[modelName];
+                if (Model.associations && Model.associations.Instansi && Model.rawAttributes.deletedAt) {
+                    updatePromises.push(
+                        Model.update({ deletedAt: new Date() }, {
+                            where: {
+                                instansi_id: instansiGet.id
+                            },
+                            transaction
+                        })
+                    );
                 }
-            })
+            });
+
+            // Jalankan semua promise update secara bersamaan
+            await Promise.all(updatePromises);
+
+            await Instansi.update({ deletedAt: new Date() }, {
+                where: {
+                    slug: req.params.slug
+                },
+                transaction
+            });
+
+            // Commit transaksi jika semua operasi berhasil
+            await transaction.commit();
 
             res.status(200).json(response(200, 'success delete instansi'));
 
         } catch (err) {
-            if (err.name === 'SequelizeForeignKeyConstraintError') {
-                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
-            } else {
-                res.status(500).json(response(500, 'Internal server error', err));
-                console.log(err);
-            }
+            // Rollback transaksi jika terjadi kesalahan
+            await transaction.rollback();
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
         }
     }
 }

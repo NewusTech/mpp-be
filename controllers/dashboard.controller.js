@@ -90,6 +90,9 @@ module.exports = {
                     }],
                     attributes: ['id', 'name'],
                 }],
+                where: {
+                    deletedAt: null
+                },
                 attributes: ['id', 'name'],
             });
 
