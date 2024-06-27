@@ -11,6 +11,8 @@ const desaRoute = require('./desa.route');
 const visimisiRoute = require('./visimisi.route');
 const videoRoute = require('./video.route');
 const alurmppRoute = require('./alurmpp.route');
+const alurbookingRoute = require('./alurbooking.route');
+const alurpermohonanRoute = require('./alurpermohonan.route');
 const aplikasietcRoute = require('./aplikasietc.route');
 const facilitiesRoute = require('./facilities.route');
 const carouselRoute = require('./carousel.route');
@@ -37,6 +39,8 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, visimisiRoute);
     app.use(urlApi, videoRoute);
     app.use(urlApi, alurmppRoute);
+    app.use(urlApi, alurbookingRoute);
+    app.use(urlApi, alurpermohonanRoute);
     app.use(urlApi, aplikasietcRoute);
     app.use(urlApi, dashboardRoute);
     app.use(urlApi, statistikRoute);

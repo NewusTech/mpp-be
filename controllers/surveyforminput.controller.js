@@ -221,6 +221,7 @@ module.exports = {
                 return {
                     id: data.id,
                     date: data.date,
+                    kritiksaran: data.kritiksaran,
                     nilai: surveyforminputsNilai,
                     name: data.Userinfo ? data.Userinfo.name : null
                 };

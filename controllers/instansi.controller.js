@@ -174,7 +174,6 @@ module.exports = {
         }
     },
 
-
     //mendapatkan data instansi berdasarkan slug
     getinstansiBySlug: async (req, res) => {
         try {
