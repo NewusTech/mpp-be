@@ -185,6 +185,7 @@ module.exports = {
 
     web_admin: async (req, res) => {
         try {
+
             const { month } = req.query;
             const today = new Date();
             const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
@@ -196,14 +197,19 @@ module.exports = {
 
             const firstDaythisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const lastDaythisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-            
+
             const dateRangethisMonth = [firstDaythisMonth, lastDaythisMonth];
-    
+
             const dateRangeToday = [new Date().setHours(0, 0, 0, 0), new Date().setHours(23, 59, 59, 999)];
             const dateRangeWeek = [sevenDaysAgo, new Date()];
-    
+
             const instansiWhere = { instansi_id: data.instansi_id };
-    
+
+            const datainstansi = await Instansi.findAll({
+                where: { id: data.instansi_id },
+                attributes: ['id', 'name', 'desc', 'image'],
+            })
+
             const counts = await Promise.all([
                 Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeToday } }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
                 Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeToday }, status: 4 }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
@@ -211,7 +217,7 @@ module.exports = {
                 Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeMonth }, status: 4 }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
                 Userinfo.count(),
             ]);
-    
+
             const getTopLayanan = async (range) => {
                 const layanan = await Layanan.findAll({
                     where: instansiWhere,
@@ -222,19 +228,20 @@ module.exports = {
                         where: { createdAt: { [Op.between]: range } },
                     },
                 });
-    
+
                 return layanan
                     .map(l => ({ LayananId: l.id, LayananName: l.name, LayananformnumCount: l.Layananformnums.length }))
                     .sort((a, b) => b.LayananformnumCount - a.LayananformnumCount)
                     .slice(0, 3);
             };
-    
+
             const [top3LayananMonth, top3LayananWeek] = await Promise.all([
                 getTopLayanan(dateRangethisMonth),
                 getTopLayanan(dateRangeWeek),
             ]);
-    
+
             res.status(200).json(response(200, 'success get data', {
+                datainstansi,
                 permohonanCountToday: counts[0],
                 permohonanGagalToday: counts[1],
                 permohonanCountMonth: counts[2],
@@ -243,12 +250,11 @@ module.exports = {
                 top3LayananMonth,
                 top3LayananWeek,
             }));
-    
+
         } catch (err) {
             console.error(err);
             res.status(500).json(response(500, 'internal server error', err));
         }
     },
-    
 
 }
