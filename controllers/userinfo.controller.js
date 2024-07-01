@@ -248,7 +248,7 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 2 },
                 nik: { type: "string", length: 16 },
-                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
                 kecamatan_id: { type: "string", min: 1, optional: true },
                 desa_id: { type: "string", min: 1, optional: true },
@@ -398,7 +398,7 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 2 },
                 nik: { type: "string", length: 16, optional: true },
-                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
                 kecamatan_id: { type: "string", min: 1, optional: true },
                 desa_id: { type: "string", min: 1, optional: true },

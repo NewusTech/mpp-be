@@ -22,15 +22,15 @@ const s3Client = new S3Client({
 
 const { Sequelize, Op } = require('sequelize');
 
-function numberToAlphabeticCode(number) {
-    let code = '';
-    while (number > 0) {
-        let remainder = (number - 1) % 26;
-        code = String.fromCharCode(65 + remainder) + code;
-        number = Math.floor((number - 1) / 26);
-    }
-    return code;
-}
+// function numberToAlphabeticCode(number) {
+//     let code = '';
+//     while (number > 0) {
+//         let remainder = (number - 1) % 26;
+//         code = String.fromCharCode(65 + remainder) + code;
+//         number = Math.floor((number - 1) / 26);
+//     }
+//     return code;
+// }
 
 module.exports = {
 
@@ -65,12 +65,12 @@ module.exports = {
                 }
             });
 
-            const newNumber = existingAntrian.length + 1;
-            const instansiCode = numberToAlphabeticCode(req.body.instansi_id);
-            const codeBooking = `${instansiCode}${String(newNumber).padStart(3, '0')}`;
+            // const newNumber = existingAntrian.length + 1;
+            // const instansiCode = numberToAlphabeticCode(req.body.instansi_id);
+            // const codeBooking = `${instansiCode}${String(newNumber).padStart(3, '0')}`;
 
             const antrianCreateObj = {
-                code: codeBooking,
+                // code: codeBooking,
                 instansi_id: Number(req.body.instansi_id),
                 layanan_id: Number(req.body.layanan_id),
                 userinfo_id: userinfo_id ?? null,
@@ -85,16 +85,25 @@ module.exports = {
             }
 
             if (userinfo_id) {
-                const qrCodeBuffer = await QRCode.toBuffer(codeBooking);
-
+                const qrCodeData = {
+                    instansi_id: req.body.instansi_id,
+                    layanan_id: req.body.layanan_id,
+                    userinfo_id: userinfo_id
+                };
+    
+                const qrCodeString = Buffer.from(JSON.stringify(qrCodeData)).toString('base64');
+                const qrCodeBuffer = await QRCode.toBuffer(qrCodeString);
+                
                 const now = new Date();
                 const datetime = now.toISOString().replace(/[-:.]/g, '');
 
-                const codeBookingfix = `${codeBooking}_${datetime}`;
+                // const codeBookingfix = `${codeBooking}_${datetime}`;
+
+                const namekey = `${qrCodeString}_${datetime}`;
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/qrcode/${codeBookingfix}`,
+                    Key: `dir_mpp/qrcode/${namekey}`,
                     Body: qrCodeBuffer,
                     ACL: 'public-read',
                     ContentType: 'image/png'
@@ -118,6 +127,81 @@ module.exports = {
         }
     },
 
+    // getantrian: async (req, res) => {
+    //     try {
+    //         const { slugdinas } = req.params;
+
+    //         const page = parseInt(req.query.page) || 1;
+    //         const limit = parseInt(req.query.limit) || 10;
+    //         const offset = (page - 1) * limit;
+
+    //         let antrianHariIni;
+    //         let totalCount;
+
+    //         // Validasi apakah instansi (dinas) ada
+    //         const instansi = await Instansi.findOne({
+    //             where: {
+    //                 slug: slugdinas
+    //             }
+    //         });
+    //         if (!instansi) {
+    //             return res.status(404).json({ status: 404, message: 'Instansi not found' });
+    //         }
+
+    //         // Mendapatkan rentang tanggal untuk hari ini
+    //         const startOfToday = moment().startOf('day').toDate();
+    //         const endOfToday = moment().endOf('day').toDate();
+
+    //         [antrianHariIni, totalCount] = await Promise.all([
+    //             Antrian.findAll({
+    //                 where: {
+    //                     createdAt: {
+    //                         [Op.between]: [startOfToday, endOfToday]
+    //                     }
+    //                 },
+    //                 include: [{
+    //                     model: Instansi,
+    //                     attributes: ['name'],
+    //                     where: {
+    //                         slug: slugdinas,
+    //                     },
+    //                 }],
+    //                 limit: limit,
+    //                 offset: offset
+    //             }),
+    //             Antrian.count(
+    //                 {
+    //                     where: {
+    //                         createdAt: {
+    //                             [Op.between]: [startOfToday, endOfToday]
+    //                         }
+    //                     },
+    //                     include: [{
+    //                         model: Instansi,
+    //                         where: {
+    //                             slug: slugdinas,
+    //                         },
+    //                     }]
+    //                 }
+    //             )
+    //         ]);
+
+    //         const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.slugdinas}`);
+
+    //         res.status(200).json({
+    //             status: 200,
+    //             message: 'success get',
+    //             data: antrianHariIni,
+    //             pagination: pagination
+    //         });
+    //     } catch (err) {
+    //         console.error(err);
+    //         res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+    //     }
+    // },
+
+    //menghapus antrian berdasarkan id
+    
     getantrian: async (req, res) => {
         try {
             const { slugdinas } = req.params;
@@ -190,8 +274,7 @@ module.exports = {
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });
         }
     },
-
-    //menghapus antrian berdasarkan id
+    
     deleteantrian: async (req, res) => {
         let transaction;
         try {

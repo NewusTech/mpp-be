@@ -35,7 +35,7 @@ module.exports = {
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 },
-                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 jam_buka: { type: "string", optional: true },
                 jam_tutup: { type: "string", optional: true }
             }
@@ -241,7 +241,7 @@ module.exports = {
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 },
-                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 jam_buka: { type: "string", optional: true },
                 jam_tutup: { type: "string", optional: true }
             }

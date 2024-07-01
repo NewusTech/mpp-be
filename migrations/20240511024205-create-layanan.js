@@ -18,6 +18,12 @@ module.exports = {
       desc: {
         type: Sequelize.TEXT
       },
+      dasarhukum: {
+        type: Sequelize.TEXT
+      },
+      syarat: {
+        type: Sequelize.TEXT
+      },
       image: {
         type: Sequelize.STRING
       },
