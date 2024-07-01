@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Pengaduan } = require('../models');
+const { Pengaduan, Layanan, Instansi } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
@@ -110,6 +110,10 @@ module.exports = {
             [pengaduanGets, totalCount] = await Promise.all([
                 Pengaduan.findAll({
                     where: whereCondition,
+                    include: [
+                        { model: Layanan, attributes: ['id', 'name'] },
+                        { model: Instansi, attributes: ['id', 'name'] }
+                    ],
                     limit: limit,
                     offset: offset
                 }),
@@ -145,6 +149,10 @@ module.exports = {
                 where: {
                     id: req.params.id
                 },
+                include: [
+                    { model: Layanan, attributes: ['id', 'name'] },
+                    { model: Instansi, attributes: ['id', 'name'] }
+                ],
             });
 
             //cek jika pengaduan tidak ada

@@ -26,6 +26,8 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     slug: DataTypes.STRING,
     desc: DataTypes.TEXT,
+    dasarhukum: DataTypes.TEXT,
+    syarat: DataTypes.TEXT,
     image: DataTypes.STRING,
     instansi_id: DataTypes.INTEGER,
     active_online: DataTypes.BOOLEAN,

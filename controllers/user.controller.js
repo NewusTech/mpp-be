@@ -21,7 +21,7 @@ module.exports = {
             const schema = {
                 name: { type: "string", min: 3 },
                 nik: { type: "string", min: 3 },
-                email: { type: "string", min: 5, max: 25, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },
                 password: { type: "string", min: 3 },
                 instansi_id: { type: "number", optional: true },

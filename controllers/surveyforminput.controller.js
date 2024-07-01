@@ -190,7 +190,7 @@ module.exports = {
                         },
                         {
                             model: Userinfo,
-                            attributes: ['id', 'name'],
+                            attributes: ['id', 'name', 'pendidikan', 'gender'],
                         },
                     ],
                     where: WhereClause,
@@ -223,7 +223,9 @@ module.exports = {
                     date: data.date,
                     kritiksaran: data.kritiksaran,
                     nilai: surveyforminputsNilai,
-                    name: data.Userinfo ? data.Userinfo.name : null
+                    name: data.Userinfo ? data.Userinfo.name : null,
+                    pendidikan: data.Userinfo ? data.Userinfo.pendidikan : null,
+                    gender: data.Userinfo ? data.Userinfo.gender : null
                 };
             });
     
