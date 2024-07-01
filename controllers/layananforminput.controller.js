@@ -173,7 +173,8 @@ module.exports = {
                 userinfo: layananformnumData.Userinfo,
                 createdAt: layananformnumData.createdAt,
                 updatedAt: layananformnumData.updatedAt,
-                Layananforminputs: formattedInputData
+                Layananforminputs: formattedInputData,
+                status: layananformnumData.status
             };
 
             res.status(200).json(response(200, 'success get data', result));

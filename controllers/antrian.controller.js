@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Antrian, Instansi, sequelize } = require('../models');
+const { Antrian, Instansi, Layanan, sequelize } = require('../models');
 
 const tts = require('google-tts-api');
 const axios = require('axios');
@@ -48,26 +48,10 @@ module.exports = {
 
             const userinfo_id = data.role === "User" ? data.userId : null;
 
-            // Mendapatkan tanggal hari ini
-            const today = new Date().toISOString().split('T')[0];
-
             const instansi = await Instansi.findByPk(req.body.instansi_id);
             if (!instansi) {
                 return res.status(404).json({ status: 404, message: 'Instansi not found' });
             }
-
-            const existingAntrian = await Antrian.findAll({
-                where: {
-                    instansi_id: req.body.instansi_id,
-                    createdAt: {
-                        [Sequelize.Op.gte]: new Date(today)
-                    }
-                }
-            });
-
-            // const newNumber = existingAntrian.length + 1;
-            // const instansiCode = numberToAlphabeticCode(req.body.instansi_id);
-            // const codeBooking = `${instansiCode}${String(newNumber).padStart(3, '0')}`;
 
             const antrianCreateObj = {
                 // code: codeBooking,
@@ -90,10 +74,10 @@ module.exports = {
                     layanan_id: req.body.layanan_id,
                     userinfo_id: userinfo_id
                 };
-    
+
                 const qrCodeString = Buffer.from(JSON.stringify(qrCodeData)).toString('base64');
                 const qrCodeBuffer = await QRCode.toBuffer(qrCodeString);
-                
+
                 const now = new Date();
                 const datetime = now.toISOString().replace(/[-:.]/g, '');
 
@@ -127,81 +111,6 @@ module.exports = {
         }
     },
 
-    // getantrian: async (req, res) => {
-    //     try {
-    //         const { slugdinas } = req.params;
-
-    //         const page = parseInt(req.query.page) || 1;
-    //         const limit = parseInt(req.query.limit) || 10;
-    //         const offset = (page - 1) * limit;
-
-    //         let antrianHariIni;
-    //         let totalCount;
-
-    //         // Validasi apakah instansi (dinas) ada
-    //         const instansi = await Instansi.findOne({
-    //             where: {
-    //                 slug: slugdinas
-    //             }
-    //         });
-    //         if (!instansi) {
-    //             return res.status(404).json({ status: 404, message: 'Instansi not found' });
-    //         }
-
-    //         // Mendapatkan rentang tanggal untuk hari ini
-    //         const startOfToday = moment().startOf('day').toDate();
-    //         const endOfToday = moment().endOf('day').toDate();
-
-    //         [antrianHariIni, totalCount] = await Promise.all([
-    //             Antrian.findAll({
-    //                 where: {
-    //                     createdAt: {
-    //                         [Op.between]: [startOfToday, endOfToday]
-    //                     }
-    //                 },
-    //                 include: [{
-    //                     model: Instansi,
-    //                     attributes: ['name'],
-    //                     where: {
-    //                         slug: slugdinas,
-    //                     },
-    //                 }],
-    //                 limit: limit,
-    //                 offset: offset
-    //             }),
-    //             Antrian.count(
-    //                 {
-    //                     where: {
-    //                         createdAt: {
-    //                             [Op.between]: [startOfToday, endOfToday]
-    //                         }
-    //                     },
-    //                     include: [{
-    //                         model: Instansi,
-    //                         where: {
-    //                             slug: slugdinas,
-    //                         },
-    //                     }]
-    //                 }
-    //             )
-    //         ]);
-
-    //         const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.slugdinas}`);
-
-    //         res.status(200).json({
-    //             status: 200,
-    //             message: 'success get',
-    //             data: antrianHariIni,
-    //             pagination: pagination
-    //         });
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500).json({ status: 500, message: 'Internal server error', error: err });
-    //     }
-    // },
-
-    //menghapus antrian berdasarkan id
-    
     getantrian: async (req, res) => {
         try {
             const { slugdinas } = req.params;
@@ -274,7 +183,83 @@ module.exports = {
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });
         }
     },
-    
+
+    getantrianforuser: async (req, res) => {
+        try {
+            const whereCondition = { userinfo_id: data.userId };
+
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+
+            let antrianForUser;
+            let totalCount;
+
+            [antrianForUser, totalCount] = await Promise.all([
+                Antrian.findAll({
+                    where: whereCondition,
+                    include: [{
+                        model: Instansi,
+                        attributes: ['name'],
+                    }],
+                    limit: limit,
+                    offset: offset
+                }),
+                Antrian.count(
+                    {
+                        where: whereCondition,
+                        include: [{
+                            model: Instansi,
+                        }]
+                    }
+                )
+            ]);
+
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/foruser`);
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: antrianForUser,
+                pagination: pagination
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
+
+    getantrianbyid: async (req, res) => {
+        try {
+
+            let AntrianGet = await Antrian.findOne({
+                where: {
+                    id: req.params.idantrian
+                },
+                include: [
+                    {
+                        model: Instansi,
+                        attributes: ['name'],
+                    },
+                    {
+                        model: Layanan,
+                        attributes: ['name', 'syarat'],
+                    }
+                ],
+            });
+
+            if (!AntrianGet) {
+                res.status(404).json(response(404, 'data not found'));
+                return;
+            }
+
+            res.status(200).json(response(200, 'success get data', AntrianGet));
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
+
     deleteantrian: async (req, res) => {
         let transaction;
         try {
@@ -350,104 +335,4 @@ module.exports = {
         }
     },
 
-    panggilAntrianBerikutnya: async (req, res) => {
-        const transaction = await sequelize.transaction();
-        try {
-            const { slugdinas } = req.params;
-
-            // Validasi apakah instansi (dinas) ada
-            const instansi = await Instansi.findOne({
-                where: {
-                    slug: slugdinas
-                }
-            });
-            if (!instansi) {
-                await transaction.rollback();
-                return res.status(404).json({ status: 404, message: 'Instansi not found' });
-            }
-
-            // Cari antrian berikutnya yang belum dipanggil (statusnya false)
-            const antrianBerikutnya = await Antrian.findOne({
-                where: {
-                    status: false
-                },
-                include: [{
-                    model: Instansi,
-                    attributes: ['id', 'name'],
-                    where: {
-                        slug: slugdinas,
-                    },
-                }],
-                order: [
-                    ['createdAt', 'ASC']
-                ],
-                transaction
-            });
-
-            if (!antrianBerikutnya) {
-                await transaction.rollback();
-                return res.status(404).json({ status: 404, message: 'Tidak ada antrian yang tersedia' });
-            }
-
-            // Update status antrian menjadi true (sudah dipanggil)
-            antrianBerikutnya.status = true;
-            await antrianBerikutnya.save({ transaction });
-
-            // Generate suara panggilan antrian
-            const panggilanAntrian = `Antrian ${antrianBerikutnya.code}, silahkan ke loket ${antrianBerikutnya.Instansi.name}`;
-            const languageCode = 'id';
-
-            const generateAndUploadAudio = async (text, language) => {
-                try {
-                    const url = await tts.getAudioUrl(text, {
-                        lang: language || 'id',
-                        slow: false,
-                        host: 'https://translate.google.com',
-                    });
-
-                    const response = await axios({
-                        url,
-                        method: 'GET',
-                        responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Node.js
-                    });
-
-                    const now = new Date();
-                    const datetime = now.toISOString().replace(/[-:.]/g, '');
-                    const audioFileName = `antrian_audio_${uuidv4()}_${datetime}.mp3`;
-
-                    const uploadParams = {
-                        Bucket: process.env.AWS_S3_BUCKET,
-                        Key: `audio/${audioFileName}`,
-                        Body: response.data, // Buffer dari response arraybuffer
-                        ContentType: 'audio/mpeg',
-                        ACL: 'public-read',
-                    };
-
-                    const command = new PutObjectCommand(uploadParams);
-                    await s3Client.send(command);
-
-                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
-                    return fileUrl;
-                } catch (error) {
-                    console.error('Error converting text to speech or uploading to S3:', error);
-                    throw error;
-                }
-            };
-
-            const audioUrl = await generateAndUploadAudio(panggilanAntrian, languageCode);
-
-            antrianBerikutnya.audio = audioUrl;
-            await antrianBerikutnya.save({ transaction });
-
-            await transaction.commit();
-
-            res.status(200).json(response(200, 'Panggilan antrian berhasil', antrianBerikutnya));
-
-        } catch (err) {
-            await transaction.rollback();
-            console.error(err);
-            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
-        }
-    }
 }
