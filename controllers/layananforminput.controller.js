@@ -489,6 +489,7 @@ module.exports = {
                     userinfo_id: data.userinfo_id,
                     name: data.Userinfo.name,
                     nik: data.Userinfo.nik,
+                    pesan: data.pesan,
                     status: data.status,
                     tgl_selesai: data.tgl_selesai,
                     isonline: data.isonline,
