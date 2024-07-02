@@ -188,7 +188,7 @@ module.exports = {
 
             let instansiGet = await Instansi.findOne({
                 where: whereCondition,
-                include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }]
+                include: [{ model: Layanan, as: 'Layanans', attributes: ['id', 'name', 'desc', 'syarat', 'dasarhukum'] }]
             });
 
             //cek jika instansi tidak ada
@@ -201,10 +201,10 @@ module.exports = {
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
+                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan,
+                Layanans // Include the services
             };
 
-            //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));

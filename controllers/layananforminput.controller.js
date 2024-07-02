@@ -173,7 +173,8 @@ module.exports = {
                 userinfo: layananformnumData.Userinfo,
                 createdAt: layananformnumData.createdAt,
                 updatedAt: layananformnumData.updatedAt,
-                Layananforminputs: formattedInputData
+                Layananforminputs: formattedInputData,
+                status: layananformnumData.status
             };
 
             res.status(200).json(response(200, 'success get data', result));
@@ -488,6 +489,7 @@ module.exports = {
                     userinfo_id: data.userinfo_id,
                     name: data.Userinfo.name,
                     nik: data.Userinfo.nik,
+                    pesan: data.pesan,
                     status: data.status,
                     tgl_selesai: data.tgl_selesai,
                     isonline: data.isonline,
