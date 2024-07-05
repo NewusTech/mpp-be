@@ -357,7 +357,7 @@ module.exports = {
             // Membuat object untuk create user
             let userCreateObj = {
                 password: passwordHash.generate(generatedPassword),
-                role_id: 3,
+                role_id: 5,
                 userinfo_id: userinfoCreate.id,
                 slug: slug
             };
@@ -396,7 +396,7 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 2 },
+                name: { type: "string", min: 2, optional: true },
                 nik: { type: "string", length: 16, optional: true },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telepon: { type: "string", min: 7, max: 15, optional: true },

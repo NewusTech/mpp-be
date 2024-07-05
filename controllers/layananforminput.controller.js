@@ -153,28 +153,28 @@ module.exports = {
                 }
 
                 return {
-                    id: datafilter.id,
-                    data: datafilter.data,
-                    layananform_id: datafilter.layananform_id,
-                    layananformnum_id: datafilter.layananformnum_id,
-                    layananform_name: datafilter.Layananform.field,
-                    layananform_datajson: datafilter.Layananform.datajson,
-                    layananform_tipedata: datafilter.Layananform.tipedata,
-                    data_key: data_key
+                    id: datafilter?.id,
+                    data: datafilter?.data,
+                    layananform_id: datafilter?.layananform_id,
+                    layananformnum_id: datafilter?.layananformnum_id,
+                    layananform_name: datafilter?.Layananform.field,
+                    layananform_datajson: datafilter?.Layananform.datajson,
+                    layananform_tipedata: datafilter?.Layananform.tipedata,
+                    data_key: data_key ?? null
                 };
             });
 
             // Embed the formatted Layananforminput data into the Layananformnum data
             let result = {
-                id: layananformnumData.id,
-                layanan_id: layananformnumData.layanan_id,
-                tgl_selesai: layananformnumData.tgl_selesai,
-                userinfo_id: layananformnumData.userinfo_id,
-                userinfo: layananformnumData.Userinfo,
-                createdAt: layananformnumData.createdAt,
-                updatedAt: layananformnumData.updatedAt,
-                Layananforminputs: formattedInputData,
-                status: layananformnumData.status
+                id: layananformnumData?.id,
+                layanan_id: layananformnumData?.layanan_id,
+                tgl_selesai: layananformnumData?.tgl_selesai,
+                userinfo_id: layananformnumData?.userinfo_id,
+                userinfo: layananformnumData?.Userinfo,
+                createdAt: layananformnumData?.createdAt,
+                updatedAt: layananformnumData?.updatedAt,
+                Layananforminputs: formattedInputData ?? null,
+                status: layananformnumData?.status
             };
 
             res.status(200).json(response(200, 'success get data', result));
