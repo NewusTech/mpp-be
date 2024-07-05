@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Surveyformnum, Userinfo } = require('../models');
+const { Instansi, Layanan, Layananformnum, Surveyformnum, Userinfo, Antrian } = require('../models');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 
@@ -13,12 +13,14 @@ module.exports = {
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
+            const antrianCountToday = await Antrian.count({});
+
             const permohonanCountToday = await Layananformnum.count({
-                where: {
-                    createdAt: {
-                        [Op.between]: [startOfDay, endOfDay]
-                    }
-                }
+                // where: {
+                //     createdAt: {
+                //         [Op.between]: [startOfDay, endOfDay]
+                //     }
+                // }
             });
             const instansiCount = await Instansi.count();
             const layananCount = await Layanan.count();
@@ -26,7 +28,8 @@ module.exports = {
             const dataget = {
                 instansiCount,
                 layananCount,
-                permohonanCountToday
+                permohonanCountToday,
+                antrianCountToday
             };
 
             res.status(200).json(response(200, 'success get data', dataget));

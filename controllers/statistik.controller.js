@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Surveyformnum, Layananformnum, Instansi, Layanan } = require('../models');
+const { Surveyformnum, Layananformnum, Instansi, Layanan, Antrian } = require('../models');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 
@@ -16,9 +16,13 @@ module.exports = {
             const countPerYear = {};
             let total3year = 0;
 
-            const { month } = req.query;
-            const startDate = new Date(currentYear, month ? month - 1 : 0, 1);
-            const endDate = new Date(currentYear, month ? month : 12, 0, 23, 59, 59);
+            const countantrianPerYear = {};
+            let totalantrian3year = 0;
+
+            const { month, year } = req.query;
+            const selectedYear = year ? parseInt(year) : currentYear;
+            const startDate = new Date(selectedYear, month ? month - 1 : 0, 1);
+            const endDate = new Date(selectedYear, month ? month : 12, 0, 23, 59, 59)
 
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -33,8 +37,19 @@ module.exports = {
                     },
                 });
 
+                const countantrian = await Antrian.count({
+                    where: {
+                        createdAt: {
+                            [Op.between]: [`${year}-01-01`, `${year}-12-31`],
+                        },
+                    },
+                });
+    
                 countPerYear[year] = count;
                 total3year += count;
+
+                countantrianPerYear[year] = countantrian;
+                totalantrian3year += countantrian;
             }
 
             let countbyInstansi;
@@ -90,6 +105,8 @@ module.exports = {
             const dataget = {
                 countPerYear,
                 total3year,
+                countantrianPerYear,
+                totalantrian3year,
                 formattedCountByInstansi,
                 pagination
             };
