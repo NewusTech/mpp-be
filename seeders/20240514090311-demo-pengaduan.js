@@ -9,6 +9,7 @@ module.exports = {
         status: 0,
         layanan_id:1,
         instansi_id:1,
+        userinfo_id:5,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -18,6 +19,7 @@ module.exports = {
         status: 0,
         layanan_id:1,
         instansi_id:1,
+        userinfo_id:6,
         createdAt: new Date(),
         updatedAt: new Date()
       },

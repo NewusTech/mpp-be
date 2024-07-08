@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, Userinfo, sequelize } = require('../models');
+const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, Userinfo, Surveyformnum, sequelize } = require('../models');
 require('dotenv').config()
 
 const Validator = require("fastest-validator");
@@ -174,7 +174,8 @@ module.exports = {
                 createdAt: layananformnumData?.createdAt,
                 updatedAt: layananformnumData?.updatedAt,
                 Layananforminputs: formattedInputData ?? null,
-                status: layananformnumData?.status
+                status: layananformnumData?.status,
+                fileoutput: layananformnumData?.fileoutput
             };
 
             res.status(200).json(response(200, 'success get data', result));
@@ -466,7 +467,8 @@ module.exports = {
                         }
                     ],
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [['id', 'ASC']]
                 }),
                 Layananformnum.count({
                     where: WhereClause,
@@ -500,6 +502,7 @@ module.exports = {
                     instansi_name: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.name : null,
                     instansi_image: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.image : null,
                     createdAt: data.createdAt,
+                    fileoutput: data.fileoutput,
                 };
             });
 
@@ -520,7 +523,6 @@ module.exports = {
 
     gethistorybyid: async (req, res) => {
         try {
-            const userinfo_id = data.role === "User" ? data.userId : null;
 
             let Layananformnumget = await Layananformnum.findOne({
                 where: {
@@ -547,6 +549,13 @@ module.exports = {
                 return;
             }
 
+            let surveyGet = await Surveyformnum.findOne({
+                where: {
+                    userinfo_id: Layananformnumget.userinfo_id,
+                    layanan_id: Layananformnumget.layanan_id
+                },
+            });
+
             let formattedData = {
                 id: Layananformnumget.id,
                 userinfo_id: Layananformnumget.userinfo_id,
@@ -561,7 +570,8 @@ module.exports = {
                 instansi_name: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.name : null,
                 instansi_image: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.image : null,
                 createdAt: Layananformnumget.createdAt,
-                tgl_selesai: Layananformnumget.tgl_selesai,
+                fileoutput: Layananformnumget.fileoutput,
+                input_skm: surveyGet ? true : false
             };
 
             res.status(200).json(response(200, 'success get', formattedData));
