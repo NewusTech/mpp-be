@@ -12,6 +12,7 @@ const path = require('path');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const logger = require('../errorHandler/logger');
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -632,7 +633,9 @@ module.exports = {
             res.send(pdfBuffer);
 
         } catch (err) {
-            res.status(500).json(response(500, 'Internal server error', err));
+            res.status(500).json(response(500, 'Internal server errorsss', err));
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
             console.log(err);
         }
     },
