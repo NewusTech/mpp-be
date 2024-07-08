@@ -90,6 +90,8 @@ module.exports = {
     //mendapatkan semua data pengaduan
     getpengaduan: async (req, res) => {
         try {
+            const userinfo_id = data.role === "User" ? data.userId : null;
+
             const instansi_id = req.query.instansi_id ?? null;
             const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
@@ -106,6 +108,9 @@ module.exports = {
             if (search) {
                 whereCondition[Op.or] = [{ judul: { [Op.iLike]: `%${search}%` } }];
             }
+            if (userinfo_id) {
+                whereCondition.userinfo_id = userinfo_id;
+            }
 
             [pengaduanGets, totalCount] = await Promise.all([
                 Pengaduan.findAll({
@@ -115,7 +120,8 @@ module.exports = {
                         { model: Instansi, attributes: ['id', 'name'] }
                     ],
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [['id', 'ASC']]
                 }),
                 Pengaduan.count({
                     where: {

@@ -633,7 +633,7 @@ module.exports = {
             res.send(pdfBuffer);
 
         } catch (err) {
-            res.status(500).json(response(500, 'Internal server errorsss', err));
+            res.status(500).json(response(500, 'Internal server error', err));
             logger.error(`Error : ${err}`);
             logger.error(`Error message: ${err.message}`);
             console.log(err);

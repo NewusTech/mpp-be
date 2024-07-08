@@ -13,6 +13,9 @@ module.exports = {
             const currentYear = new Date().getFullYear();
             const threeYearsAgo = currentYear - 2;
 
+            const startYear = 2010; 
+            const endYear = currentYear;
+
             const countPerYear = {};
             let total3year = 0;
 
@@ -100,6 +103,11 @@ module.exports = {
                 skm_count: instansi.Layanans.reduce((total, layanan) => total + layanan.Surveyformnums.length, 0),
             }));
 
+            const yearList = {};
+            for (let year = 2010; year <= currentYear; year++) {
+                yearList[year.toString()] = year;
+            }
+
             const pagination = generatePagination(totalCount, page, limit, '/api/statistik');
 
             const dataget = {
@@ -108,6 +116,7 @@ module.exports = {
                 countantrianPerYear,
                 totalantrian3year,
                 formattedCountByInstansi,
+                yearList,
                 pagination
             };
 

@@ -22,7 +22,7 @@ const antrianRoute = require('./antrian.route');
 const layananRoute = require('./layanan.route');
 const layananformRoute = require('./layananform.route');
 const surveyformRoute = require('./surveyform.route');
-
+const termcondRoute = require('./termcond.route');
 const suratRoute = require('./surat.route');
 const inputformRoute = require('./inputform.route');
 const inputsurveyRoute = require('./inputsurvey.route');
@@ -52,7 +52,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, antrianRoute);
     app.use(urlApi, layananRoute);
     app.use(urlApi, layananformRoute);
-
+    app.use(urlApi, termcondRoute);
     app.use(urlApi, suratRoute);
     app.use(urlApi, surveyformRoute);
     app.use(urlApi, inputformRoute);
