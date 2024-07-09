@@ -175,7 +175,8 @@ module.exports = {
             let totalCount;
 
             const whereCondition = {
-                instansi_id: instansi_id
+                instansi_id: instansi_id,
+                status: true
             };
 
             if (search) {

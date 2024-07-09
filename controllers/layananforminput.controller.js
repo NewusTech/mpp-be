@@ -468,7 +468,7 @@ module.exports = {
                     ],
                     limit: limit,
                     offset: offset,
-                    order: [['id', 'ASC']]
+                    order: [['id', 'DESC']]
                 }),
                 Layananformnum.count({
                     where: WhereClause,
