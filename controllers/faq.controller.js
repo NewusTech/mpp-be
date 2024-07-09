@@ -128,6 +128,7 @@ module.exports = {
                 question: {
                     type: "string",
                     min: 3,
+                    optional: true
                 },
                 answer: {
                     type: "string",

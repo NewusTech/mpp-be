@@ -98,6 +98,7 @@ module.exports = {
                 name: {
                     type: "string",
                     min: 3,
+                    optional: true
                 },
             }
 

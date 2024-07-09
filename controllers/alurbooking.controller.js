@@ -107,6 +107,7 @@ module.exports = {
                 desc: {
                     type: "string",
                     min: 3,
+                    optional: true
                 },
             }
 

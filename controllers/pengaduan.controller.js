@@ -193,7 +193,7 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                status: { type: "number" },
+                status: { type: "number", optional: true },
                 jawaban: { type: "string", optional: true }
             }
 
