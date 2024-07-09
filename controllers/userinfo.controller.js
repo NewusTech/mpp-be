@@ -469,7 +469,118 @@ module.exports = {
 
     //update data person
     //user update sendiri
+    // updateuserdocs: async (req, res) => {
+    //     try {
+    //         const folderPaths = {
+    //             filektp: "dir_mpp/datauser/filektp",
+    //             filekk: "dir_mpp/datauser/filekk",
+    //             fileijazahsd: "dir_mpp/datauser/fileijazahsd",
+    //             fileijazahsmp: "dir_mpp/datauser/fileijazahsmp",
+    //             fileijazahsma: "dir_mpp/datauser/fileijazahsma",
+    //             fileijazahlain: "dir_mpp/datauser/fileijazahlain",
+    //         };
+
+    //         //mendapatkan data userinfo untuk pengecekan
+    //         let userinfoGet = await Userinfo.findOne({
+    //             where: {
+    //                 slug: req.params.slug,
+    //                 deletedAt: null
+    //             }
+    //         })
+
+    //         //cek apakah data userinfo ada
+    //         if (!userinfoGet) {
+    //             res.status(404).json(response(404, 'userinfo not found'));
+    //             return;
+    //         }
+
+    //         const oldImageUrls = {
+    //             filektp: userinfoGet.filektp,
+    //             filekk: userinfoGet.filekk,
+    //             fileijazahsd: userinfoGet.fileijazahsd,
+    //             fileijazahsmp: userinfoGet.fileijazahsmp,
+    //             fileijazahsma: userinfoGet.fileijazahsma,
+    //             fileijazahlain: userinfoGet.fileijazahlain,
+    //         };
+
+    //         //membuat schema untuk validasi
+    //         const schema = {
+    //             filektp: { type: "string" },
+    //             filekk: { type: "string", optional: true },
+    //             fileijazahsd: { type: "string", optional: true },
+    //             fileijazahsmp: { type: "string", optional: true },
+    //             fileijazahsma: { type: "string", optional: true },
+    //             fileijazahlain: { type: "string", optional: true },
+    //         }
+
+    //         const files = req.files;
+    //         let uploadResults = {};
+
+    //         for (const key in files) {
+    //             if (files[key] && files[key][0]) {
+
+    //                 const file = files[key][0];
+    //                 const { mimetype, buffer, originalname } = file;
+    //                 const base64 = Buffer.from(buffer).toString('base64');
+    //                 const dataURI = `data:${mimetype};base64,${base64}`;
+
+    //                 const now = new Date();
+    //                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
+    //                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
+
+    //                 const uploadParams = {
+    //                     Bucket: process.env.AWS_S3_BUCKET,
+    //                     Key: `${folderPaths[key]}/${uniqueFilename}`,
+    //                     Body: buffer,
+    //                     ACL: 'public-read',
+    //                     ContentType: mimetype
+    //                 };
+
+    //                 const command = new PutObjectCommand(uploadParams);
+    //                 await s3Client.send(command);
+
+    //                 const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+    //                 uploadResults[key] = fileUrl;
+    //             }
+    //         }
+
+    //         let userinfoUpdateObj = {};
+
+    //         for (const key in folderPaths) {
+    //             if (uploadResults[key]) {
+    //                 userinfoUpdateObj[key] = uploadResults[key];
+    //             } else {
+    //                 // Jika file tidak diperbarui, gunakan URL lama
+    //                 userinfoUpdateObj[key] = oldImageUrls[key];
+    //             }
+    //         }
+
+    //         //update userinfo
+    //         await Userinfo.update(userinfoUpdateObj, {
+    //             where: {
+    //                 slug: req.params.slug,
+    //             }
+    //         })
+
+    //         //mendapatkan data userinfo setelah update
+    //         let userinfoAfterUpdate = await Userinfo.findOne({
+    //             where: {
+    //                 slug: req.params.slug,
+    //             }
+    //         })
+
+    //         //response menggunakan helper response.formatter
+    //         res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
+
+    //     } catch (err) {
+    //         res.status(500).json(response(500, 'internal server error', err));
+    //         console.log(err);
+    //     }
+    // },
+
     updateuserdocs: async (req, res) => {
+        const transaction = await sequelize.transaction();
         try {
             const folderPaths = {
                 filektp: "dir_mpp/datauser/filektp",
@@ -479,21 +590,23 @@ module.exports = {
                 fileijazahsma: "dir_mpp/datauser/fileijazahsma",
                 fileijazahlain: "dir_mpp/datauser/fileijazahlain",
             };
-
-            //mendapatkan data userinfo untuk pengecekan
+    
+            // Mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
                     slug: req.params.slug,
                     deletedAt: null
-                }
-            })
-
-            //cek apakah data userinfo ada
+                },
+                transaction
+            });
+    
+            // Cek apakah data userinfo ada
             if (!userinfoGet) {
+                await transaction.rollback();
                 res.status(404).json(response(404, 'userinfo not found'));
                 return;
             }
-
+    
             const oldImageUrls = {
                 filektp: userinfoGet.filektp,
                 filekk: userinfoGet.filekk,
@@ -502,32 +615,21 @@ module.exports = {
                 fileijazahsma: userinfoGet.fileijazahsma,
                 fileijazahlain: userinfoGet.fileijazahlain,
             };
-
-            //membuat schema untuk validasi
-            const schema = {
-                filektp: { type: "string" },
-                filekk: { type: "string", optional: true },
-                fileijazahsd: { type: "string", optional: true },
-                fileijazahsmp: { type: "string", optional: true },
-                fileijazahsma: { type: "string", optional: true },
-                fileijazahlain: { type: "string", optional: true },
-            }
-
+    
             const files = req.files;
             let uploadResults = {};
-
-            for (const key in files) {
+    
+            const uploadPromises = Object.keys(files).map(async (key) => {
                 if (files[key] && files[key][0]) {
-
                     const file = files[key][0];
                     const { mimetype, buffer, originalname } = file;
                     const base64 = Buffer.from(buffer).toString('base64');
                     const dataURI = `data:${mimetype};base64,${base64}`;
-
+    
                     const now = new Date();
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-
+    
                     const uploadParams = {
                         Bucket: process.env.AWS_S3_BUCKET,
                         Key: `${folderPaths[key]}/${uniqueFilename}`,
@@ -535,45 +637,46 @@ module.exports = {
                         ACL: 'public-read',
                         ContentType: mimetype
                     };
-
+    
                     const command = new PutObjectCommand(uploadParams);
                     await s3Client.send(command);
-
+    
                     const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
                     uploadResults[key] = fileUrl;
                 }
-            }
-
+            });
+    
+            await Promise.all(uploadPromises);
+    
             let userinfoUpdateObj = {};
-
+    
             for (const key in folderPaths) {
-                if (uploadResults[key]) {
-                    userinfoUpdateObj[key] = uploadResults[key];
-                } else {
-                    // Jika file tidak diperbarui, gunakan URL lama
-                    userinfoUpdateObj[key] = oldImageUrls[key];
-                }
+                userinfoUpdateObj[key] = uploadResults[key] || oldImageUrls[key];
             }
-
-            //update userinfo
+    
+            // Update userinfo
             await Userinfo.update(userinfoUpdateObj, {
                 where: {
                     slug: req.params.slug,
-                }
-            })
-
-            //mendapatkan data userinfo setelah update
+                },
+                transaction
+            });
+    
+            // Mendapatkan data userinfo setelah update
             let userinfoAfterUpdate = await Userinfo.findOne({
                 where: {
                     slug: req.params.slug,
-                }
-            })
-
-            //response menggunakan helper response.formatter
+                },
+                transaction
+            });
+    
+            await transaction.commit();
+    
+            // Response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
-
+    
         } catch (err) {
+            await transaction.rollback();
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
