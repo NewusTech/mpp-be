@@ -49,7 +49,9 @@ module.exports = {
             let alurpermohonanGets;
 
             [alurpermohonanGets] = await Promise.all([
-                Alurpermohonan.findAll({}),
+                Alurpermohonan.findAll({
+                    order: [['id', 'ASC']]
+                }),
             ]);
 
             res.status(200).json(response(200, 'success get DATA', alurpermohonanGets));

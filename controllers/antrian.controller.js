@@ -2,15 +2,15 @@ const { response } = require('../helpers/response.formatter');
 
 const { Antrian, Instansi, Layanan, sequelize } = require('../models');
 
-const tts = require('google-tts-api');
-const axios = require('axios');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 const QRCode = require('qrcode');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const moment = require('moment-timezone');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const { v4: uuidv4 } = require('uuid');
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -254,6 +254,79 @@ module.exports = {
             }
 
             res.status(200).json(response(200, 'success get data', AntrianGet));
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
+
+    getPDFantrianbyid: async (req, res) => {
+        try {
+
+            let AntrianGet = await Antrian.findOne({
+                where: {
+                    id: req.params.idantrian
+                },
+                include: [
+                    {
+                        model: Instansi,
+                        attributes: ['name'],
+                    },
+                    {
+                        model: Layanan,
+                        attributes: ['name', 'syarat'],
+                    }
+                ],
+            });
+
+            // Read HTML template
+            const templatePath = path.resolve(__dirname, '../views/tiket.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+
+            const originalDate = new Date(AntrianGet?.tanggal || new Date());
+            const formattedDate = `${(originalDate.getMonth() + 1).toString().padStart(2, '0')}/${originalDate.getDate().toString().padStart(2, '0')}/${originalDate.getFullYear()}`;
+            const formattedTime = originalDate.toTimeString().split(' ')[0].slice(0, 5); // Format HH:MM
+
+            const barcode = AntrianGet?.qrcode || '';
+            htmlContent = htmlContent.replace('{{barcode}}', barcode);
+            htmlContent = htmlContent.replace('{{instansiName}}', AntrianGet?.Instansi?.name ?? '');
+            htmlContent = htmlContent.replace('{{layananName}}', AntrianGet?.Layanan?.name ?? '');
+            htmlContent = htmlContent.replace('{{tanggal}}', formattedDate);
+            htmlContent = htmlContent.replace('{{waktu}}', formattedTime);
+
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                timeout: 60000 // Increase timeout to 60 seconds
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content and wait until all resources are loaded
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF with 1 cm margins
+            const pdfBuffer = await page.pdf({
+                width: '2.91in',  // Custom width (e.g., 7.4 cm)
+                height: '4.13in', // Custom height (e.g., 10.5 cm)
+                margin: {
+                    top: '0.39in',    // 1 cm
+                    right: '0.39in',  // 1 cm
+                    bottom: '0.39in', // 1 cm
+                    left: '0.39in'    // 1 cm
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename with current date and time
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `tiket-${currentDate}.pdf`;
+
+            // Set response headers and send the PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
         } catch (err) {
             console.error(err);
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });

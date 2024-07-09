@@ -49,7 +49,9 @@ module.exports = {
             let alurbookingGets;
 
             [alurbookingGets] = await Promise.all([
-                Alurbooking.findAll({}),
+                Alurbooking.findAll({
+                    order: [['id', 'ASC']]
+                }),
             ]);
 
             res.status(200).json(response(200, 'success get DATA', alurbookingGets));
