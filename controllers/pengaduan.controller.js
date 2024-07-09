@@ -121,7 +121,7 @@ module.exports = {
                     ],
                     limit: limit,
                     offset: offset,
-                    order: [['id', 'ASC']]
+                    order: [['id', 'DESC']]
                 }),
                 Pengaduan.count({
                     where: {
