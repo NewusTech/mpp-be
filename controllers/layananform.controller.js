@@ -270,6 +270,7 @@ module.exports = {
                 field: {
                     type: "string",
                     min: 1,
+                    optional: true
                 },
                 tipedata: {
                     type: "string",

@@ -231,11 +231,11 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3 },
-                desc: { type: "string", min: 3, optional: true },
-                pj: { type: "string", min: 3, optional: true },
-                nip_pj: { type: "string", min: 3, optional: true },
-                alamat: { type: "string", min: 3, optional: true },
+                name: { type: "string", min: 3, optional: true },
+                desc: { type: "string", optional: true },
+                pj: { type: "string", optional: true },
+                nip_pj: { type: "string", optional: true },
+                alamat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },

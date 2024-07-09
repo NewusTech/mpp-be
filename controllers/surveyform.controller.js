@@ -197,6 +197,7 @@ module.exports = {
                 field: {
                     type: "string",
                     min: 1,
+                    optional: true
                 },
                 desc: {
                     type: "string",

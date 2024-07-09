@@ -282,7 +282,7 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3 },
+                name: { type: "string", min: 3, optional: true },
                 desc: { type: "string", min: 3, optional: true },
                 dasarhukum: { type: "string", min: 3, optional: true },
                 syarat: { type: "string", min: 3, optional: true },

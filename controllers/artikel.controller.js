@@ -195,7 +195,7 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                title: { type: "string", min: 3 },
+                title: { type: "string", min: 3, optional: true },
                 desc: { type: "string", min: 3, optional: true },
                 image: { type: "string", optional: true },
             }
