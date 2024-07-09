@@ -120,7 +120,8 @@ module.exports = {
                     }],
                     where: WhereClause,
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [['id', 'DESC']]
                 }),
                 Layanan.count({
                     where: WhereClause,
