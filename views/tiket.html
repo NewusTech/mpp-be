@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tiket Antrian</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .barcode {
+            margin: 10px 0;
+        }
+        .details {
+            font-size: 14px;
+        }
+        .detailsbetween {
+            font-size: 14px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="detailsbetween">
+        <div>{{tanggal}}</div>
+        <div>{{waktu}}</div>
+    </div>
+    <div class="barcode">
+        <img src="{{barcode}}" />
+    </div>
+    <div class="details">
+        <div>{{instansiName}}</div>
+        <div>{{layananName}}</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        JsBarcode(".barcode").init();
+    </script>
+</body>
+</html>

@@ -16,5 +16,6 @@ route.delete('/user/antrian/delete', [mid.checkRolesAndLogout(['Admin Instansi',
 
 route.get('/user/antrian/getforuser', [mid.checkRolesAndLogout(['User'])], antrianController.getantrianforuser); 
 route.get('/user/antrian/:idantrian', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], antrianController.getantrianbyid); 
+route.get('/user/antrian/pdf/:idantrian', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], antrianController.getPDFantrianbyid); 
 
 module.exports = route;
