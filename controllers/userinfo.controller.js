@@ -236,6 +236,8 @@ module.exports = {
 
         try {
             const folderPaths = {
+                aktalahir: "dir_mpp/datauser/aktalahir",
+                foto: "dir_mpp/datauser/foto",
                 filektp: "dir_mpp/datauser/filektp",
                 filekk: "dir_mpp/datauser/filekk",
                 fileijazahsd: "dir_mpp/datauser/fileijazahsd",
@@ -263,6 +265,10 @@ module.exports = {
                 pekerjaan: { type: "string", optional: true },
                 goldar: { type: "number", optional: true },
                 pendidikan: { type: "number", optional: true },
+                foto: { type: "string", optional: true },
+                aktalahir: { type: "string", optional: true },
+                filekk: { type: "string", optional: true },
+                filektp: { type: "string", optional: true },
                 fileijazahsd: { type: "string", optional: true },
                 fileijazahsmp: { type: "string", optional: true },
                 fileijazahsma: { type: "string", optional: true },
@@ -583,6 +589,8 @@ module.exports = {
         const transaction = await sequelize.transaction();
         try {
             const folderPaths = {
+                aktalahir: "dir_mpp/datauser/aktalahir",
+                foto: "dir_mpp/datauser/foto",
                 filektp: "dir_mpp/datauser/filektp",
                 filekk: "dir_mpp/datauser/filekk",
                 fileijazahsd: "dir_mpp/datauser/fileijazahsd",
@@ -608,6 +616,8 @@ module.exports = {
             }
     
             const oldImageUrls = {
+                aktalahir: userinfoGet.aktalahir,
+                foto: userinfoGet.foto,
                 filektp: userinfoGet.filektp,
                 filekk: userinfoGet.filekk,
                 fileijazahsd: userinfoGet.fileijazahsd,

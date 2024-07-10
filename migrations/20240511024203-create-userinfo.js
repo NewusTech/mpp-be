@@ -64,6 +64,12 @@ module.exports = {
       pendidikan: {
         type: Sequelize.SMALLINT
       },
+      foto: {
+        type: Sequelize.STRING
+      },
+      aktalahir: {
+        type: Sequelize.STRING
+      },
       filektp: {
         type: Sequelize.STRING
       },

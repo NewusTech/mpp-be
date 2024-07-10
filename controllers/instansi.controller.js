@@ -68,9 +68,9 @@ module.exports = {
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
                 email: req.body.email,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : undefined,
-                active_online: req.body.active_online ? Number(req.body.active_online) : undefined,
-                status: req.body.status ? Number(req.body.status) : undefined,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : 0,
+                active_online: req.body.active_online ? Number(req.body.active_online) : 0,
+                status: req.body.status ? Number(req.body.status) : 0,
                 alamat: req.body.alamat,
                 image: req.file ? imageKey : undefined,
                 jam_buka: req.body.jam_buka,
@@ -113,8 +113,6 @@ module.exports = {
     getinstansi: async (req, res) => {
         try {
             const search = req.query.search ?? null;
-            const active_offline = req.query.active_offline ?? null;
-            const active_online = req.query.active_online ?? null;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -123,15 +121,16 @@ module.exports = {
             let totalCount;
 
             const whereCondition = {};
+
             if (search) {
                 whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
             }
-            if (active_offline !== null) {
-                whereCondition.active_offline = active_offline === 'true';
+
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            } else {
+                whereCondition.status = true;
             }
-            if (active_online !== null) {
-                whereCondition.active_online = active_online === 'true';
-            }
+
             if (showDeleted !== null) {
                 whereCondition.deletedAt = { [Op.not]: null };
             } else {
@@ -143,8 +142,10 @@ module.exports = {
                     where: whereCondition,
                     include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
                     limit: limit,
-                    offset: offset,
-                    order: [['id', 'ASC']]
+                    order: [
+                        ['status', 'DESC'],
+                        ['id', 'ASC']
+                    ]
                 }),
                 Instansi.count({
                     where: whereCondition
@@ -184,6 +185,11 @@ module.exports = {
                 whereCondition.deletedAt = { [Op.not]: null };
             } else {
                 whereCondition.deletedAt = null;
+            }
+
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            } else {
+                whereCondition.status = true;
             }
 
             let instansiGet = await Instansi.findOne({
@@ -267,7 +273,7 @@ module.exports = {
             //buat object instansi
             let instansiUpdateObj = {
                 name: req.body.name,
-                slug: slugify(req.body.name, { lower: true }),
+                slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,

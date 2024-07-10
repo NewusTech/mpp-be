@@ -40,6 +40,19 @@ const checkRolesAndLogout = (allowedRoles) => async (req, res, next) => {
     });
 };
 
+const checkRoles = () => async (req, res, next) => {
+    let token;
+    try {
+        token = req.headers.authorization.split(' ')[1];
+    } catch (err) {
+    }
+
+    jwt.verify(token, baseConfig.auth_secret, async (err, decoded) => {
+        data = decoded;
+        next();
+    });
+};
+
 module.exports = {
-    checkRolesAndLogout,
+    checkRolesAndLogout, checkRoles
 };

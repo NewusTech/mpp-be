@@ -68,9 +68,9 @@ module.exports = {
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : null,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
-                active_online: req.body.active_online ? Number(req.body.active_online) : null,
-                status: req.body.status ? Number(req.body.status) : null,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : false,
+                active_online: req.body.active_online ? Number(req.body.active_online) : false,
+                status: req.body.status ? Number(req.body.status) : false,
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
             }
 
@@ -127,12 +127,21 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            } else {
+                whereCondition.status = true;
+            }
+
             [layananGets, totalCount] = await Promise.all([
                 Layanan.findAll({
                     where: whereCondition,
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [
+                        ['status', 'DESC'],
+                        ['id', 'ASC']
+                    ]
                 }),
                 Layanan.count({
                     where: whereCondition
@@ -175,9 +184,13 @@ module.exports = {
             let totalCount;
 
             const whereCondition = {
-                instansi_id: instansi_id,
-                status: true
+                instansi_id: instansi_id
             };
+
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            } else {
+                whereCondition.status = true;
+            }
 
             if (search) {
                 whereCondition[Op.and] = [
@@ -197,7 +210,11 @@ module.exports = {
                     where: whereCondition,
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [
+                        ['status', 'DESC'],
+                        ['id', 'ASC']
+                    ]
                 }),
                 Layanan.count({
                     where: whereCondition
@@ -237,6 +254,11 @@ module.exports = {
                 whereCondition.deletedAt = { [Op.not]: null };
             } else {
                 whereCondition.deletedAt = null;
+            }
+
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            } else {
+                whereCondition.status = true;
             }
 
             let layananGet = await Layanan.findOne({
@@ -320,9 +342,9 @@ module.exports = {
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : layananGet.image,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : null,
-                active_online: req.body.active_online ? Number(req.body.active_online) : null,
-                status: req.body.status ? Number(req.body.status) : null,
+                active_offline: req.body.active_offline ? Number(req.body.active_offline) : undefined,
+                active_online: req.body.active_online ? Number(req.body.active_online) : undefined,
+                status: req.body.status ? Number(req.body.status) : undefined,
             }
 
             //validasi menggunakan module fastest-validator

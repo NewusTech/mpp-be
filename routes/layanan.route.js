@@ -11,9 +11,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 route.post('/user/layanan/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), layananController.createlayanan);
-route.get('/user/layanan/get', layananController.getlayanan); 
-route.get('/user/layanan/dinas/get/:instansi_id', layananController.getlayananbydinas); 
-route.get('/user/layanan/get/:id', layananController.getlayananById); 
+route.get('/user/layanan/get', [mid.checkRoles()], layananController.getlayanan); 
+route.get('/user/layanan/dinas/get/:instansi_id', [mid.checkRoles()], layananController.getlayananbydinas); 
+route.get('/user/layanan/get/:id', [mid.checkRoles()], layananController.getlayananById); 
 
 //update layanan
 route.put('/user/layanan/update/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], upload.single('image'), layananController.updatelayanan); 

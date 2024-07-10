@@ -15,6 +15,8 @@ route.get('/user/alluserinfo/get/:slug', [mid.checkRolesAndLogout(['Super Admin'
 route.delete('/user/alluserinfo/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
 
 route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin'])], upload.fields([
+    { name: 'foto', maxCount: 1 },
+    { name: 'aktalahir', maxCount: 1 },
     { name: 'filektp', maxCount: 1 },
     { name: 'filekk', maxCount: 1 },
     { name: 'fileijazahsd', maxCount: 1 },
@@ -24,6 +26,8 @@ route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 
 ]), userinfoController.createuserinfo); 
 route.put('/user/userinfo/update/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], userinfoController.updateuserinfo);
 route.put('/user/userinfo/updatedocs/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], upload.fields([
+    { name: 'foto', maxCount: 1 },
+    { name: 'aktalahir', maxCount: 1 },
     { name: 'filektp', maxCount: 1 },
     { name: 'filekk', maxCount: 1 },
     { name: 'fileijazahsd', maxCount: 1 },
