@@ -1,7 +1,43 @@
 2024-07-08T04:13:12.771Z error: Error creating user: [object SequelizeInstance:Userinfo]
 2024-07-08T04:13:17.299Z error: Error creating user: [object SequelizeInstance:Userinfo]
-2024-07-10T03:42:01.282Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+024-07-10T03:42:01.282Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
 2024-07-10T03:42:56.609Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
 2024-07-10T03:43:38.037Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
 2024-07-10T03:45:18.141Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
 2024-07-10T03:45:45.182Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+2024-07-08T04:27:08.597Z error: Error : Error: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libgbm.so.1: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+2024-07-08T04:27:08.598Z error: Error message: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libgbm.so.1: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+2024-07-08T04:34:23.858Z error: Error : Error: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libasound.so.2: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+2024-07-08T04:34:23.859Z error: Error message: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libasound.so.2: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+2024-07-08T04:34:29.888Z error: Error : Error: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libasound.so.2: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+2024-07-08T04:34:29.888Z error: Error message: Failed to launch the browser process!
+/root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64/chrome: error while loading shared libraries: libasound.so.2: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+

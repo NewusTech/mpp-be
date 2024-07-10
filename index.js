@@ -7,7 +7,7 @@ const logger = require('./errorHandler/logger');
 const error = require('./errorHandler/errorHandler')
 
 const app = express();
-const port = 3000;
+const port = 3004;
 const urlApi = "/api";
 
 app.use(cors());
