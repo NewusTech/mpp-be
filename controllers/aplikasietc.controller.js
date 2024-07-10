@@ -87,7 +87,8 @@ module.exports = {
             [AplikasietcsGets, totalCount] = await Promise.all([
                 Aplikasietcs.findAll({
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    order: [['id', 'ASC']]
                 }),
                 Aplikasietcs.count()
             ]);

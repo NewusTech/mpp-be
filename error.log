@@ -1,2 +1,7 @@
 2024-07-08T04:13:12.771Z error: Error creating user: [object SequelizeInstance:Userinfo]
 2024-07-08T04:13:17.299Z error: Error creating user: [object SequelizeInstance:Userinfo]
+2024-07-10T03:42:01.282Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+2024-07-10T03:42:56.609Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+2024-07-10T03:43:38.037Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+2024-07-10T03:45:18.141Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
+2024-07-10T03:45:45.182Z error: 500 - Unexpected field - /api/user/userinfo/updatedocs/Chanzu-20240620041615213 - PUT - ::1
