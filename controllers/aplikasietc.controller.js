@@ -27,6 +27,8 @@ module.exports = {
                     type: "string",
                     optional: true
                 },
+                desc: { type: "string", optional: true },
+                link: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -175,6 +177,8 @@ module.exports = {
             //buat object Aplikasietcs
             let AplikasietcsUpdateObj = {
                 name: req.body.name,
+                link: req.body.link,
+                desc: req.body.desc,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 image: req.file ? imageKey : AplikasietcsGet.image,
             }
