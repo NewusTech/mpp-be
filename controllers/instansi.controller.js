@@ -142,6 +142,7 @@ module.exports = {
                 Instansi.findAll({
                     where: whereCondition,
                     include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
+                    offset: offset,
                     limit: limit,
                     order: [
                         ['status', 'DESC'],
