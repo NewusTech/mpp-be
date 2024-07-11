@@ -36,9 +36,9 @@ module.exports = {
                 dasarhukum: { type: "string", min: 3, optional: true },
                 syarat: { type: "string", min: 3, optional: true },
                 image: { type: "string", optional: true },
-                active_offline: { type: "number", optional: true },
-                active_online: { type: "number", optional: true },
-                status: { type: "number", optional: true },
+                active_offline: { type: "string", optional: true },
+                active_online: { type: "string", optional: true },
+                status: { type: "string", optional: true },
                 instansi_id: { type: "number", optional: true }
             }
 
@@ -69,9 +69,9 @@ module.exports = {
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : null,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : false,
-                active_online: req.body.active_online ? Number(req.body.active_online) : false,
-                status: req.body.status ? Number(req.body.status) : false,
+                active_offline: req.body.active_offline,
+                active_online: req.body.active_online,
+                status: req.body.status,
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : null,
             }
 
@@ -169,6 +169,8 @@ module.exports = {
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
         }
     },
 
@@ -311,9 +313,9 @@ module.exports = {
                 dasarhukum: { type: "string", min: 3, optional: true },
                 syarat: { type: "string", min: 3, optional: true },
                 image: { type: "string", optional: true },
-                active_offline: { type: "number", optional: true },
-                active_online: { type: "number", optional: true },
-                status: { type: "number", optional: true },
+                active_offline: { type: "string", optional: true },
+                active_online: { type: "string", optional: true },
+                status: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -343,9 +345,9 @@ module.exports = {
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : layananGet.image,
-                active_offline: req.body.active_offline ? Number(req.body.active_offline) : undefined,
-                active_online: req.body.active_online ? Number(req.body.active_online) : undefined,
-                status: req.body.status ? Number(req.body.status) : undefined,
+                active_offline: req.body.active_offline,
+                active_online: req.body.active_online,
+                status: req.body.status
             }
 
             //validasi menggunakan module fastest-validator
