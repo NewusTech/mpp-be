@@ -8,7 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Alurmpp.init({
-    image: DataTypes.STRING
+    image: DataTypes.STRING,
+    title: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Alurmpp',

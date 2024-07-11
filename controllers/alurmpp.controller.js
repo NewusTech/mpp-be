@@ -22,7 +22,9 @@ module.exports = {
     getalurmpp: async (req, res) => {
         try {
             //mendapatkan data alurmpp berdasarkan id
-            let alurmppGet = await Alurmpp.findOne();
+            let alurmppGet = await Alurmpp.findAll({
+                order: [['id', 'ASC']]
+            });
 
             //cek jika alurmpp tidak ada
             if (!alurmppGet) {
@@ -38,11 +40,39 @@ module.exports = {
         }
     },
 
+    //mendapatkan data Alurmpp berdasarkan id
+    getAlurmppById: async (req, res) => {
+        try {
+            //mendapatkan data Alurmpp berdasarkan id
+            let AlurmppGet = await Alurmpp.findOne({
+                where: {
+                    id: req.params.id
+                },
+            });
+
+            //cek jika Alurmpp tidak ada
+            if (!AlurmppGet) {
+                res.status(404).json(response(404, 'Alurmpp not found'));
+                return;
+            }
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get Alurmpp by id', AlurmppGet));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
     //mengupdate alurmpp berdasarkan id
     updatealurmpp: async (req, res) => {
         try {
             //mendapatkan data alurmpp untuk pengecekan
-            let alurmppGet = await Alurmpp.findOne()
+            let alurmppGet = await Alurmpp.findOne({
+                where: {
+                    id: req.params.id
+                }
+            })
 
             //cek apakah data alurmpp ada
             if (!alurmppGet) {
@@ -52,10 +82,8 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                image: {
-                    type: "string",
-                    optional: true
-                }
+                image: { type: "string", optional: true },
+                title: { type: "string", optional: true }
             }
 
             if (req.file) {
@@ -80,6 +108,7 @@ module.exports = {
             //buat object alurmpp
             let alurmppUpdateObj = {
                 image: req.file ? imageKey : undefined,
+                title: req.body.title,
             }
 
             //validasi menggunakan module fastest-validator
@@ -89,17 +118,18 @@ module.exports = {
                 return;
             }
 
-            console.log(alurmppGet.id)
-
-            //update alurmpp
             await Alurmpp.update(alurmppUpdateObj, {
                 where: {
-                    id: alurmppGet.id,
-                },
+                    id: req.params.id,
+                }
             });
 
             //mendapatkan data alurmpp setelah update
-            let alurmppAfterUpdate = await Alurmpp.findOne()
+            let alurmppAfterUpdate = await Alurmpp.findOne({
+                where: {
+                    id: alurmppGet.id,
+                },
+            })
 
             //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update alurmpp', alurmppAfterUpdate));
