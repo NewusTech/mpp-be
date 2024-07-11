@@ -11,7 +11,7 @@ route.get('/user/detailsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Insta
 route.get('/user/surat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin'])], suratController.getsurat); 
 
 //untuk print pdf berserta permohonan user
-route.get('/user/surat/:idlayanan/:idforminput', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin'])], suratController.getsurat); 
+route.get('/user/surat/:idlayanan/:idforminput', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], suratController.getsurat); 
 
 route.put('/user/editsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], suratController.editinfosurat); 
 

@@ -457,6 +457,8 @@ module.exports = {
                 pendidikan: userGet.Userinfo?.pendidikan,
                 filektp: userGet.Userinfo?.filektp,
                 filekk: userGet.Userinfo?.filekk,
+                foto: userGet.Userinfo?.foto,
+                aktalahir: userGet.Userinfo?.aktalahir,
                 fileijazahsd: userGet.Userinfo?.fileijazahsd,
                 fileijazahsmp: userGet.Userinfo?.fileijazahsmp,
                 fileijazahsma: userGet.Userinfo?.fileijazahsma,

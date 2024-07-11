@@ -338,7 +338,7 @@ module.exports = {
             //buat object layanan
             let layananUpdateObj = {
                 name: req.body.name,
-                slug: slugify(req.body.name, { lower: true }),
+                slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
