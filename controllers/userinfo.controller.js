@@ -158,6 +158,8 @@ module.exports = {
                     pekerjaan: user.pekerjaan,
                     goldar: user.goldar,
                     pendidikan: user.pendidikan,
+                    foto: user.foto,
+                    aktalahir: user.aktalahir,
                     filektp: user.filektp,
                     filekk: user.filekk,
                     fileijazahsd: user.fileijazahsd,

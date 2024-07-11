@@ -32,6 +32,7 @@ module.exports = {
 
             const idlayanan = req.params.idlayanan;
             const iduser = data.role === "User" ? data.userId : req.body.userId;
+            const statusinput = data.role === "User" ? 0 : 1;
 
             if (!iduser) {
                 throw new Error('User ID is required');
@@ -44,7 +45,7 @@ module.exports = {
                 userinfo_id: Number(iduser),
                 layanan_id: Number(idlayanan),
                 isonline: true,
-                status: 0
+                status: Number(statusinput)
             };
 
             const createdLayananformnum = await Layananformnum.create(layananID, { transaction });

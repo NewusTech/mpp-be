@@ -22,8 +22,16 @@ module.exports = {
                 //     }
                 // }
             });
-            const instansiCount = await Instansi.count();
-            const layananCount = await Layanan.count();
+            const instansiCount = await Instansi.count({
+                where: {
+                    status: true
+                }
+            });
+            const layananCount = await Layanan.count({
+                where: {
+                    status: true
+                }
+            });
 
             const dataget = {
                 instansiCount,
