@@ -153,7 +153,7 @@ module.exports = {
                 const { Instansi, ...otherData } = layanan.dataValues;
                 return {
                     ...otherData,
-                    instansi_name: Instansi.name
+                    instansi_name: Instansi?.name
                 };
             });
 
@@ -228,7 +228,7 @@ module.exports = {
                 const { Instansi, ...otherData } = layanan.dataValues;
                 return {
                     ...otherData,
-                    instansi_name: Instansi.name
+                    instansi_name: Instansi?.name
                 };
             });
 
