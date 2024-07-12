@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Surveyformnum, Userinfo, Antrian } = require('../models');
+const { Instansi, Layanan, Layananformnum, Surveyforminput, Surveyformnum, Userinfo, Antrian } = require('../models');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 
@@ -194,7 +194,7 @@ module.exports = {
         }
     },
 
-    web_admin: async (req, res) => {
+    web_admin_layanan: async (req, res) => {
         try {
 
             const { month } = req.query;
@@ -260,6 +260,105 @@ module.exports = {
                 UserCount: counts[4],
                 top3LayananMonth,
                 top3LayananWeek,
+            }));
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
+    web_admin_survey: async (req, res) => {
+        try {
+
+            const { year } = req.query;
+
+            const datainstansi = await Instansi.findAll({
+                where: { id: data.instansi_id },
+                attributes: ['id', 'name', 'desc', 'image'],
+            })
+
+            const WhereClause = {};
+            WhereClause.instansi_id = data?.instansi_id;
+
+            const WhereClause2 = {};
+
+            if (year) {
+                const startDate = new Date(year, 0, 1);
+                const endDate = new Date(year, 11, 31);
+                WhereClause2.createdAt = {
+                    [Op.between]: [startDate, endDate]
+                };
+            }
+
+            [history, totalCount] = await Promise.all([
+                Layanan.findAll({
+                    include: [{
+                        model: Surveyformnum,
+                        required: false,
+                        include: [{
+                            model: Surveyforminput,
+                        }],
+                        where: WhereClause2,
+                    }],
+                    where: WhereClause,
+                })
+            ]);
+
+            const calculateNilai = (surveyformnums) => {
+                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
+                let totalNilai = 0;
+                let totalInputs = 0;
+
+                surveyformnums.forEach(surveyformnum => {
+                    surveyformnum.Surveyforminputs.forEach(input => {
+                        totalNilai += nilaiMap[input.nilai] || 0;
+                        totalInputs++;
+                    });
+                });
+
+                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+            };
+            
+            let totalNilai = 0;
+            let totalLayanan = 0;
+
+            let nilaiSKM_perlayanan = history.map(data => {
+                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
+                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
+                
+                if (surveyformnumsNilai > 0) {
+                    totalNilai += surveyformnumsNilai;
+                    totalLayanan++;
+                }
+
+                return {
+                    id: data.id,
+                    layanan_name: data.name || null,
+                    // Surveyformnums_count: surveyformnumsCount,
+                    Surveyformnums_nilai: surveyformnumsNilai
+                };
+            });
+
+            const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
+
+            const surveyformnumPerBulan = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                total: 0
+            }));
+    
+            history.forEach(data => {
+                data.Surveyformnums.forEach(surveyformnum => {
+                    const bulan = new Date(surveyformnum.createdAt).getMonth();
+                    surveyformnumPerBulan[bulan].total++;
+                });
+            });
+
+            res.status(200).json(response(200, 'success get data', {
+                datainstansi,
+                nilaiSKM_perlayanan,
+                rataRataNilaiSKM,
+                surveyformnumPerBulan
             }));
 
         } catch (err) {

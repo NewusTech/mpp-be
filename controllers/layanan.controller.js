@@ -278,7 +278,7 @@ module.exports = {
             const { Instansi: instansiObj, ...otherData } = layananGet.dataValues;
             const modifiedLayananGet = {
                 ...otherData,
-                instansi_name: instansiObj.name
+                instansi_name: instansiObj?.name
             };
 
             //response menggunakan helper response.formatter
