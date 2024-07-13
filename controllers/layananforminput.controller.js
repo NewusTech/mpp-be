@@ -5,7 +5,7 @@ require('dotenv').config()
 
 const Validator = require("fastest-validator");
 const v = new Validator();
-
+const moment = require('moment-timezone');
 const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -581,6 +581,59 @@ module.exports = {
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
+        }
+    },
+
+    totalpermohonan_bulan: async (req, res) => {
+        try {
+            const { iddinas } = req.params;
+
+            const currentYear = moment().year();
+
+            const monthlyPromises = [];
+
+            for (let month = 0; month < 12; month++) {
+                const startOfMonth = moment().year(currentYear).month(month).startOf('month').toDate();
+                const endOfMonth = moment().year(currentYear).month(month).endOf('month').toDate();
+                monthlyPromises.push(
+                    Layananformnum.count({
+                        include: [
+                            {
+                                model: Layanan,
+                                attributes: { exclude: ['name'] },
+                                where: {
+                                    instansi_id: iddinas
+                                }
+                            }
+                        ],
+                        where: {
+                            createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
+                        }
+                    })
+                );
+            }
+
+            const [monthlyCounts] = await Promise.all([
+                Promise.all(monthlyPromises)
+            ]);
+    
+            const monthlyAntrianCounts = {};
+            for (let month = 0; month < 12; month++) {
+                monthlyAntrianCounts[moment().month(month).format('MMMM')] = monthlyCounts[month];
+            }
+    
+            const data = {
+                monthlyAntrianCounts
+            };
+    
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
         }
     }
 
