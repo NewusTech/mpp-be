@@ -27,5 +27,4 @@ route.get('/user/layananform/get', [mid.checkRolesAndLogout(['Admin Instansi', '
 //get form by id --> gak bakal kepake
 route.get('/user/layananform/get/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin'])], layananformController.getlayananformById); 
 
-
 module.exports = route;

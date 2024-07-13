@@ -3,6 +3,7 @@ const { response } = require('../helpers/response.formatter');
 const { Instansi, Layanan, Layananformnum, Surveyforminput, Surveyformnum, Userinfo, Antrian } = require('../models');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
+const axios = require('axios');
 
 module.exports = {
 
@@ -359,6 +360,21 @@ module.exports = {
                 nilaiSKM_perlayanan,
                 rataRataNilaiSKM,
                 surveyformnumPerBulan
+            }));
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
+    web_admin_antrian: async (req, res) => {
+        try {
+            const responseurl = await axios.get(process.env.BASE_URLKIOSK + '/antrian/get/1');
+            const data = responseurl.data;
+
+            res.status(200).json(response(200, 'success get data', {
+              data
             }));
 
         } catch (err) {

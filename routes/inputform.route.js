@@ -18,4 +18,6 @@ route.put('/user/inputform/updatestatus/:idlayanannum', [mid.checkRolesAndLogout
 
 route.put('/user/inputform/file/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin'])], upload.single('file'), layananforminput.uploadfilehasil);
 
+route.get('/user/layananform/getperbulan/:iddinas', layananforminput.totalpermohonan_bulan); 
+
 module.exports = route;
