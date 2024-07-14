@@ -286,7 +286,7 @@ module.exports = {
 
             const originalDate = new Date(AntrianGet?.tanggal || new Date());
             const formattedDate = `${(originalDate.getMonth() + 1).toString().padStart(2, '0')}/${originalDate.getDate().toString().padStart(2, '0')}/${originalDate.getFullYear()}`;
-            const formattedTime = originalDate.toTimeString().split(' ')[0].slice(0, 5); // Format HH:MM
+            const formattedTime = AntrianGet?.waktu.split(' ')[0].slice(0, 5); // Format HH:MM
 
             const barcode = AntrianGet?.qrcode || '';
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
