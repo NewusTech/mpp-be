@@ -36,11 +36,11 @@ module.exports = {
 
             let totalantrian = null;
             try {
-                const response = await axios.get(process.env.BASE_URLKIOSK + `/antrian/count`);
+                const response = await axios.get(process.env.BASE_URLKIOSK + `/antrian/a`);
                 totalantrian = response?.data?.data;
             } catch (error) {
                 if (error.response && error.response.status === 404) {
-                    console.error('Data not found for the specified iddinas:', iddinas);
+                  
                 } else {
                     throw error; // Re-throw the error if it is not a 404
                 }
@@ -51,7 +51,7 @@ module.exports = {
                 layananCount,
                 permohonanCountToday,
                 // antrianCountToday
-                totalantrian
+                totalantrian: totalantrian ? totalantrian : '-'
             };
 
             res.status(200).json(response(200, 'success get data', dataget));
