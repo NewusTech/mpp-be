@@ -14,7 +14,7 @@ module.exports = {
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-            // const antrianCountToday = await Antrian.count({});
+            const antrianCountToday = await Antrian.count({});
 
             const permohonanCountToday = await Layananformnum.count({
                 // where: {
@@ -34,24 +34,24 @@ module.exports = {
                 }
             });
 
-            let totalantrian = null;
-            try {
-                const response = await axios.get(process.env.BASE_URLKIOSK + `/antrian/a`);
-                totalantrian = response?.data?.data;
-            } catch (error) {
-                if (error.response && error.response.status === 404) {
+            // let totalantrian = null;
+            // try {
+            //     const response = await axios.get(process.env.BASE_URLKIOSK + `/antrian/a`);
+            //     totalantrian = response?.data?.data;
+            // } catch (error) {
+            //     if (error.response && error.response.status === 404) {
                   
-                } else {
-                    throw error; // Re-throw the error if it is not a 404
-                }
-            }
+            //     } else {
+            //         throw error; // Re-throw the error if it is not a 404
+            //     }
+            // }
 
             const dataget = {
                 instansiCount,
                 layananCount,
                 permohonanCountToday,
-                // antrianCountToday
-                totalantrian: totalantrian ? totalantrian : '-'
+                antrianCountToday
+                // totalantrian: totalantrian ? totalantrian : '-'
             };
 
             res.status(200).json(response(200, 'success get data', dataget));
