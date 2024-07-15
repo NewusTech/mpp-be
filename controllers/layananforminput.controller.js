@@ -126,6 +126,14 @@ module.exports = {
                     },
                     {
                         model: Userinfo,
+                    },
+                    {
+                        model: Layanan,
+                        attributes: ['id', 'name', 'desc'],
+                        include: [{
+                            model: Instansi,
+                            attributes: ['id', 'name', 'desc'],
+                        }]
                     }
                 ]
             });
@@ -170,6 +178,7 @@ module.exports = {
             let result = {
                 id: layananformnumData?.id,
                 layanan_id: layananformnumData?.layanan_id,
+                layanan: layananformnumData?.Layanan,
                 tgl_selesai: layananformnumData?.tgl_selesai,
                 userinfo_id: layananformnumData?.userinfo_id,
                 userinfo: layananformnumData?.Userinfo,
@@ -504,6 +513,7 @@ module.exports = {
                     instansi_name: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.name : null,
                     instansi_image: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.image : null,
                     createdAt: data.createdAt,
+                    updatedAt: data.updatedAt,
                     fileoutput: data.fileoutput,
                 };
             });
@@ -572,6 +582,7 @@ module.exports = {
                 instansi_name: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.name : null,
                 instansi_image: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.image : null,
                 createdAt: Layananformnumget.createdAt,
+                updatedAt: Layananformnumget.updatedAt,
                 fileoutput: Layananformnumget.fileoutput,
                 input_skm: surveyGet ? true : false
             };

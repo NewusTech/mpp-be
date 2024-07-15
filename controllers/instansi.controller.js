@@ -141,7 +141,17 @@ module.exports = {
             [instansiGets, totalCount] = await Promise.all([
                 Instansi.findAll({
                     where: whereCondition,
-                    include: [{ model: Layanan, as: 'Layanans', attributes: ['id'] }],
+                    include: [
+                        { 
+                            model: Layanan, 
+                            as: 'Layanans', 
+                            attributes: ['id'],
+                            where: {
+                                status: true
+                            },
+                            required: false
+                        }
+                    ],
                     offset: offset,
                     limit: limit,
                     order: [
