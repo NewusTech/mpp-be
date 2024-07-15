@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Pengaduan, Layanan, Instansi } = require('../models');
+const { Pengaduan, Layanan, Instansi, Userinfo } = require('../models');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
@@ -118,7 +118,8 @@ module.exports = {
                     where: whereCondition,
                     include: [
                         { model: Layanan, attributes: ['id', 'name'] },
-                        { model: Instansi, attributes: ['id', 'name'] }
+                        { model: Instansi, attributes: ['id', 'name'] },
+                        { model: Userinfo, attributes: ['id', 'name', 'nik'] }
                     ],
                     limit: limit,
                     offset: offset,
@@ -158,7 +159,8 @@ module.exports = {
                 },
                 include: [
                     { model: Layanan, attributes: ['id', 'name'] },
-                    { model: Instansi, attributes: ['id', 'name'] }
+                    { model: Instansi, attributes: ['id', 'name'] },
+                    { model: Userinfo, attributes: ['id', 'name', 'nik'] }
                 ],
             });
 
