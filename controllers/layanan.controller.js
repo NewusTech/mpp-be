@@ -250,10 +250,10 @@ module.exports = {
     //mendapatkan data layanan berdasarkan id
     getlayananById: async (req, res) => {
         try {
-            const showDeleted  = req.query.showDeleted  ?? null;
+            const showDeleted = req.query.showDeleted ?? null;
             const whereCondition = { id: req.params.id };
 
-            if (showDeleted  !== null) {
+            if (showDeleted !== null) {
                 whereCondition.deletedAt = { [Op.not]: null };
             } else {
                 whereCondition.deletedAt = null;
@@ -728,6 +728,50 @@ module.exports = {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    }
+    },
+
+    updateActiveOnlineLayanans: async (req, res) => {
+        const { instansiId } = req.params;
+        const { active_online } = req.body;
+
+        try {
+            // Define schema for validation
+            const result = await Layanan.update(
+                { active_online },
+                {
+                    where: {
+                        instansi_id: instansiId
+                    }
+                }
+            );
+
+            res.status(200).json(response(200, 'Successfully updated layanans, total row data berubah adalah', result));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    updateActiveOfflineLayanans: async (req, res) => {
+        const { instansiId } = req.params;
+        const { active_offline } = req.body;
+
+        try {
+            // Define schema for validation
+            const result = await Layanan.update(
+                { active_offline },
+                {
+                    where: {
+                        instansi_id: instansiId
+                    }
+                }
+            );
+
+            res.status(200).json(response(200, 'Successfully updated layanans, total row data berubah adalah', result));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
 
 }

@@ -21,6 +21,10 @@ route.put('/user/layanan/update/:id', [mid.checkRolesAndLogout(['Admin Instansi'
 //update active online and offline layanan -> multiple
 route.post('/user/layanan/updatestatus', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.updateMultipleLayanans); 
 
+//update all active online / offline layanan
+route.post('/user/layanan/activeonline/:instansiId', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.updateActiveOnlineLayanans); 
+route.post('/user/layanan/activeoffline/:instansiId', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.updateActiveOfflineLayanans); 
+
 route.delete('/user/layanan/delete/:id', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], layananController.deletelayanan);
 
 //history
