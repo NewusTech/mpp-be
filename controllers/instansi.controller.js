@@ -147,7 +147,8 @@ module.exports = {
                             as: 'Layanans', 
                             attributes: ['id'],
                             where: {
-                                status: true
+                                status: true,
+                                deletedAt: null
                             },
                             required: false
                         }
@@ -206,7 +207,18 @@ module.exports = {
 
             let instansiGet = await Instansi.findOne({
                 where: whereCondition,
-                include: [{ model: Layanan, as: 'Layanans', attributes: ['id', 'name', 'desc', 'syarat', 'dasarhukum'] }]
+                include:[
+                    { 
+                        model: Layanan, 
+                        as: 'Layanans', 
+                        attributes: ['id', 'name', 'desc', 'syarat', 'dasarhukum'],
+                        where: {
+                            status: true,
+                            deletedAt: null
+                        },
+                        required: false
+                    }
+                ]
             });
 
             //cek jika instansi tidak ada
