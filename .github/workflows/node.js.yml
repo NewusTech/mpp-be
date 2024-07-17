@@ -23,7 +23,9 @@ jobs:
       with:
         node-version: '20.x'
     - name: Run migration if present
-      run: npx sequelize-cli db:migrate
+      run: |
+          cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id
+          npx sequelize-cli db:migrate
     - name: Run NPM
       run: npm ci
     - name : change repo
