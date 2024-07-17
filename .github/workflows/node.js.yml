@@ -1,8 +1,8 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
-
+name: CI proccess backend-mpp.newus.id
+ 
 on:
   push:
     branches: [ "main" ]
@@ -24,4 +24,8 @@ jobs:
         node-version: '20.x'
     - name: Run NPM
       run: npm ci
+    - name : change repo
+      run : cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id/actions-runner/_work/mpp-be/mpp-be
+    - run : pm2 restart 76
+      
     
