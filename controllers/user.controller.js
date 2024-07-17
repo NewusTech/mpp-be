@@ -25,6 +25,7 @@ module.exports = {
                 telepon: { type: "string", min: 7, max: 15, optional: true },
                 password: { type: "string", min: 3 },
                 instansi_id: { type: "number", optional: true },
+                layanan_id: { type: "number", optional: true },
                 role_id: { type: "number", optional: true },
                 kecamatan_id: { type: "string", min: 1, optional: true },
                 desa_id: { type: "string", min: 1, optional: true },
@@ -39,6 +40,7 @@ module.exports = {
                 nik: req.body.nik,
                 password: req.body.password,
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
+                layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : undefined,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : undefined,
                 email: req.body.email,
                 telepon: req.body.telepon,
@@ -91,6 +93,7 @@ module.exports = {
             let userCreateObj = {
                 password: passwordHash.generate(req.body.password),
                 instansi_id: req.body.instansi_id !== undefined ? Number(req.body.instansi_id) : undefined,
+                layanan_id: req.body.layanan_id !== undefined ? Number(req.body.layanan_id) : undefined,
                 role_id: req.body.role_id !== undefined ? Number(req.body.role_id) : undefined,
                 userinfo_id: userinfoCreate.id,
                 slug: slug
@@ -145,7 +148,7 @@ module.exports = {
                 include: [
                     {
                         model: User,
-                        attributes: ['password', 'id', 'role_id'],
+                        attributes: ['password', 'id', 'role_id', 'layanan_id'],
                         include: [
                             {
                                 model: Role,
@@ -182,10 +185,13 @@ module.exports = {
                 nik: userinfo.nik,
                 role: userinfo.User.Role.name,
                 instansi: userinfo?.User?.Instansi?.name ?? undefined,
-                instansi_id: userinfo?.User?.Instansi?.id ?? undefined
+                instansi_id: userinfo?.User?.Instansi?.id ?? undefined,
+                layanan_id: userinfo?.User?.layanan_id ?? undefined
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
+
+            console.log("aaa", userinfo?.User?.layanan_id)
 
             res.status(200).json(response(200, 'login success', { token: token }));
 

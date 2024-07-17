@@ -31,10 +31,11 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3 },
-                desc: { type: "string", min: 3, optional: true },
-                dasarhukum: { type: "string", min: 3, optional: true },
-                syarat: { type: "string", min: 3, optional: true },
+                name: { type: "string" },
+                desc: { type: "string", optional: true },
+                code: { type: "string", optional: true },
+                dasarhukum: { type: "string", optional: true },
+                syarat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
                 active_offline: { type: "string", optional: true },
                 active_online: { type: "string", optional: true },
@@ -48,7 +49,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/layanan/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/layanan/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -66,6 +67,7 @@ module.exports = {
                 name: req.body.name,
                 slug: slugify(req.body.name, { lower: true }),
                 desc: req.body.desc,
+                code: req.body.code,
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : null,
@@ -128,7 +130,7 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
-            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
             }
@@ -190,7 +192,7 @@ module.exports = {
                 instansi_id: instansi_id
             };
 
-            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
             }
@@ -259,7 +261,7 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
-            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
             }
@@ -308,10 +310,11 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3, optional: true },
-                desc: { type: "string", min: 3, optional: true },
-                dasarhukum: { type: "string", min: 3, optional: true },
-                syarat: { type: "string", min: 3, optional: true },
+                name: { type: "string", optional: true },
+                desc: { type: "string", optional: true },
+                code: { type: "string", optional: true },
+                dasarhukum: { type: "string", optional: true },
+                syarat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
                 active_offline: { type: "string", optional: true },
                 active_online: { type: "string", optional: true },
@@ -324,7 +327,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/layanan/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/layanan/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -342,6 +345,7 @@ module.exports = {
                 name: req.body.name,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
+                code: req.body.code,
                 dasarhukum: req.body.dasarhukum,
                 syarat: req.body.syarat,
                 image: req.file ? imageKey : layananGet.image,

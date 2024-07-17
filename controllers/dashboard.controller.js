@@ -3,7 +3,7 @@ const { response } = require('../helpers/response.formatter');
 const { Instansi, Layanan, Layananformnum, Surveyforminput, Surveyformnum, Userinfo, Antrian } = require('../models');
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
-const axios = require('axios');
+const moment = require('moment-timezone');
 
 module.exports = {
 
@@ -14,14 +14,20 @@ module.exports = {
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-            const antrianCountToday = await Antrian.count({});
+            const antrianCountToday = await Antrian.count({
+                where: {
+                    createdAt: {
+                        [Op.between]: [startOfDay, endOfDay]
+                    }
+                }
+            });
 
             const permohonanCountToday = await Layananformnum.count({
-                // where: {
-                //     createdAt: {
-                //         [Op.between]: [startOfDay, endOfDay]
-                //     }
-                // }
+                where: {
+                    createdAt: {
+                        [Op.between]: [startOfDay, endOfDay]
+                    }
+                }
             });
             const instansiCount = await Instansi.count({
                 where: {
@@ -34,24 +40,11 @@ module.exports = {
                 }
             });
 
-            // let totalantrian = null;
-            // try {
-            //     const response = await axios.get(process.env.BASE_URLKIOSK + `/antrian/a`);
-            //     totalantrian = response?.data?.data;
-            // } catch (error) {
-            //     if (error.response && error.response.status === 404) {
-                  
-            //     } else {
-            //         throw error; // Re-throw the error if it is not a 404
-            //     }
-            // }
-
             const dataget = {
                 instansiCount,
                 layananCount,
                 permohonanCountToday,
                 antrianCountToday
-                // totalantrian: totalantrian ? totalantrian : '-'
             };
 
             res.status(200).json(response(200, 'success get data', dataget));
@@ -333,14 +326,14 @@ module.exports = {
 
                 return totalInputs > 0 ? totalNilai / totalInputs : 0;
             };
-            
+
             let totalNilai = 0;
             let totalLayanan = 0;
 
             let nilaiSKM_perlayanan = history.map(data => {
                 // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
-                
+
                 if (surveyformnumsNilai > 0) {
                     totalNilai += surveyformnumsNilai;
                     totalLayanan++;
@@ -360,7 +353,7 @@ module.exports = {
                 month: i + 1,
                 total: 0
             }));
-    
+
             history.forEach(data => {
                 data.Surveyformnums.forEach(surveyformnum => {
                     const bulan = new Date(surveyformnum.createdAt).getMonth();
@@ -383,12 +376,175 @@ module.exports = {
 
     web_admin_antrian: async (req, res) => {
         try {
-            const responseurl = await axios.get(process.env.BASE_URLKIOSK + '/antrian/get/1');
-            const data = responseurl.data;
+            const iddinas = data.instansi_id;
+            const yearParam = req.query.year;
+            const currentYear = yearParam ? parseInt(yearParam) : moment().year();
 
-            res.status(200).json(response(200, 'success get data', {
-              data
-            }));
+            const createCountPromises = (month) => {
+                const startOfMonth = moment().year(currentYear).month(month).startOf('month').toDate();
+                const endOfMonth = moment().year(currentYear).month(month).endOf('month').toDate();
+                return Antrian.count({
+                    where: {
+                        createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
+                        instansi_id: iddinas
+                    }
+                });
+            };
+
+            const createPermohonanPromises = (month) => {
+                const startOfMonth = moment().year(currentYear).month(month).startOf('month').toDate();
+                const endOfMonth = moment().year(currentYear).month(month).endOf('month').toDate();
+                return Layananformnum.count({
+                    include: [{
+                        model: Layanan,
+                        attributes: { exclude: ['name'] },
+                        where: { instansi_id: iddinas }
+                    }],
+                    where: {
+                        createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
+                    }
+                });
+            };
+
+            const months = Array.from({ length: 12 }, (_, month) => month);
+
+            const [AntrianmonthlyCounts, PermohonanmonthlyCounts] = await Promise.all([
+                Promise.all(months.map(createCountPromises)),
+                Promise.all(months.map(createPermohonanPromises))
+            ]);
+
+            const formatMonthlyData = (counts) =>
+                months.reduce((acc, month, idx) => {
+                    acc[moment().month(month).format('MMMM')] = counts[idx];
+                    return acc;
+                }, {});
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: {
+                    antrianperBulan: formatMonthlyData(AntrianmonthlyCounts),
+                    permohonanperBulan: formatMonthlyData(PermohonanmonthlyCounts)
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'internal server error', error: err });
+        }
+    },
+
+    web_admlayanan: async (req, res) => {
+        try {
+
+            const idlayanan = data.layanan_id
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            const { status, code, range, start_date, end_date } = req.query;
+
+            const startOfToday = moment().startOf('day').toDate();
+            const endOfToday = moment().endOf('day').toDate();
+
+            let startOfToday2;
+            let endOfToday2;
+
+            if (range == 'today') {
+                startOfToday2 = moment().startOf('day').toDate();
+                endOfToday2 = moment().endOf('day').toDate();
+            } else {
+                if (start_date && end_date) {
+                    startOfToday2 = moment(start_date).startOf('day').toDate();
+                    endOfToday2 = moment(end_date).endOf('day').toDate();
+                } else if (start_date) {
+                    startOfToday2 = moment(start_date).startOf('day').toDate();
+                    endOfToday2 = moment('2080-01-01').endOf('day').toDate();
+                } else if (end_date) {
+                    startOfToday2 = moment('2010-01-01').startOf('day').toDate();
+                    endOfToday2 = moment(end_date).endOf('day').toDate();
+                } else {
+                    startOfToday2 = moment('2010-01-01').startOf('day').toDate();
+                    endOfToday2 = moment('2080-01-01').endOf('day').toDate();
+                }
+            }
+
+            const [AntrianCount, AntrianSebelumnya, AntrianNext, riwayatAntrian, riwayatCount] = await Promise.all([
+                Antrian.count({
+                    where: {
+                        createdAt: { [Op.between]: [startOfToday, endOfToday] },
+                        layanan_id: idlayanan
+                    },
+                }),
+                Antrian.findOne({
+                    where: {
+                        createdAt: { [Op.between]: [startOfToday, endOfToday] },
+                        status: true,
+                        layanan_id: idlayanan
+                    },
+                    order: [['id', 'DESC']]
+                }),
+                Antrian.findAll({
+                    where: {
+                        createdAt: { [Op.between]: [startOfToday, endOfToday] },
+                        status: false,
+                        layanan_id: idlayanan,
+                    },
+                    limit: 2,
+                    order: [['id', 'ASC']]
+                }),
+                Antrian.findAll({
+                    where: {
+                        createdAt: {
+                            [Op.between]: [startOfToday2, endOfToday2],
+                        },
+                        ...(status && { status: status }),
+                        ...(code && { code: { [Op.like]: `%${code}%` } }),
+                    },
+                    include: [{
+                        model: Layanan,
+                        attributes: ['name'],
+                        where: {
+                            id: idlayanan,
+                        },
+                    }],
+                    order: [['id', 'ASC']],
+                    limit: limit,
+                    offset: offset
+                }),
+                Antrian.count(
+                    {
+                        where: {
+                            createdAt: {
+                                [Op.between]: [startOfToday2, endOfToday2],
+                            },
+                            ...(status && { status: status }),
+                            ...(code && { code: { [Op.like]: `%${code}%` } }),
+                        },
+                        include: [{
+                            model: Layanan,
+                            where: {
+                                id: idlayanan,
+                            },
+                        }]
+                    }
+                )
+            ]);
+
+            const pagination = generatePagination(riwayatCount, page, limit, `/api/dashboard/adminlayanan`);
+
+            const dataget = {
+                AntrianCount,
+                AntrianSebelumnya: AntrianSebelumnya?.code ?? null,
+                AntrianProses: AntrianNext[0]?.code ?? null,
+                AntrianNext: AntrianNext[1]?.code ?? null,
+                riwayatAntrian,
+                pagination: pagination
+            };
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: dataget
+            });
 
         } catch (err) {
             console.error(err);

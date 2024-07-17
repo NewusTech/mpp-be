@@ -17,6 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       Instansi.hasMany(models.Antrian, {
         foreignKey: 'instansi_id',
       });
+      Instansi.hasMany(models.Bookingantrian, {
+        foreignKey: 'instansi_id',
+      });
       Instansi.hasMany(models.Surveyform, {
         foreignKey: 'instansi_id',
       });
@@ -25,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
   Instansi.init({
     name: DataTypes.STRING,
     slug: DataTypes.STRING,
+    code: DataTypes.STRING,
     alamat: DataTypes.STRING,
     telp: DataTypes.STRING,
     email: DataTypes.STRING,

@@ -64,7 +64,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/video/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/video/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype

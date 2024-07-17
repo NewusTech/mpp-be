@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'instansi_id',
       });
 
+      User.belongsTo(models.Layanan, {
+        foreignKey: 'layanan_id',
+      });
+
       User.belongsTo(models.Role, {
         foreignKey: 'role_id',
       });
@@ -22,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     password: DataTypes.STRING,
     slug: DataTypes.STRING,
     instansi_id: DataTypes.INTEGER,
+    layanan_id: DataTypes.INTEGER,
     role_id: DataTypes.INTEGER,
     userinfo_id: DataTypes.INTEGER,
     deletedAt: DataTypes.DATE

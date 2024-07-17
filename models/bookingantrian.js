@@ -3,29 +3,31 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Antrian extends Model {
+  class Bookingantrian extends Model {
     static associate(models) {
-      Antrian.belongsTo(models.Instansi, {
+      Bookingantrian.belongsTo(models.Instansi, {
         foreignKey: 'instansi_id',
       });
-      Antrian.belongsTo(models.Layanan, {
+      Bookingantrian.belongsTo(models.Layanan, {
         foreignKey: 'layanan_id',
       });
-      Antrian.belongsTo(models.Userinfo, {
+      Bookingantrian.belongsTo(models.Userinfo, {
         foreignKey: 'userinfo_id',
       });
     }
   }
-  Antrian.init({
-    code: DataTypes.STRING,
+  Bookingantrian.init({
     instansi_id: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,
     userinfo_id: DataTypes.INTEGER,
+    qrkey: DataTypes.STRING,
+    qrcode: DataTypes.STRING,
+    tanggal: DataTypes.DATEONLY,
+    waktu: DataTypes.TIME,
     status: DataTypes.BOOLEAN,
-    audio: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'Antrian',
+    modelName: 'Bookingantrian',
   });
-  return Antrian;
+  return Bookingantrian;
 };

@@ -2,6 +2,8 @@
 WEB_NAME = "MPP BE"
 BASE_URL = "http://localhost:3000"
 
+PATH_AWS = "dir_mpp"
+
 # auth secret untuk JWT
 AUTH_SECRET = ""
 

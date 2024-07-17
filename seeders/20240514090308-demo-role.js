@@ -19,12 +19,17 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        name: 'Staff Instansi',
+        name: 'Admin Verifikasi',
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         name: 'User',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Admin Layanan',
         createdAt: new Date(),
         updatedAt: new Date()
       },
