@@ -22,6 +22,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20.x'
+    - name: Run migration if present
+      run: npx sequelize-cli db:migrate
     - name: Run NPM
       run: npm ci
     - name : change repo
