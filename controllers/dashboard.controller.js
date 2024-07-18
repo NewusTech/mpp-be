@@ -203,39 +203,20 @@ module.exports = {
 
     web_admin_layanan: async (req, res) => {
         try {
-
-            const { month } = req.query;
             const today = new Date();
-            const sevenDaysAgo = new Date(today.setDate(today.getDate() - 7));
-            const queryMonth = month ? parseInt(month, 10) - 1 : today.getMonth();
-            const queryYear = today.getFullYear();
-            const firstDayOfMonth = new Date(queryYear, queryMonth, 1);
-            const lastDayOfMonth = new Date(queryYear, queryMonth + 1, 0, 23, 59, 59, 999);
-            const dateRangeMonth = [firstDayOfMonth, lastDayOfMonth];
-
+    
             const firstDaythisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const lastDaythisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-
+    
             const dateRangethisMonth = [firstDaythisMonth, lastDaythisMonth];
-
-            const dateRangeToday = [new Date().setHours(0, 0, 0, 0), new Date().setHours(23, 59, 59, 999)];
-            const dateRangeWeek = [sevenDaysAgo, new Date()];
-
+    
             const instansiWhere = { instansi_id: data.instansi_id };
-
+    
             const datainstansi = await Instansi.findAll({
                 where: { id: data.instansi_id },
                 attributes: ['id', 'name', 'desc', 'image'],
-            })
-
-            const counts = await Promise.all([
-                Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeToday } }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
-                Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeToday }, status: 4 }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
-                Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeMonth } }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
-                Layananformnum.count({ where: { createdAt: { [Op.between]: dateRangeMonth }, status: 4 }, include: { model: Layanan, attributes: ['id'], where: instansiWhere } }),
-                Userinfo.count(),
-            ]);
-
+            });
+    
             const getTopLayanan = async (range) => {
                 const layanan = await Layanan.findAll({
                     where: instansiWhere,
@@ -246,29 +227,48 @@ module.exports = {
                         where: { createdAt: { [Op.between]: range } },
                     },
                 });
-
+    
                 return layanan
                     .map(l => ({ LayananId: l.id, LayananName: l.name, LayananformnumCount: l.Layananformnums.length }))
                     .sort((a, b) => b.LayananformnumCount - a.LayananformnumCount)
                     .slice(0, 3);
             };
-
-            const [top3LayananMonth, top3LayananWeek] = await Promise.all([
+    
+            const getLast7Days = () => {
+                const dates = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    date.setHours(0, 0, 0, 0);
+                    const endDate = new Date(date);
+                    endDate.setHours(23, 59, 59, 999);
+                    dates.push({ start: date, end: endDate });
+                }
+                return dates;
+            };
+    
+            const totalLayananPerDay = await Promise.all(
+                getLast7Days().map(async ({ start, end }) => {
+                    const range = [start, end];
+                    const layanan = await getTopLayanan(range);
+    
+                    return {
+                        date: start.toISOString(),
+                        top3: layanan,
+                    };
+                })
+            );
+    
+            const [top3LayananMonth] = await Promise.all([
                 getTopLayanan(dateRangethisMonth),
-                getTopLayanan(dateRangeWeek),
             ]);
-
+    
             res.status(200).json(response(200, 'success get data', {
                 datainstansi,
-                permohonanCountToday: counts[0],
-                permohonanGagalToday: counts[1],
-                permohonanCountMonth: counts[2],
-                permohonanGagalMonth: counts[3],
-                UserCount: counts[4],
                 top3LayananMonth,
-                top3LayananWeek,
+                totalLayananPerDay,
             }));
-
+    
         } catch (err) {
             console.error(err);
             res.status(500).json(response(500, 'internal server error', err));
@@ -278,7 +278,7 @@ module.exports = {
     web_admin_survey: async (req, res) => {
         try {
 
-            const { year } = req.query;
+            const { year, month } = req.query;
 
             const datainstansi = await Instansi.findAll({
                 where: { id: data.instansi_id },
@@ -291,8 +291,11 @@ module.exports = {
             const WhereClause2 = {};
 
             if (year) {
-                const startDate = new Date(year, 0, 1);
-                const endDate = new Date(year, 11, 31);
+                const startDate = new Date(year, month ? month - 1 : 0, 1);
+                const endDate = month 
+                    ? new Date(year, month, 0, 23, 59, 59, 999) 
+                    : new Date(year, 11, 31, 23, 59, 59, 999);
+    
                 WhereClause2.createdAt = {
                     [Op.between]: [startDate, endDate]
                 };
@@ -433,7 +436,7 @@ module.exports = {
         }
     },
 
-    web_admlayanan: async (req, res) => {
+    web_admantrian: async (req, res) => {
         try {
 
             const idlayanan = data.layanan_id
@@ -545,6 +548,134 @@ module.exports = {
                 message: 'success get',
                 data: dataget
             });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
+    web_admlayanan_survey: async (req, res) => {
+        try {
+
+            const { year, month } = req.query;
+
+            const WhereClause = {};
+            WhereClause.id = data?.layanan_id;
+
+            const WhereClause2 = {};
+
+            if (year && month) {
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+                WhereClause2.createdAt = {
+                    [Op.between]: [startDate, endDate]
+                };
+            } else if (year) {
+                const startDate = new Date(year, 0, 1);
+                const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+                WhereClause2.createdAt = {
+                    [Op.between]: [startDate, endDate]
+                };
+            } else if (month) {
+                const currentYear = new Date().getFullYear();
+                const startDate = new Date(currentYear, month - 1, 1);
+                const endDate = new Date(currentYear, month, 0, 23, 59, 59, 999);
+                WhereClause2.createdAt = {
+                    [Op.between]: [startDate, endDate]
+                };
+            }
+            
+            [history, totalCount] = await Promise.all([
+                Layanan.findAll({
+                    include: [{
+                        model: Surveyformnum,
+                        required: false,
+                        include: [{
+                            model: Surveyforminput,
+                        }],
+                        where: WhereClause2,
+                    }],
+                    where: WhereClause,
+                })
+            ]);
+
+            let totalNilai = 0;
+            let totalLayanan = 0;
+
+            const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
+
+            const surveyformnumPerBulan = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                total: 0
+            }));
+
+            history.forEach(data => {
+                data.Surveyformnums.forEach(surveyformnum => {
+                    const bulan = new Date(surveyformnum.createdAt).getMonth();
+                    surveyformnumPerBulan[bulan].total++;
+                });
+            });
+
+            res.status(200).json(response(200, 'success get data', {
+                rataRataNilaiSKM,
+                surveyformnumPerBulan
+            }));
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json(response(500, 'internal server error', err));
+        }
+    },
+
+    web_admlayanan_layanan: async (req, res) => {
+        try {
+
+            const { month, year } = req.query;
+            const today = new Date();
+            const queryMonth = month ? parseInt(month, 10) - 1 : today.getMonth();
+            const queryYear = year ? year : today.getFullYear();
+            const firstDayOfMonth = new Date(queryYear, queryMonth, 1);
+            const lastDayOfMonth = new Date(queryYear, queryMonth + 1, 0, 23, 59, 59, 999);
+            const dateRangeMonth = [firstDayOfMonth, lastDayOfMonth];
+
+            const dateRangeToday = [new Date().setHours(0, 0, 0, 0), new Date().setHours(23, 59, 59, 999)];
+
+            const counts = await Promise.all([
+                Layananformnum.count({ 
+                    where: { 
+                        createdAt: { [Op.between]: dateRangeToday },
+                        layanan_id: data.layanan_id
+                    }, 
+                }),
+                Layananformnum.count({ 
+                    where: { 
+                        createdAt: { [Op.between]: dateRangeToday }, 
+                        status: 4,
+                        layanan_id: data.layanan_id
+                    }, 
+                }),
+                Layananformnum.count({ 
+                    where: { 
+                        createdAt: { [Op.between]: dateRangeMonth },
+                        layanan_id: data.layanan_id
+                    }, 
+                }),
+                Layananformnum.count({ 
+                    where: { 
+                        createdAt: { [Op.between]: dateRangeMonth },
+                        status: 4,
+                        layanan_id: data.layanan_id
+                     }, 
+                }),
+            ]);
+
+            res.status(200).json(response(200, 'success get data', {
+                permohonanCountToday: counts[0],
+                permohonanGagalToday: counts[1],
+                permohonanCountMonth: counts[2],
+                permohonanGagalMonth: counts[3]
+            }));
 
         } catch (err) {
             console.error(err);
