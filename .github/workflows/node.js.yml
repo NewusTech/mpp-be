@@ -30,6 +30,6 @@ jobs:
       run: npm ci
     - name : change repo
       run : cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id/actions-runner/_work/mpp-be/mpp-be
-    - run : pm2 restart 76
+    - run : pm2 restart backend-mpp.newus.id
       
     
