@@ -11,6 +11,8 @@ route.get('/user/dashboard/admindinas', [mid.checkRolesAndLogout(['Admin Instans
 route.get('/user/dashboard/admindinas-survey', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi'])], dashboardController.web_admin_survey); 
 route.get('/user/dashboard/admindinas-antrian', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi'])], dashboardController.web_admin_antrian); 
 
-route.get('/user/dashboard/adminlayanan', [mid.checkRolesAndLogout(['Admin Layanan'])], dashboardController.web_admlayanan); 
+route.get('/user/dashboard/admlayanan-antrian', [mid.checkRolesAndLogout(['Admin Layanan'])], dashboardController.web_admantrian); 
+route.get('/user/dashboard/admlayanan-survey', [mid.checkRolesAndLogout(['Admin Layanan'])], dashboardController.web_admlayanan_survey); 
+route.get('/user/dashboard/admlayanan-layanan', [mid.checkRolesAndLogout(['Admin Layanan'])], dashboardController.web_admlayanan_layanan); 
 
 module.exports = route;
