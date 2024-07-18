@@ -10,31 +10,35 @@
         }
         .barcode {
             margin: 10px 0;
+            text-align: center;
         }
         .details {
             font-size: 14px;
         }
         .detailsbetween {
             font-size: 14px;
-            margin-top: 10px;
+            margin-top: 12px;
             display: flex;
             justify-content: space-between;
-            padding-left: 15px;
-            padding-right: 15px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="detailsbetween">
-        <div>{{tanggal}}</div>
-        <div>{{waktu}}</div>
-    </div>
-    <div class="barcode">
-        <img src="{{barcode}}" />
-    </div>
     <div class="details">
         <div>{{instansiName}}</div>
         <div>{{layananName}}</div>
+    </div>
+    <div class="detailsbetween">
+        <div>{{tanggal}}</div>
+        <div>{{waktu}} WIB</div>
+    </div>
+    <div class="barcode">
+        <img width="80%" src="{{barcode}}" />
+    </div>
+    <div class="details">
+        <div>Loket : {{layananCode}}</div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script>

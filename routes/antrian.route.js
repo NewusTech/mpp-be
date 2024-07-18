@@ -10,12 +10,12 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User', 'Super Admin', 'Admin Instansi', 'Staff Instansi'])], antrianController.createantrian);
-route.get('/user/antrian/get/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Staff Instansi', 'Bupati'])], antrianController.getantrian); 
-route.delete('/user/antrian/delete', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])], antrianController.deleteantrian);
+route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User'])], antrianController.createantrian);
+route.post('/antrian/createfrombarcode', antrianController.createAntrianFromQRCode);
+route.get('/user/antrian/get/instansi/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbyinstansi); 
+route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbylayanan); 
 
-route.get('/user/antrian/getforuser', [mid.checkRolesAndLogout(['User'])], antrianController.getantrianforuser); 
-route.get('/user/antrian/:idantrian', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], antrianController.getantrianbyid); 
-route.get('/user/antrian/pdf/:idantrian', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], antrianController.getPDFantrianbyid); 
+route.get('/antrian/check/:idlayanan', antrianController.checkantrian); 
+route.get('/panggilantrian/get/:sluglayanan', antrianController.panggilAntrianBerikutnya); 
 
 module.exports = route;

@@ -2,15 +2,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Antrians', {
+    await queryInterface.createTable('Bookingantrians', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
-      },
-      code: {
-        type: Sequelize.STRING
       },
       instansi_id: {
         type: Sequelize.INTEGER
@@ -21,8 +18,17 @@ module.exports = {
       userinfo_id: {
         type: Sequelize.INTEGER
       },
-      audio: {
+      qrkey: {
         type: Sequelize.STRING,
+      },
+      qrcode: {
+        type: Sequelize.STRING,
+      },
+      tanggal: {
+        type: Sequelize.DATEONLY
+      },
+      waktu: {
+        type: Sequelize.TIME
       },
       status: {
         type: Sequelize.BOOLEAN
@@ -37,10 +43,10 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('Antrians', {
+    await queryInterface.addConstraint('Bookingantrians', {
       fields: ['layanan_id'],
       type: 'foreign key',
-      name: 'custom_fkey_layanan_id2',
+      name: 'custom_fkey_layanan_id22',
       references: {
         table: 'Layanans',
         field: 'id'
@@ -50,7 +56,7 @@ module.exports = {
     await queryInterface.addConstraint('Antrians', {
       fields: ['instansi_id'],
       type: 'foreign key',
-      name: 'custom_fkey_instansi_id2',
+      name: 'custom_fkey_instansi_id22',
       references: {
         table: 'Instansis',
         field: 'id'
@@ -60,7 +66,7 @@ module.exports = {
     await queryInterface.addConstraint('Antrians', {
       fields: ['userinfo_id'],
       type: 'foreign key',
-      name: 'custom_fkey_userinfo_id2',
+      name: 'custom_fkey_userinfo_id22',
       references: {
         table: 'Userinfos',
         field: 'id'
@@ -70,6 +76,6 @@ module.exports = {
 
   //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Antrians');
+    await queryInterface.dropTable('Bookingantrians');
   }
 };

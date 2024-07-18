@@ -18,14 +18,14 @@ module.exports = {
         userinfo_id: 2,
         password: passwordHash.generate('123456'),
         slug: "superadmin-20240620041615213",
-        instansi_id: 2,
+        instansi_id: null,
         role_id: 2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
         userinfo_id: 3,
-        slug: "adminpolres-20240620041615213",
+        slug: "superadminpolres-20240620041615213",
         password: passwordHash.generate('123456'),
         instansi_id: 1,
         role_id: 3,
@@ -35,7 +35,7 @@ module.exports = {
       {
         userinfo_id: 4,
         password: passwordHash.generate('123456'),
-        slug: "staffpolres-20240620041615213",
+        slug: "adminverifpolres-20240620041615213",
         instansi_id: 1,
         role_id: 4,
         createdAt: new Date(),
@@ -65,6 +65,16 @@ module.exports = {
         slug: "Ida-20240620041615213",
         instansi_id: null,
         role_id: 5,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        userinfo_id: 8,
+        password: passwordHash.generate('123456'),
+        slug: "admlayananpolres1-2024062004161521",
+        instansi_id: 1,
+        layanan_id: 1,
+        role_id: 6,
         createdAt: new Date(),
         updatedAt: new Date()
       }

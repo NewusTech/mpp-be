@@ -22,6 +22,9 @@ module.exports = {
       instansi_id: {
         type: Sequelize.INTEGER
       },
+      layanan_id: {
+        type: Sequelize.INTEGER
+      },
       userinfo_id: {
         type: Sequelize.INTEGER
       },
@@ -44,6 +47,16 @@ module.exports = {
       name: 'custom_fkey_instansi_id',
       references: {
         table: 'Instansis',
+        field: 'id'
+      }
+    });
+
+    await queryInterface.addConstraint('Users', {
+      fields: ['layanan_id'],
+      type: 'foreign key',
+      name: 'custom_fkey_layanan_id11',
+      references: {
+        table: 'Layanans',
         field: 'id'
       }
     });

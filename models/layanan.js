@@ -5,6 +5,9 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Layanan extends Model {
     static associate(models) {
+      Layanan.hasMany(models.User, {
+        foreignKey: 'layanan_id',
+      });
       Layanan.belongsTo(models.Instansi, {
         foreignKey: 'instansi_id',
       });
@@ -25,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
   Layanan.init({
     name: DataTypes.STRING,
     slug: DataTypes.STRING,
+    code: DataTypes.STRING,
     desc: DataTypes.TEXT,
     dasarhukum: DataTypes.TEXT,
     syarat: DataTypes.TEXT,

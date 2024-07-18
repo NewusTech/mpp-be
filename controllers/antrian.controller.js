@@ -1,15 +1,19 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Antrian, Instansi, Layanan, sequelize } = require('../models');
+const { Bookingantrian, Antrian, Instansi, Layanan, sequelize } = require('../models');
 
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+const tts = require('google-tts-api');
+const axios = require('axios');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const moment = require('moment-timezone');
+const { Sequelize, Op } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const s3Client = new S3Client({
@@ -21,18 +25,6 @@ const s3Client = new S3Client({
     useAccelerateEndpoint: true
 });
 
-const { Sequelize, Op } = require('sequelize');
-
-// function numberToAlphabeticCode(number) {
-//     let code = '';
-//     while (number > 0) {
-//         let remainder = (number - 1) % 26;
-//         code = String.fromCharCode(65 + remainder) + code;
-//         number = Math.floor((number - 1) / 26);
-//     }
-//     return code;
-// }
-
 module.exports = {
 
     // membuat antrian OFFLINE
@@ -40,67 +32,48 @@ module.exports = {
         try {
             const schema = {
                 instansi_id: { type: "number" },
-                layanan_id: { type: "number" },
-                tanggal: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}$/, optional: true },
-                waktu: { type: "string", optional: true },
+                layanan_id: { type: "number" }
             };
 
-            console.log(data)
+            const today = new Date().toISOString().split('T')[0];
 
-            const userinfo_id = data.role === "User" ? data.userId : null;
+            const existingAntrian = await Antrian.findAll({
+                where: {
+                    instansi_id: req.body.instansi_id,
+                    layanan_id: req.body.layanan_id,
+                    createdAt: {
+                        [Sequelize.Op.gte]: new Date(today)
+                    }
+                }
+            });
 
-            const instansi = await Instansi.findByPk(req.body.instansi_id);
-            if (!instansi) {
-                return res.status(404).json({ status: 404, message: 'Instansi not found' });
-            }
+            const instansi = await Instansi.findOne({
+                where: {
+                    id: req.body.instansi_id
+                },
+                attributes: ['id', 'code']
+            });
+
+            const layanan = await Layanan.findOne({
+                where: {
+                    id: req.body.layanan_id
+                },
+                attributes: ['id', 'code']
+            });
+
+            const newNumber = existingAntrian.length + 1;
+            const codeBooking = `${instansi.code}${layanan.code}-${String(newNumber).padStart(3, '0')}`;
 
             const antrianCreateObj = {
-                // code: codeBooking,
+                code: codeBooking,
                 instansi_id: Number(req.body.instansi_id),
                 layanan_id: Number(req.body.layanan_id),
-                userinfo_id: userinfo_id ?? null,
-                tanggal: req.body.tanggal ?? null,
-                waktu: req.body.waktu ?? null,
                 status: 0
             };
 
             const validate = v.validate(antrianCreateObj, schema);
             if (validate.length > 0) {
                 return res.status(400).json({ status: 400, message: 'Validation failed', errors: validate });
-            }
-
-            if (userinfo_id) {
-                const qrCodeData = {
-                    instansi_id: req.body.instansi_id,
-                    layanan_id: req.body.layanan_id,
-                    userinfo_id: userinfo_id
-                };
-
-                const qrCodeString = Buffer.from(JSON.stringify(qrCodeData)).toString('base64');
-                const qrCodeBuffer = await QRCode.toBuffer(qrCodeString);
-
-                const now = new Date();
-                const datetime = now.toISOString().replace(/[-:.]/g, '');
-
-                // const codeBookingfix = `${codeBooking}_${datetime}`;
-
-                const namekey = `${qrCodeString}_${datetime}`;
-
-                const uploadParams = {
-                    Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/qrcode/${namekey}`,
-                    Body: qrCodeBuffer,
-                    ACL: 'public-read',
-                    ContentType: 'image/png'
-                };
-
-                const command = new PutObjectCommand(uploadParams);
-
-                await s3Client.send(command);
-
-                imageKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
-                antrianCreateObj.qrcode = imageKey;
             }
 
             const newAntrian = await Antrian.create(antrianCreateObj);
@@ -112,7 +85,95 @@ module.exports = {
         }
     },
 
-    getantrian: async (req, res) => {
+    createAntrianFromQRCode: async (req, res) => {
+        const transaction = await sequelize.transaction();
+
+        try {
+            const { qr_code } = req.body;
+
+            if (!qr_code) {
+                await transaction.rollback();
+                return res.status(400).json({ status: 400, message: 'QR code is required' });
+            }
+
+            const bookingantrian = await Bookingantrian.findOne({
+                where: {
+                    qrkey: qr_code
+                },
+                attributes: ['id', 'status']
+            });
+
+            console.log("apapa", bookingantrian.status)
+
+            if (bookingantrian.status === true) {
+                await transaction.rollback();
+                return res.status(200).json({ status: 200, message: 'Sudah scan' });
+            }
+
+            // Mengurai data dari QR code
+            const qrCodeData = JSON.parse(Buffer.from(qr_code, 'base64').toString('utf8'));
+
+            const { instansi_id, layanan_id, userinfo_id } = qrCodeData;
+
+            // Mendapatkan tanggal hari ini
+            const today = new Date().toISOString().split('T')[0];
+
+            const existingAntrian = await Antrian.findAll({
+                where: {
+                    instansi_id,
+                    layanan_id,
+                    createdAt: {
+                        [Sequelize.Op.gte]: new Date(today)
+                    }
+                }
+            });
+
+            const instansi = await Instansi.findOne({
+                where: {
+                    id: instansi_id
+                },
+                attributes: ['id', 'code']
+            });
+
+            const layanan = await Layanan.findOne({
+                where: {
+                    id: layanan_id
+                },
+                attributes: ['id', 'code']
+            });
+
+            const newNumber = existingAntrian.length + 1;
+            const codeBooking = `${instansi.code}${layanan.code}-${String(newNumber).padStart(3, '0')}`;
+
+            const antrianCreateObj = {
+                code: codeBooking,
+                instansi_id,
+                layanan_id,
+                userinfo_id,
+                status: 0
+            };
+
+            const newAntrian = await Antrian.create(antrianCreateObj, { transaction });
+
+            await Bookingantrian.update({
+                status: 1
+            }, {
+                where: {
+                    qrkey: qr_code,
+                },
+                transaction
+            });
+
+            await transaction.commit();
+            res.status(201).json({ status: 201, message: 'Antrian created successfully from QR code', data: newAntrian });
+        } catch (err) {
+            console.error(err);
+            await transaction.rollback();
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
+
+    getantrianbyinstansi: async (req, res) => {
         try {
             const { slugdinas } = req.params;
 
@@ -151,6 +212,7 @@ module.exports = {
                             slug: slugdinas,
                         },
                     }],
+                    order: [['id', 'ASC']],
                     limit: limit,
                     offset: offset
                 }),
@@ -171,7 +233,7 @@ module.exports = {
                 )
             ]);
 
-            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/${req.params.slugdinas}`);
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/instansi/${req.params.slugdinas}`);
 
             res.status(200).json({
                 status: 200,
@@ -185,43 +247,72 @@ module.exports = {
         }
     },
 
-    getantrianforuser: async (req, res) => {
+    getantrianbylayanan: async (req, res) => {
         try {
-            const whereCondition = { userinfo_id: data.userId };
+            const { sluglayanan } = req.params;
 
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
 
-            let antrianForUser;
+            let antrianHariIni;
             let totalCount;
 
-            [antrianForUser, totalCount] = await Promise.all([
+            // Validasi apakah layanan (dinas) ada
+            const layanan = await Layanan.findOne({
+                where: {
+                    slug: sluglayanan
+                }
+            });
+            if (!layanan) {
+                return res.status(404).json({ status: 404, message: 'Instansi not found' });
+            }
+
+            // Mendapatkan rentang tanggal untuk hari ini
+            const startOfToday = moment().startOf('day').toDate();
+            const endOfToday = moment().endOf('day').toDate();
+
+            [antrianHariIni, totalCount] = await Promise.all([
                 Antrian.findAll({
-                    where: whereCondition,
+                    where: {
+                        createdAt: {
+                            [Op.between]: [startOfToday, endOfToday]
+                        }
+                    },
                     include: [{
-                        model: Instansi,
+                        model: Layanan,
                         attributes: ['name'],
+                        where: {
+                            slug: sluglayanan,
+                        },
                     }],
+                    order: [['id', 'ASC']],
                     limit: limit,
                     offset: offset
                 }),
                 Antrian.count(
                     {
-                        where: whereCondition,
+                        where: {
+                            createdAt: {
+                                [Op.between]: [startOfToday, endOfToday]
+                            }
+                        },
                         include: [{
-                            model: Instansi,
+                            model: Layanan,
+                            where: {
+                                slug: sluglayanan,
+                            },
                         }]
                     }
                 )
             ]);
 
-            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/foruser`);
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/antrian/get/instansi/${req.params.slugdinas}`);
 
             res.status(200).json({
                 status: 200,
                 message: 'success get',
-                data: antrianForUser,
+                data: antrianHariIni,
                 pagination: pagination
             });
         } catch (err) {
@@ -230,183 +321,161 @@ module.exports = {
         }
     },
 
-    getantrianbyid: async (req, res) => {
+    checkantrian: async (req, res) => {
         try {
 
-            let AntrianGet = await Antrian.findOne({
-                where: {
-                    id: req.params.idantrian
-                },
-                include: [
-                    {
-                        model: Instansi,
-                        attributes: ['name'],
-                    },
-                    {
-                        model: Layanan,
-                        attributes: ['name', 'syarat'],
-                    }
-                ],
-            });
+            const { idlayanan } = req.params;
 
-            if (!AntrianGet) {
-                res.status(404).json(response(404, 'data not found'));
-                return;
-            }
+            const today = new Date();
+            const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-            res.status(200).json(response(200, 'success get data', AntrianGet));
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
-        }
-    },
-
-    getPDFantrianbyid: async (req, res) => {
-        try {
-
-            let AntrianGet = await Antrian.findOne({
-                where: {
-                    id: req.params.idantrian
-                },
-                include: [
-                    {
-                        model: Instansi,
-                        attributes: ['name'],
-                    },
-                    {
-                        model: Layanan,
-                        attributes: ['name', 'syarat'],
-                    }
-                ],
-            });
-
-            // Read HTML template
-            const templatePath = path.resolve(__dirname, '../views/tiket.html');
-            let htmlContent = fs.readFileSync(templatePath, 'utf8');
-
-            const originalDate = new Date(AntrianGet?.tanggal || new Date());
-            const formattedDate = `${(originalDate.getMonth() + 1).toString().padStart(2, '0')}/${originalDate.getDate().toString().padStart(2, '0')}/${originalDate.getFullYear()}`;
-            const formattedTime = AntrianGet?.waktu.split(' ')[0].slice(0, 5); // Format HH:MM
-
-            const barcode = AntrianGet?.qrcode || '';
-            htmlContent = htmlContent.replace('{{barcode}}', barcode);
-            htmlContent = htmlContent.replace('{{instansiName}}', AntrianGet?.Instansi?.name ?? '');
-            htmlContent = htmlContent.replace('{{layananName}}', AntrianGet?.Layanan?.name ?? '');
-            htmlContent = htmlContent.replace('{{tanggal}}', formattedDate);
-            htmlContent = htmlContent.replace('{{waktu}}', formattedTime);
-
-            const browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                timeout: 60000 // Increase timeout to 60 seconds
-            });
-            const page = await browser.newPage();
-
-            // Set HTML content and wait until all resources are loaded
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-            // Generate PDF with 1 cm margins
-            const pdfBuffer = await page.pdf({
-                width: '2.91in',  // Custom width (e.g., 7.4 cm)
-                height: '4.13in', // Custom height (e.g., 10.5 cm)
-                margin: {
-                    top: '0.39in',    // 1 cm
-                    right: '0.39in',  // 1 cm
-                    bottom: '0.39in', // 1 cm
-                    left: '0.39in'    // 1 cm
-                }
-            });
-
-            await browser.close();
-
-            // Generate filename with current date and time
-            const currentDate = new Date().toISOString().replace(/:/g, '-');
-            const filename = `tiket-${currentDate}.pdf`;
-
-            // Set response headers and send the PDF buffer
-            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
-            res.setHeader('Content-type', 'application/pdf');
-            res.send(pdfBuffer);
-
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
-        }
-    },
-
-    deleteantrian: async (req, res) => {
-        let transaction;
-        try {
-            const { startDateTime, endDateTime, deleteAll } = req.body;
-
-            transaction = await sequelize.transaction();
-
-            if (deleteAll) {
-                const antrianAudio = await Antrian.findAll({
+            const [AntrianCount, AntrianNumber, AntrianClear] = await Promise.all([
+                Antrian.count({
                     where: {
-                        instansi_id: data.instansi_id
-                    },
-                    attributes: ['audio', 'qrcode'],
-                    transaction
-                });
-
-                const deleted = await Antrian.destroy({
+                        createdAt: {
+                            [Op.between]: [startOfDay, endOfDay]
+                        },
+                        layanan_id: idlayanan
+                    }
+                }),
+                Antrian.count({
                     where: {
-                        instansi_id: data.instansi_id
-                    },
-                    transaction
-                });
+                        createdAt: {
+                            [Op.between]: [startOfDay, endOfDay]
+                        },
+                        layanan_id: idlayanan,
+                        status: true
+                    }
+                }),
+                Antrian.count({
+                    where: {
+                        createdAt: {
+                            [Op.between]: [startOfDay, endOfDay]
+                        },
+                        layanan_id: idlayanan,
+                        status: true
+                    }
+                })
+            ]);
 
-                await transaction.commit();
-
-                return res.status(200).json({ status: 200, message: `${deleted} antrian(s) deleted successfully` });
-            }
-
-            // Validasi input untuk rentang tanggal
-            if (!startDateTime) {
-                return res.status(400).json({ status: 400, message: 'Start date is required' });
-            }
-
-            // Konversi input tanggal ke waktu UTC dengan awal dan akhir hari
-            const startUTC = moment.tz(startDateTime, "UTC").startOf('day').toDate();
-            const endUTC = endDateTime ? moment.tz(endDateTime, "UTC").endOf('day').toDate() : moment(startUTC).endOf('day').toDate();
-
-            // Menentukan rentang tanggal dan waktu dalam UTC
-            const dateTimeRange = {
-                [Op.between]: [startUTC, endUTC]
+            const data = {
+                AntrianCount,
+                AntrianNumber: AntrianNumber + 1,
+                AntrianClear
             };
 
-            const antrianAudio = await Antrian.findAll({
-                where: {
-                    createdAt: dateTimeRange,
-                    instansi_id: data.instansi_id
-                },
-                attributes: ['audio', 'qrcode'],
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data
             });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
 
-            // Hapus data antrian dalam rentang tanggal dan waktu tersebut
-            const deleted = await Antrian.destroy({
+    panggilAntrianBerikutnya: async (req, res) => {
+        const transaction = await sequelize.transaction();
+        try {
+            const { sluglayanan } = req.params;
+
+            const today = new Date();
+            const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+            // Cari antrian berikutnya yang belum dipanggil (statusnya false)
+            const antrianBerikutnya = await Antrian.findOne({
                 where: {
-                    createdAt: dateTimeRange,
-                    instansi_id: data.instansi_id
+                    status: false,
+                    createdAt: {
+                        [Op.between]: [startOfDay, endOfDay]
+                    },
                 },
+                include: [
+                    {
+                        model: Instansi,
+                        attributes: ['id', 'name'],
+                       
+                    }, {
+                        model: Layanan,
+                        attributes: ['id', 'name'],
+                        where: {
+                            slug: sluglayanan,
+                        },
+                    }
+                ],
+                order: [
+                    ['createdAt', 'ASC']
+                ],
                 transaction
             });
 
+            if (!antrianBerikutnya) {
+                await transaction.rollback();
+                return res.status(404).json({ status: 404, message: 'Tidak ada antrian yang tersedia' });
+            }
+
+            // Update status antrian menjadi true (sudah dipanggil)
+            antrianBerikutnya.status = true;
+            await antrianBerikutnya.save({ transaction });
+
+            // Generate suara panggilan antrian
+            const panggilanAntrian = `Antrian ${antrianBerikutnya?.code}, silahkan ke loket ${antrianBerikutnya?.Layanan?.name}`;
+            const languageCode = 'id';
+
+            const generateAndUploadAudio = async (text, language) => {
+                try {
+                    const url = await tts.getAudioUrl(text, {
+                        lang: language || 'id',
+                        slow: false,
+                        host: 'https://translate.google.com',
+                    });
+
+                    const response = await axios({
+                        url,
+                        method: 'GET',
+                        responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Node.js
+                    });
+
+                    const now = new Date();
+                    const datetime = now.toISOString().replace(/[-:.]/g, '');
+                    const audioFileName = `antrian_audio_${uuidv4()}_${datetime}.mp3`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `audio/${audioFileName}`,
+                        Body: response.data, // Buffer dari response arraybuffer
+                        ContentType: 'audio/mpeg',
+                        ACL: 'public-read',
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+                    await s3Client.send(command);
+
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+                    return fileUrl;
+                } catch (error) {
+                    console.error('Error converting text to speech or uploading to S3:', error);
+                    throw error;
+                }
+            };
+
+            const audioUrl = await generateAndUploadAudio(panggilanAntrian, languageCode);
+
+            antrianBerikutnya.audio = audioUrl;
+            await antrianBerikutnya.save({ transaction });
+
             await transaction.commit();
 
-            // Mengembalikan response
-            res.status(200).json({ status: 200, message: `${deleted} antrian(s) deleted successfully` });
+            res.status(200).json(response(200, 'Panggilan antrian berhasil', antrianBerikutnya));
+
         } catch (err) {
-            if (transaction) await transaction.rollback();
-
-            if (err.name === 'SequelizeForeignKeyConstraintError') {
-                res.status(400).json(response(400, 'Data tidak bisa dihapus karena masih digunakan pada tabel lain'));
-            } else {
-                res.status(500).json(response(500, 'Internal server error', err));
-                console.log(err);
-            }
+            await transaction.rollback();
+            console.error(err);
+            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
         }
-    },
-
+    }
 }

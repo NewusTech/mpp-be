@@ -8,11 +8,11 @@ const route = express.Router();
 route.post('/user/inputsurvey/create/:idlayanan', [mid.checkRolesAndLogout(['User'])], surveyforminput.inputsurvey);
 
 //melihat detail survey user by id user
-route.get('/user/inputsurvey/detail/:idsurveynum', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], surveyforminput.getdetailsurveyform);
+route.get('/user/inputsurvey/detail/:idsurveynum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Super Admin', 'User'])], surveyforminput.getdetailsurveyform);
 
-route.get('/user/historysurvey', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], surveyforminput.gethistorysurveyuser);
-route.get('/user/historysurvey/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], surveyforminput.getPDFhistorysurveyuser);
-route.get('/user/historysurvey/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], surveyforminput.getsurveybylayanan);
-route.get('/user/historysurvey/:idlayanan/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Staff Instansi', 'Super Admin', 'User'])], surveyforminput.getPDFsurveybylayanan);
+route.get('/user/historysurvey', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Super Admin', 'User'])], surveyforminput.gethistorysurveyuser);
+route.get('/user/historysurvey/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Super Admin', 'User'])], surveyforminput.getPDFhistorysurveyuser);
+route.get('/user/historysurvey/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Super Admin', 'User'])], surveyforminput.getsurveybylayanan);
+route.get('/user/historysurvey/:idlayanan/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Super Admin', 'User'])], surveyforminput.getPDFsurveybylayanan);
 
 module.exports = route;

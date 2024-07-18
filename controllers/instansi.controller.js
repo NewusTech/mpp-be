@@ -26,17 +26,18 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3 },
-                desc: { type: "string", min: 3, optional: true },
-                pj: { type: "string", min: 3, optional: true },
-                nip_pj: { type: "string", min: 3, optional: true },
-                alamat: { type: "string", min: 3, optional: true },
+                name: { type: "string" },
+                desc: { type: "string", optional: true },
+                code: { type: "string", optional: true },
+                pj: { type: "string", optional: true },
+                nip_pj: { type: "string", optional: true },
+                alamat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 },
-                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 100, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 jam_buka: { type: "string", optional: true },
                 jam_tutup: { type: "string", optional: true }
             }
@@ -47,7 +48,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/instansi/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/instansi/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -65,6 +66,7 @@ module.exports = {
                 name: req.body.name,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
+                code: req.body.code,
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
@@ -127,7 +129,7 @@ module.exports = {
                 whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
             }
 
-            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
             }
@@ -166,10 +168,10 @@ module.exports = {
             ]);
 
             const formattedInstansiGets = instansiGets.map(instansi => {
-                const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt } = instansi.toJSON();
+                const { id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt } = instansi.toJSON();
                 const jmlLayanan = instansi.Layanans.length;
                 return {
-                    id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
+                    id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
                 };
             });
 
@@ -200,7 +202,7 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
-            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Staff Instansi") {
+            if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
             }
@@ -227,11 +229,11 @@ module.exports = {
                 return;
             }
 
-            const { id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans } = instansiGet.toJSON();
+            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan,
+                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan,
                 Layanans // Include the services
             };
 
@@ -261,8 +263,9 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
-                name: { type: "string", min: 3, optional: true },
+                name: { type: "string", optional: true },
                 desc: { type: "string", optional: true },
+                code: { type: "string", optional: true },
                 pj: { type: "string", optional: true },
                 nip_pj: { type: "string", optional: true },
                 alamat: { type: "string", optional: true },
@@ -271,7 +274,7 @@ module.exports = {
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
                 telp: { type: "string", optional: true, min: 7, max: 15 },
-                email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
+                email: { type: "string", min: 5, max: 80, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 jam_buka: { type: "string", optional: true },
                 jam_tutup: { type: "string", optional: true }
             }
@@ -282,7 +285,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/instansi/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/instansi/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -299,6 +302,7 @@ module.exports = {
                 name: req.body.name,
                 slug: req.body.name ? slugify(req.body.name, { lower: true }) : undefined,
                 desc: req.body.desc,
+                code: req.body.code,
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,

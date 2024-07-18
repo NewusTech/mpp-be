@@ -144,20 +144,20 @@ module.exports = {
             }
 
             // Format the Layananforminput data
-            let formattedInputData = layananformnumData.Layananforminputs.map(datafilter => {
+            let formattedInputData = layananformnumData?.Layananforminputs?.map(datafilter => {
                 let data_key = null;
 
-                if (datafilter.Layananform.tipedata === 'radio' && datafilter.Layananform.datajson) {
-                    const selectedOption = datafilter.Layananform.datajson.find(option => option.id == datafilter.data);
+                if (datafilter?.Layananform?.tipedata === 'radio' && datafilter?.Layananform?.datajson) {
+                    const selectedOption = datafilter?.Layananform?.datajson.find(option => option?.id == datafilter?.data);
                     if (selectedOption) {
-                        data_key = selectedOption.key;
+                        data_key = selectedOption?.key;
                     }
                 }
 
-                if (datafilter.Layananform.tipedata === 'checkbox' && datafilter.Layananform.datajson) {
-                    const selectedOptions = JSON.parse(datafilter.data);
+                if (datafilter?.Layananform?.tipedata === 'checkbox' && datafilter?.Layananform?.datajson) {
+                    const selectedOptions = JSON.parse(datafilter?.data);
                     data_key = selectedOptions.map(selectedId => {
-                        const option = datafilter.Layananform.datajson.find(option => option.id == selectedId);
+                        const option = datafilter?.Layananform?.datajson.find(option => option?.id == selectedId);
                         return option ? option.key : null;
                     }).filter(key => key !== null);
                 }
@@ -167,9 +167,9 @@ module.exports = {
                     data: datafilter?.data,
                     layananform_id: datafilter?.layananform_id,
                     layananformnum_id: datafilter?.layananformnum_id,
-                    layananform_name: datafilter?.Layananform.field,
-                    layananform_datajson: datafilter?.Layananform.datajson,
-                    layananform_tipedata: datafilter?.Layananform.tipedata,
+                    layananform_name: datafilter?.Layananform?.field,
+                    layananform_datajson: datafilter?.Layananform?.datajson,
+                    layananform_tipedata: datafilter?.Layananform?.tipedata,
                     data_key: data_key ?? null
                 };
             });
@@ -356,7 +356,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `dir_mpp/fileoutput/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/fileoutput/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -594,58 +594,5 @@ module.exports = {
             console.log(err);
         }
     },
-
-    totalpermohonan_bulan: async (req, res) => {
-        try {
-            const { iddinas } = req.params;
-
-            const currentYear = moment().year();
-
-            const monthlyPromises = [];
-
-            for (let month = 0; month < 12; month++) {
-                const startOfMonth = moment().year(currentYear).month(month).startOf('month').toDate();
-                const endOfMonth = moment().year(currentYear).month(month).endOf('month').toDate();
-                monthlyPromises.push(
-                    Layananformnum.count({
-                        include: [
-                            {
-                                model: Layanan,
-                                attributes: { exclude: ['name'] },
-                                where: {
-                                    instansi_id: iddinas
-                                }
-                            }
-                        ],
-                        where: {
-                            createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
-                        }
-                    })
-                );
-            }
-
-            const [monthlyCounts] = await Promise.all([
-                Promise.all(monthlyPromises)
-            ]);
-    
-            const monthlyAntrianCounts = {};
-            for (let month = 0; month < 12; month++) {
-                monthlyAntrianCounts[moment().month(month).format('MMMM')] = monthlyCounts[month];
-            }
-    
-            const data = {
-                monthlyAntrianCounts
-            };
-    
-            res.status(200).json({
-                status: 200,
-                message: 'success get',
-                data
-            });
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ status: 500, message: 'Internal server error', error: err });
-        }
-    }
 
 }
