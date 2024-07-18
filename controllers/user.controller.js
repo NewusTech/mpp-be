@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Instansi, Role, Userinfo, Kecamatan, Desa, sequelize } = require('../models');
+const { User, Token, Instansi, Layanan, Role, Userinfo, Kecamatan, Desa, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -156,7 +156,11 @@ module.exports = {
                             },
                             {
                                 model: Instansi,
-                                attributes: ['id', 'name']
+                                attributes: ['id', 'name', 'image']
+                            },
+                            {
+                                model: Layanan,
+                                attributes: ['id', 'name', 'code']
                             }
                         ],
                         where: {
@@ -186,7 +190,10 @@ module.exports = {
                 role: userinfo.User.Role.name,
                 instansi: userinfo?.User?.Instansi?.name ?? undefined,
                 instansi_id: userinfo?.User?.Instansi?.id ?? undefined,
-                layanan_id: userinfo?.User?.layanan_id ?? undefined
+                instansi_image: userinfo?.User?.Instansi?.image ?? undefined,
+                layanan: userinfo?.User?.Layanan?.name ?? undefined,
+                layanan_id: userinfo?.User?.Layanan?.id ?? undefined,
+                layanan_code: userinfo?.User?.Layanan?.code ?? undefined
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });

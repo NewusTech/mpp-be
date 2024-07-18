@@ -267,7 +267,7 @@ module.exports = {
                     },
                     {
                         model: Layanan,
-                        attributes: ['name', 'syarat'],
+                        attributes: ['name', 'syarat', 'code'],
                     }
                 ],
             });
@@ -282,13 +282,15 @@ module.exports = {
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
 
             const originalDate = new Date(BookingantrianGet?.tanggal || new Date());
-            const formattedDate = `${(originalDate.getMonth() + 1).toString().padStart(2, '0')}/${originalDate.getDate().toString().padStart(2, '0')}/${originalDate.getFullYear()}`;
-            const formattedTime = BookingantrianGet?.waktu.split(' ')[0].slice(0, 5); // Format HH:MM
+            moment.locale('id');
+            const formattedDate = moment(originalDate).format('DD MMMM YYYY');
+            const formattedTime = moment(BookingantrianGet?.waktu, 'HH:mm:ss').format('HH.mm');
 
             const barcode = BookingantrianGet?.qrcode || '';
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
             htmlContent = htmlContent.replace('{{instansiName}}', BookingantrianGet?.Instansi?.name ?? '');
             htmlContent = htmlContent.replace('{{layananName}}', BookingantrianGet?.Layanan?.name ?? '');
+            htmlContent = htmlContent.replace('{{layananCode}}', BookingantrianGet?.Layanan?.code ?? '');
             htmlContent = htmlContent.replace('{{tanggal}}', formattedDate);
             htmlContent = htmlContent.replace('{{waktu}}', formattedTime);
 
@@ -308,9 +310,9 @@ module.exports = {
                 height: '4.13in', // Custom height (e.g., 10.5 cm)
                 margin: {
                     top: '0.39in',    // 1 cm
-                    right: '0.39in',  // 1 cm
+                    right: '0.19in',  // 1 cm
                     bottom: '0.39in', // 1 cm
-                    left: '0.39in'    // 1 cm
+                    left: '0.19in'    // 1 cm
                 }
             });
 

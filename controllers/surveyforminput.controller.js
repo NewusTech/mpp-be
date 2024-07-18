@@ -4,6 +4,8 @@ const { Surveyforminput, Surveyformnum, Surveyform, Layanan, Userinfo, sequelize
 require('dotenv').config()
 const fs = require('fs');
 const path = require('path');
+const { Op } = require('sequelize');
+const moment = require('moment-timezone');
 const puppeteer = require('puppeteer');
 const { generatePagination } = require('../pagination/pagination');
 
@@ -102,12 +104,27 @@ module.exports = {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
             let history;
             let totalCount;
 
             const WhereClause = {};
             if (instansi_id) {
                 WhereClause.instansi_id = instansi_id;
+            }
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
             }
 
             [history, totalCount] = await Promise.all([
@@ -151,7 +168,8 @@ module.exports = {
                     id: data.id,
                     layanan_name: data.name || null,
                     Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai
+                    Surveyformnums_nilai: surveyformnumsNilai,
+                    created_at: data.createdAt
                 };
             });
 
@@ -175,10 +193,25 @@ module.exports = {
             const instansi_id = Number(req.query.instansi_id);
             let history;
             let totalCount;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
 
             const WhereClause = {};
             if (instansi_id) {
                 WhereClause.instansi_id = instansi_id;
+            }
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
             }
 
             [history, totalCount] = await Promise.all([
@@ -298,10 +331,25 @@ module.exports = {
             const offset = (page - 1) * limit;
             let history;
             let totalCount;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
 
             const WhereClause = {};
             if (idlayanan) {
                 WhereClause.layanan_id = idlayanan;
+            }
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
             }
 
             [history, totalCount] = await Promise.all([
@@ -370,10 +418,25 @@ module.exports = {
         try {
             const idlayanan = Number(req.params.idlayanan);
             let history;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
 
             const WhereClause = {};
             if (idlayanan) {
                 WhereClause.layanan_id = idlayanan;
+            }
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
             }
 
             [history, totalCount] = await Promise.all([

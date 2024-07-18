@@ -5,6 +5,7 @@ const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
+const moment = require('moment-timezone');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
@@ -95,6 +96,8 @@ module.exports = {
 
             const instansi_id = req.query.instansi_id ?? null;
             const search = req.query.search ?? null;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
@@ -111,6 +114,19 @@ module.exports = {
             }
             if (userinfo_id) {
                 whereCondition.userinfo_id = userinfo_id;
+            }
+            if (start_date && end_date) {
+                whereCondition.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                whereCondition.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                whereCondition.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
             }
 
             [pengaduanGets, totalCount] = await Promise.all([

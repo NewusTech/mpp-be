@@ -144,20 +144,20 @@ module.exports = {
             }
 
             // Format the Layananforminput data
-            let formattedInputData = layananformnumData.Layananforminputs.map(datafilter => {
+            let formattedInputData = layananformnumData?.Layananforminputs?.map(datafilter => {
                 let data_key = null;
 
-                if (datafilter.Layananform.tipedata === 'radio' && datafilter.Layananform.datajson) {
-                    const selectedOption = datafilter.Layananform.datajson.find(option => option.id == datafilter.data);
+                if (datafilter?.Layananform?.tipedata === 'radio' && datafilter?.Layananform?.datajson) {
+                    const selectedOption = datafilter?.Layananform?.datajson.find(option => option?.id == datafilter?.data);
                     if (selectedOption) {
-                        data_key = selectedOption.key;
+                        data_key = selectedOption?.key;
                     }
                 }
 
-                if (datafilter.Layananform.tipedata === 'checkbox' && datafilter.Layananform.datajson) {
-                    const selectedOptions = JSON.parse(datafilter.data);
+                if (datafilter?.Layananform?.tipedata === 'checkbox' && datafilter?.Layananform?.datajson) {
+                    const selectedOptions = JSON.parse(datafilter?.data);
                     data_key = selectedOptions.map(selectedId => {
-                        const option = datafilter.Layananform.datajson.find(option => option.id == selectedId);
+                        const option = datafilter?.Layananform?.datajson.find(option => option?.id == selectedId);
                         return option ? option.key : null;
                     }).filter(key => key !== null);
                 }
@@ -167,9 +167,9 @@ module.exports = {
                     data: datafilter?.data,
                     layananform_id: datafilter?.layananform_id,
                     layananformnum_id: datafilter?.layananformnum_id,
-                    layananform_name: datafilter?.Layananform.field,
-                    layananform_datajson: datafilter?.Layananform.datajson,
-                    layananform_tipedata: datafilter?.Layananform.tipedata,
+                    layananform_name: datafilter?.Layananform?.field,
+                    layananform_datajson: datafilter?.Layananform?.datajson,
+                    layananform_tipedata: datafilter?.Layananform?.tipedata,
                     data_key: data_key ?? null
                 };
             });
