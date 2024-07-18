@@ -22,6 +22,10 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20.x'
+    - name: Git pull
+      run: |
+          cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id
+          git pull
     - name: Run migration if present
       run: |
           cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id
