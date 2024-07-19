@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Tiket Antrian</title>
@@ -8,13 +9,22 @@
             font-family: Arial, sans-serif;
             text-align: center;
         }
+
         .barcode {
             margin: 10px 0;
             text-align: center;
         }
+
+        .logo {
+            margin: 0;
+            width: 38px;
+            height: 38px;
+        }
+
         .details {
             font-size: 14px;
         }
+
         .detailsbetween {
             font-size: 14px;
             margin-top: 12px;
@@ -23,12 +33,38 @@
             padding-left: 10px;
             padding-right: 10px;
         }
+
+        .flex {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 3px;
+        }
+
+        .flex .logo-container {
+            position: absolute;
+            flex: 0 0 auto; /* Only takes as much space as the logo needs */
+        }
+
+        .flex .text-container {
+            padding-top: 0px;
+            margin-top: 0px;
+            flex: 1; /* This makes sure the text container takes up remaining space */
+            text-align: center; /* Align text to the left inside the text container */
+        }
     </style>
 </head>
+
 <body>
-    <div class="details">
-        <div>{{instansiName}}</div>
-        <div>{{layananName}}</div>
+    <div class="flex">
+        <div class="logo-container">
+            <img src="{{instansiImage}}" class="logo" />
+        </div>
+        <div class="text-container">
+            <div style="font-size: 15px;">{{instansiName}}</div>
+            <div style="font-size: 13px;">{{layananName}}</div>
+        </div>
     </div>
     <div class="detailsbetween">
         <div>{{tanggal}}</div>
@@ -45,4 +81,5 @@
         JsBarcode(".barcode").init();
     </script>
 </body>
+
 </html>

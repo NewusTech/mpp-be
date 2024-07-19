@@ -8,7 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Manualbook.init({
-    dokumen: DataTypes.STRING
+    dokumen: DataTypes.STRING,
+    video: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Manualbook',
