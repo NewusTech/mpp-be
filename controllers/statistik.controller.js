@@ -81,6 +81,15 @@ module.exports = {
                                     createdAt: { [Op.between]: [startDate, endDate] }
                                 },
                                 required: false
+                            },
+                            {
+                                model: Antrian,
+                                as: 'Antrians',
+                                attributes: ['id'],
+                                where: {
+                                    createdAt: { [Op.between]: [startDate, endDate] }
+                                },
+                                required: false
                             }
                         ],
                         attributes: ['id', 'name'],
@@ -96,11 +105,12 @@ module.exports = {
                 Instansi.count()
             ]);
 
-            const formattedCountByInstansi = countbyInstansi.map(instansi => ({
+            const formattedCountByInstansi = countbyInstansi?.map(instansi => ({
                 id: instansi.id,
                 name: instansi.name,
-                permohonan_count: instansi.Layanans.reduce((total, layanan) => total + layanan.Layananformnums.length, 0),
-                skm_count: instansi.Layanans.reduce((total, layanan) => total + layanan.Surveyformnums.length, 0),
+                permohonan_count: instansi?.Layanans?.reduce((total, layanan) => total + layanan?.Layananformnums?.length, 0),
+                skm_count: instansi?.Layanans?.reduce((total, layanan) => total + layanan?.Surveyformnums?.length, 0),
+                antrian_count: instansi?.Layanans?.reduce((total, layanan) => total + layanan?.Antrians?.length, 0),
             }));
 
             const yearList = {};
