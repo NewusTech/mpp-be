@@ -259,14 +259,36 @@ module.exports = {
                 })
             );
     
-            const [top3LayananMonth] = await Promise.all([
+            const calculateTotal7Days = (totalLayananPerDay) => {
+                const totalLayanan7Days = {};
+                totalLayananPerDay.forEach(day => {
+                    day.top3.forEach(layanan => {
+                        if (!totalLayanan7Days[layanan.LayananId]) {
+                            totalLayanan7Days[layanan.LayananId] = {
+                                LayananName: layanan.LayananName,
+                                LayananformnumCount: 0,
+                            };
+                        }
+                        totalLayanan7Days[layanan.LayananId].LayananformnumCount += layanan.LayananformnumCount;
+                    });
+                });
+                return Object.entries(totalLayanan7Days).map(([LayananId, { LayananName, LayananformnumCount }]) => ({
+                    LayananId: parseInt(LayananId),
+                    LayananName,
+                    LayananformnumCount,
+                }));
+            };
+
+            const [top3LayananMonth, totalLayanan7Days] = await Promise.all([
                 getTopLayanan(dateRangethisMonth),
+                calculateTotal7Days(totalLayananPerDay),
             ]);
     
             res.status(200).json(response(200, 'success get data', {
                 datainstansi,
                 top3LayananMonth,
                 totalLayananPerDay,
+                totalLayanan7Days,
             }));
     
         } catch (err) {
