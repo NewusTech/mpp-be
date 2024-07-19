@@ -135,13 +135,19 @@ module.exports = {
                         }
                     },
                     order: [['id', 'ASC']],
-                    include: [{
-                        model: Instansi,
-                        attributes: ['name'],
-                        where: {
-                            slug: slugdinas,
+                    include: [
+                        {
+                            model: Instansi,
+                            attributes: ['name', 'code'],
+                            where: {
+                                slug: slugdinas,
+                            },
                         },
-                    }],
+                        {
+                            model: Layanan,
+                            attributes: ['name', 'code'],
+                        }
+                    ],
                     limit: limit,
                     offset: offset
                 }),
@@ -190,10 +196,16 @@ module.exports = {
             [bookingantrianForUser, totalCount] = await Promise.all([
                 Bookingantrian.findAll({
                     where: whereCondition,
-                    include: [{
-                        model: Instansi,
-                        attributes: ['name'],
-                    }],
+                    include: [
+                        {
+                            model: Instansi,
+                            attributes: ['name', 'code'],
+                        },
+                        {
+                            model: Layanan,
+                            attributes: ['name', 'code'],
+                        }
+                    ],
                     limit: limit,
                     offset: offset,
                     order: [['id', 'ASC']]
@@ -232,11 +244,11 @@ module.exports = {
                 include: [
                     {
                         model: Instansi,
-                        attributes: ['name'],
+                        attributes: ['name', 'code'],
                     },
                     {
                         model: Layanan,
-                        attributes: ['name', 'syarat'],
+                        attributes: ['name', 'syarat', 'code'],
                     }
                 ],
             });
@@ -263,7 +275,7 @@ module.exports = {
                 include: [
                     {
                         model: Instansi,
-                        attributes: ['name'],
+                        attributes: ['name', 'code', 'image'],
                     },
                     {
                         model: Layanan,
@@ -287,6 +299,9 @@ module.exports = {
             const formattedTime = moment(BookingantrianGet?.waktu, 'HH:mm:ss').format('HH.mm');
 
             const barcode = BookingantrianGet?.qrcode || '';
+            const instansiImage = path.join(`${process.env.BASE_URL}/static/images/DesignLogoMpp.svg`);
+            htmlContent = htmlContent.replace('{{instansiImage}}', instansiImage);
+            console.log("aaaaaaaa", instansiImage)
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
             htmlContent = htmlContent.replace('{{instansiName}}', BookingantrianGet?.Instansi?.name ?? '');
             htmlContent = htmlContent.replace('{{layananName}}', BookingantrianGet?.Layanan?.name ?? '');
@@ -310,9 +325,9 @@ module.exports = {
                 height: '4.13in', // Custom height (e.g., 10.5 cm)
                 margin: {
                     top: '0.39in',    // 1 cm
-                    right: '0.19in',  // 1 cm
+                    right: '0.12in',  // 1 cm
                     bottom: '0.39in', // 1 cm
-                    left: '0.19in'    // 1 cm
+                    left: '0.12in'    // 1 cm
                 }
             });
 

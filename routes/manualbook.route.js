@@ -11,6 +11,6 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
  
 route.get('/user/manualbook/get', manualbookController.getmanualbook); 
-route.put('/user/manualbook/update', [mid.checkRolesAndLogout(['Super Admin'])], upload.single('manualbook'), manualbookController.updatemanualbook); 
+route.put('/user/manualbook/update', [mid.checkRolesAndLogout(['Super Admin'])], upload.fields([{ name: 'manualbook', maxCount: 1 }, { name: 'video', maxCount: 1 }]), manualbookController.updatemanualbook);
 
 module.exports = route;

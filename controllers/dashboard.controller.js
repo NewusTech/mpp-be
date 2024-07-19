@@ -470,11 +470,18 @@ module.exports = {
                 }
             }
 
-            const [AntrianCount, AntrianSebelumnya, AntrianNext, riwayatAntrian, riwayatCount] = await Promise.all([
+            const [AntrianCount, AntrianSelesaiCount, AntrianSebelumnya, AntrianNext, riwayatAntrian, riwayatCount] = await Promise.all([
                 Antrian.count({
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
                         layanan_id: idlayanan
+                    },
+                }),
+                Antrian.count({
+                    where: {
+                        createdAt: { [Op.between]: [startOfToday, endOfToday] },
+                        layanan_id: idlayanan,
+                        status: true
                     },
                 }),
                 Antrian.findOne({
@@ -536,6 +543,7 @@ module.exports = {
 
             const dataget = {
                 AntrianCount,
+                AntrianSelesaiCount,
                 AntrianSebelumnya: AntrianSebelumnya?.code ?? null,
                 AntrianProses: AntrianNext[0]?.code ?? null,
                 AntrianNext: AntrianNext[1]?.code ?? null,

@@ -205,13 +205,19 @@ module.exports = {
                             [Op.between]: [startOfToday, endOfToday]
                         }
                     },
-                    include: [{
-                        model: Instansi,
-                        attributes: ['name'],
-                        where: {
-                            slug: slugdinas,
+                    include: [
+                        {
+                            model: Instansi,
+                            attributes: ['name', 'code'],
+                            where: {
+                                slug: slugdinas,
+                            },
                         },
-                    }],
+                        {
+                            model: Layanan,
+                            attributes: ['name', 'code'],
+                        }
+                    ],
                     order: [['id', 'ASC']],
                     limit: limit,
                     offset: offset
@@ -223,12 +229,17 @@ module.exports = {
                                 [Op.between]: [startOfToday, endOfToday]
                             }
                         },
-                        include: [{
-                            model: Instansi,
-                            where: {
-                                slug: slugdinas,
+                        include: [
+                            {
+                                model: Instansi,
+                                where: {
+                                    slug: slugdinas,
+                                },
                             },
-                        }]
+                            {
+                                model: Layanan,
+                            }
+                        ]
                     }
                 )
             ]);
@@ -279,13 +290,19 @@ module.exports = {
                             [Op.between]: [startOfToday, endOfToday]
                         }
                     },
-                    include: [{
-                        model: Layanan,
-                        attributes: ['name'],
-                        where: {
-                            slug: sluglayanan,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: ['name', 'code'],
+                            where: {
+                                slug: sluglayanan,
+                            },
                         },
-                    }],
+                        {
+                            model: Instansi,
+                            attributes: ['name', 'code'],
+                        }
+                    ],
                     order: [['id', 'ASC']],
                     limit: limit,
                     offset: offset
@@ -330,7 +347,13 @@ module.exports = {
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-            const [AntrianCount, AntrianNumber, AntrianClear] = await Promise.all([
+            const [LayananData, AntrianCount, AntrianNumber, AntrianClear] = await Promise.all([
+                Layanan.findOne({
+                    where: {
+                        id: idlayanan
+                    },
+                    attributes: ['name', 'code'],
+                }),
                 Antrian.count({
                     where: {
                         createdAt: {
@@ -360,8 +383,9 @@ module.exports = {
             ]);
 
             const data = {
+                LayananData,
                 AntrianCount,
-                AntrianNumber: AntrianNumber + 1,
+                AntrianNumber: AntrianCount === 0 ? 0 : AntrianNumber + 1,
                 AntrianClear
             };
 
@@ -396,11 +420,11 @@ module.exports = {
                 include: [
                     {
                         model: Instansi,
-                        attributes: ['id', 'name'],
-                       
+                        attributes: ['id', 'name', 'code'],
+
                     }, {
                         model: Layanan,
-                        attributes: ['id', 'name'],
+                        attributes: ['id', 'name', 'code'],
                         where: {
                             slug: sluglayanan,
                         },

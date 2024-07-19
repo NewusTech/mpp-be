@@ -8,7 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Termcond.init({
-    desc: DataTypes.TEXT
+    desc: DataTypes.TEXT,
+    privasi: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Termcond',

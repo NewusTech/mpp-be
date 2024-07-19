@@ -28,6 +28,8 @@ app.use((err, req, res, next) => {
 
 app.use(error)
 
+app.use('/static', express.static('public'))
+
 //listen
 app.listen(port, () => {
     console.log(`server is running on port ${port} and url ${baseConfig.base_url}`);

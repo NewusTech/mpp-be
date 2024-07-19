@@ -12,8 +12,8 @@ const upload = multer({ storage: storage });
 
 route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User'])], antrianController.createantrian);
 route.post('/antrian/createfrombarcode', antrianController.createAntrianFromQRCode);
-route.get('/user/antrian/get/instansi/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbyinstansi); 
-route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbylayanan); 
+route.get('/user/antrian/get/instansi/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Layanan', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbyinstansi); 
+route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Layanan', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbylayanan); 
 
 route.get('/antrian/check/:idlayanan', antrianController.checkantrian); 
 route.get('/panggilantrian/get/:sluglayanan', antrianController.panggilAntrianBerikutnya); 
