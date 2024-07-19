@@ -200,7 +200,7 @@ module.exports = {
         const transaction = await sequelize.transaction();
 
         try {
-            const { datainput } = req.body;
+            const { datainput, status } = req.body;
             const idlayanannum = req.params.idlayanannum;
 
             // Update data entries
@@ -252,6 +252,12 @@ module.exports = {
                 );
             });
 
+            Layananformnum.update(
+                { status: status },
+                { where: { id: idlayanannum }, transaction }
+            );
+
+            console.log("asddasdasasd", status)
             await Promise.all([...updateDataPromises, ...fileUpdatePromises]);
 
             await transaction.commit();
@@ -401,6 +407,7 @@ module.exports = {
         try {
             const search = req.query.search ?? null;
             const status = req.query.status ?? null;
+            const range = req.query.range;
             const isonline = req.query.isonline ?? null;
             const userinfo_id = data.role === "User" ? data.userId : null;
             const instansi_id = Number(req.query.instansi_id);
@@ -416,6 +423,20 @@ module.exports = {
             const WhereClause = {};
             const WhereClause2 = {};
             const WhereClause3 = {};
+
+            if(data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                WhereClause2.instansi_id = data.instansi_id;
+            }
+
+            if(data.role === 'Admin Layanan') {
+                WhereClause.layanan_id = data.layanan_id;
+            }
+
+            if (range == 'today') {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
+                };
+            }
 
             if (isonline) {
                 WhereClause.isonline = isonline;

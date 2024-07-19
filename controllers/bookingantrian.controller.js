@@ -299,8 +299,9 @@ module.exports = {
             const formattedTime = moment(BookingantrianGet?.waktu, 'HH:mm:ss').format('HH.mm');
 
             const barcode = BookingantrianGet?.qrcode || '';
-            const instansiImage = BookingantrianGet?.Instansi?.image || '';
+            const instansiImage = path.join(`${process.env.BASE_URL}/static/images/DesignLogoMpp.svg`);
             htmlContent = htmlContent.replace('{{instansiImage}}', instansiImage);
+            console.log("aaaaaaaa", instansiImage)
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
             htmlContent = htmlContent.replace('{{instansiName}}', BookingantrianGet?.Instansi?.name ?? '');
             htmlContent = htmlContent.replace('{{layananName}}', BookingantrianGet?.Layanan?.name ?? '');
@@ -324,9 +325,9 @@ module.exports = {
                 height: '4.13in', // Custom height (e.g., 10.5 cm)
                 margin: {
                     top: '0.39in',    // 1 cm
-                    right: '0.19in',  // 1 cm
+                    right: '0.12in',  // 1 cm
                     bottom: '0.39in', // 1 cm
-                    left: '0.19in'    // 1 cm
+                    left: '0.12in'    // 1 cm
                 }
             });
 

@@ -48,6 +48,7 @@
         }
 
         .flex .text-container {
+            margin-left: 2px;
             padding-top: 0px;
             margin-top: 0px;
             flex: 1; /* This makes sure the text container takes up remaining space */
@@ -62,19 +63,23 @@
             <img src="{{instansiImage}}" class="logo" />
         </div>
         <div class="text-container">
-            <div style="font-size: 15px;">{{instansiName}}</div>
-            <div style="font-size: 13px;">{{layananName}}</div>
+            <div style="font-size: 13px;">Mal Pelayanan Publik</div>
+            <div style="font-size: 11px;">Kabupaten Lampung Timur</div>
         </div>
     </div>
+    <div class="details" style="margin-top: 10px;">
+        <div style="font-size: 12px;">{{instansiName}}</div>
+        <div style="font-size: 10px;">{{layananName}}</div>
+    </div>
     <div class="detailsbetween">
-        <div>{{tanggal}}</div>
-        <div>{{waktu}} WIB</div>
+        <div style="font-size: 11px;">{{tanggal}}</div>
+        <div style="font-size: 11px;">{{waktu}} WIB</div>
     </div>
     <div class="barcode">
-        <img width="80%" src="{{barcode}}" />
+        <img width="60%" src="{{barcode}}" />
     </div>
     <div class="details">
-        <div>Loket : {{layananCode}}</div>
+        <div style="font-size: 12px;">Loket : {{layananCode}}</div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script>
