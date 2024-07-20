@@ -61,6 +61,11 @@ module.exports = {
                     min: 3,
                     optional: true
                 },
+                privasi_text: {
+                    type: "string",
+                    min: 3,
+                    optional: true
+                },
             }
 
             let descKey, privasiKey;
@@ -109,6 +114,7 @@ module.exports = {
               let descUpdateObj = {
                 desc: req.files.desc ? descKey : undefined,
                 privasi: req.files.privasi ? privasiKey : undefined,
+                privasi_text: req.body.privasi_text,
             };
 
             // Validasi menggunakan module fastest-validator

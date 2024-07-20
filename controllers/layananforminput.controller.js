@@ -41,8 +41,33 @@ module.exports = {
             const { datainput } = req.body;
             let { datafile } = req.body;
 
+            let dataLayanan = await Layanan.findOne({
+                where: {
+                    id: idlayanan
+                },
+                attributes: ['id', 'code'],
+            });
+
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+
+            const countToday = await Layananformnum.count({
+                where: {
+                    createdAt: {
+                        [Op.gte]: new Date(todayStr + 'T00:00:00Z'),
+                        [Op.lte]: new Date(todayStr + 'T23:59:59Z')
+                    },
+                    layanan_id: idlayanan
+                }
+            });
+
+            const urut = String(countToday + 1).padStart(4, '0'); // Menambah 1 pada count dan pad dengan '0' hingga 4 digit
+            const tanggalFormat = today.toISOString().slice(2, 10).replace(/-/g, ''); // Format YYMMDD
+            const noRequest = `${dataLayanan.code}-${tanggalFormat}-${urut}`;
+
             let layananID = {
                 userinfo_id: Number(iduser),
+                no_request: noRequest,
                 layanan_id: Number(idlayanan),
                 isonline: true,
                 status: Number(statusinput)
@@ -177,6 +202,7 @@ module.exports = {
             // Embed the formatted Layananforminput data into the Layananformnum data
             let result = {
                 id: layananformnumData?.id,
+                no_request: layananformnumData?.no_request,
                 layanan_id: layananformnumData?.layanan_id,
                 layanan: layananformnumData?.Layanan,
                 tgl_selesai: layananformnumData?.tgl_selesai,
@@ -424,11 +450,11 @@ module.exports = {
             const WhereClause2 = {};
             const WhereClause3 = {};
 
-            if(data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
                 WhereClause2.instansi_id = data.instansi_id;
             }
 
-            if(data.role === 'Admin Layanan') {
+            if (data.role === 'Admin Layanan') {
                 WhereClause.layanan_id = data.layanan_id;
             }
 
@@ -520,22 +546,23 @@ module.exports = {
             let formattedData = history.map(data => {
                 return {
                     id: data.id,
-                    userinfo_id: data.userinfo_id,
-                    name: data.Userinfo.name,
-                    nik: data.Userinfo.nik,
-                    pesan: data.pesan,
-                    status: data.status,
-                    tgl_selesai: data.tgl_selesai,
-                    isonline: data.isonline,
-                    layanan_id: data.layanan_id,
-                    layanan_name: data.Layanan ? data.Layanan.name : null,
-                    layanan_image: data.Layanan ? data.Layanan.image : null,
-                    instansi_id: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.id : null,
-                    instansi_name: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.name : null,
-                    instansi_image: data.Layanan && data.Layanan.Instansi ? data.Layanan.Instansi.image : null,
-                    createdAt: data.createdAt,
-                    updatedAt: data.updatedAt,
-                    fileoutput: data.fileoutput,
+                    userinfo_id: data?.userinfo_id,
+                    name: data?.Userinfo?.name,
+                    nik: data?.Userinfo?.nik,
+                    pesan: data?.pesan,
+                    status: data?.status,
+                    tgl_selesai: data?.tgl_selesai,
+                    isonline: data?.isonline,
+                    layanan_id: data?.layanan_id,
+                    layanan_name: data?.Layanan ? data?.Layanan?.name : null,
+                    layanan_image: data?.Layanan ? data?.Layanan?.image : null,
+                    instansi_id: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.id : null,
+                    instansi_name: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.name : null,
+                    instansi_image: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.image : null,
+                    createdAt: data?.createdAt,
+                    updatedAt: data?.updatedAt,
+                    fileoutput: data?.fileoutput,
+                    no_request: data?.no_request,
                 };
             });
 
@@ -590,22 +617,23 @@ module.exports = {
             });
 
             let formattedData = {
-                id: Layananformnumget.id,
-                userinfo_id: Layananformnumget.userinfo_id,
-                name: Layananformnumget.Userinfo ? Layananformnumget.Userinfo.name : null,
-                status: Layananformnumget.status,
-                pesan: Layananformnumget.pesan,
-                tgl_selesai: data.tgl_selesai,
-                layanan_id: Layananformnumget.layanan_id,
-                layanan_name: Layananformnumget.Layanan ? Layananformnumget.Layanan.name : null,
-                layanan_image: Layananformnumget.Layanan ? Layananformnumget.Layanan.image : null,
-                instansi_id: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.id : null,
-                instansi_name: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.name : null,
-                instansi_image: Layananformnumget.Layanan && Layananformnumget.Layanan.Instansi ? Layananformnumget.Layanan.Instansi.image : null,
-                createdAt: Layananformnumget.createdAt,
-                updatedAt: Layananformnumget.updatedAt,
-                fileoutput: Layananformnumget.fileoutput,
-                input_skm: surveyGet ? true : false
+                id: Layananformnumget?.id,
+                userinfo_id: Layananformnumget?.userinfo_id,
+                name: Layananformnumget?.Userinfo ? Layananformnumget?.Userinfo?.name : null,
+                status: Layananformnumget?.status,
+                pesan: Layananformnumget?.pesan,
+                tgl_selesai: data?.tgl_selesai,
+                layanan_id: Layananformnumget?.layanan_id,
+                layanan_name: Layananformnumget?.Layanan ? Layananformnumget?.Layanan?.name : null,
+                layanan_image: Layananformnumget?.Layanan ? Layananformnumget?.Layanan?.image : null,
+                instansi_id: Layananformnumget?.Layanan && Layananformnumget?.Layanan?.Instansi ? Layananformnumget?.Layanan?.Instansi.id : null,
+                instansi_name: Layananformnumget?.Layanan && Layananformnumget?.Layanan?.Instansi ? Layananformnumget?.Layanan?.Instansi.name : null,
+                instansi_image: Layananformnumget?.Layanan && Layananformnumget?.Layanan?.Instansi ? Layananformnumget?.Layanan?.Instansi.image : null,
+                createdAt: Layananformnumget?.createdAt,
+                updatedAt: Layananformnumget?.updatedAt,
+                fileoutput: Layananformnumget?.fileoutput,
+                input_skm: surveyGet ? true : false,
+                no_request: Layananformnumget?.no_request,
             };
 
             res.status(200).json(response(200, 'success get', formattedData));

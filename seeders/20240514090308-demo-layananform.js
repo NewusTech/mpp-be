@@ -98,7 +98,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -109,7 +109,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -120,7 +120,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -131,7 +131,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -143,7 +143,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -154,7 +154,7 @@ module.exports = {
         mininput: null,
         status: false,
         isrequired: false,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -165,7 +165,7 @@ module.exports = {
         mininput: null,
         status: false,
         isrequired: false,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -176,7 +176,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -188,7 +188,7 @@ module.exports = {
         mininput: null,
         status: false,
         isrequired: false,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -200,7 +200,7 @@ module.exports = {
         mininput: null,
         status: true,
         isrequired: true,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -211,7 +211,7 @@ module.exports = {
         mininput: null,
         status: false,
         isrequired: false,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -222,7 +222,7 @@ module.exports = {
         mininput: null,
         status: false,
         isrequired: false,
-        layanan_id: 63,
+        layanan_id: 43,
         createdAt: new Date(),
         updatedAt: new Date()
       }

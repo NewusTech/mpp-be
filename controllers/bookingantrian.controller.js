@@ -299,9 +299,9 @@ module.exports = {
             const formattedTime = moment(BookingantrianGet?.waktu, 'HH:mm:ss').format('HH.mm');
 
             const barcode = BookingantrianGet?.qrcode || '';
-            const instansiImage = path.join(`${process.env.BASE_URL}/static/images/DesignLogoMpp.svg`);
+            const instansiImage = path.join(`${process.env.SERVER_URL}/static/images/DesignLogoMpp.svg`);
             htmlContent = htmlContent.replace('{{instansiImage}}', instansiImage);
-            console.log("aaaaaaaa", instansiImage)
+
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
             htmlContent = htmlContent.replace('{{instansiName}}', BookingantrianGet?.Instansi?.name ?? '');
             htmlContent = htmlContent.replace('{{layananName}}', BookingantrianGet?.Layanan?.name ?? '');
