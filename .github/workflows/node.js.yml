@@ -34,6 +34,21 @@ jobs:
       run: npm ci
     - name : change repo
       run : cd /home/newus-backend-mpp/htdocs/backend-mpp.newus.id/actions-runner/_work/mpp-be/mpp-be
-    - run : pm2 restart backend-mpp.newus.id
+    - name : restart PM2
+      run : |
+          APP_NAME="backend-mpp.newus.id"
+          APP_ID="5"
+
+          if pm2 restart $APP_NAME; then
+            echo "Successfully restarted app with name $APP_NAME"
+          else
+            echo "Failed to restart app with name $APP_NAME, trying with ID $APP_ID"
+            if pm2 restart $APP_ID; then
+              echo "Successfully restarted app with ID $APP_ID"
+            else
+              echo "Failed to restart app with both name and ID"
+              exit 1
+            fi
+          fi
       
     
