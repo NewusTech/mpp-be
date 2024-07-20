@@ -587,7 +587,13 @@ module.exports = {
             const status = req.query.status ?? null;
             const range = req.query.range;
             const isonline = req.query.isonline ?? null;
-            const userinfo_id = data.role === "User" ? data.userId : null;
+            let userinfo_id;
+            if(data.role === "User") {
+                userinfo_id = data.userId
+            } else {
+                userinfo_id = req.query.userId
+            }
+         
             const instansi_id = Number(req.query.instansi_id);
             const layanan_id = Number(req.query.layanan_id);
             const start_date = req.query.start_date;
