@@ -581,6 +581,169 @@ module.exports = {
         }
     },
 
+    gethistorydokumen: async (req, res) => {
+        try {
+            const search = req.query.search ?? null;
+            const status = req.query.status ?? null;
+            const range = req.query.range;
+            const isonline = req.query.isonline ?? null;
+            const userinfo_id = data.role === "User" ? data.userId : null;
+            const instansi_id = Number(req.query.instansi_id);
+            const layanan_id = Number(req.query.layanan_id);
+            const start_date = req.query.start_date;
+            let end_date = req.query.end_date;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let history;
+            let totalCount;
+    
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+    
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                WhereClause2.instansi_id = data.instansi_id;
+            }
+    
+            if (data.role === 'Admin Layanan') {
+                WhereClause.layanan_id = data.layanan_id;
+            }
+    
+            WhereClause.status = 3;
+    
+            if (range == 'today') {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
+                };
+            }
+    
+            if (isonline) {
+                WhereClause.isonline = isonline;
+            }
+            if (userinfo_id) {
+                WhereClause.userinfo_id = userinfo_id;
+            }
+            if (status) {
+                WhereClause.status = status;
+            }
+            if (layanan_id) {
+                WhereClause.layanan_id = layanan_id;
+            }
+    
+            if (start_date && end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.between]: [new Date(start_date), new Date(end_date)]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: new Date(start_date)
+                };
+            } else if (end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.lte]: new Date(end_date)
+                };
+            }
+    
+            if (instansi_id) {
+                WhereClause2.instansi_id = instansi_id;
+            }
+    
+            if (search) {
+                WhereClause3.name = {
+                    [Op.iLike]: `%${search}%`
+                };
+            }
+    
+            [history, totalCount] = await Promise.all([
+                Layananformnum.findAll({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: ['name', 'image', "id"],
+                            include: [{
+                                model: Instansi,
+                                attributes: ['name', 'image', "id"] ,
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            attributes: ['name', 'nik'],
+                            where: WhereClause3,
+                        }
+                    ],
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'DESC']]
+                }),
+                Layananformnum.count({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            where: WhereClause3,
+                        }
+                    ],
+                })
+            ]);
+    
+            // Restructure the data to show Instansi first
+            let instansiMap = {};
+    
+            history.forEach(data => {
+                const instansiId = data?.Layanan?.Instansi?.id;
+                const instansiName = data?.Layanan?.Instansi?.name;
+                const instansiImage = data?.Layanan?.Instansi?.image;
+    
+                if (!instansiMap[instansiId]) {
+                    instansiMap[instansiId] = {
+                        instansi_id: instansiId,
+                        instansi_name: instansiName,
+                        instansi_image: instansiImage,
+                        dokumen: []
+                    };
+                }
+    
+                instansiMap[instansiId].dokumen.push({
+                    id: data.id,
+                    userinfo_id: data?.userinfo_id,
+                    tgl_selesai: data?.tgl_selesai,
+                    layanan_name: data?.Layanan ? data?.Layanan?.name : null,
+                    createdAt: data?.createdAt,
+                    updatedAt: data?.updatedAt,
+                    fileoutput: data?.fileoutput,
+                    no_request: data?.no_request,
+                });
+            });
+    
+            const formattedData = Object.values(instansiMap);
+    
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/historyform`);
+    
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: formattedData,
+                pagination: pagination
+            });
+    
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+    
+
     gethistorybyid: async (req, res) => {
         try {
 
