@@ -4,6 +4,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Layanans = [
       {
+        code: 'PMC',
         name: 'Laporan Polisi Model C',
         slug: 'laporan-polisi-model-c',
         desc: 'Laporan Polisi Model C adalah laporan yang dibuat untuk melaporkan kejadian atau tindak pidana tertentu.',
@@ -18,6 +19,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'OMT',
         name: 'Izin Operasional Majelis Taklim',
         slug: 'izin-operasional-majelis-taklim',
         desc: 'Izin yang diberikan untuk operasional majelis taklim agar dapat melakukan kegiatan keagamaan.',
@@ -32,6 +34,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'IPP',
         name: 'Layanan Informasi dan Pendaftaran Perkara',
         slug: 'layanan-informasi-dan-pendaftaran-perkara',
         desc: 'Layanan yang menyediakan informasi dan pendaftaran perkara di pengadilan.',
@@ -46,6 +49,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PPP',
         name: 'Layanan Pengambilan Produk Pengadilan',
         slug: 'layanan-pengambilan-produk-pengadilan',
         desc: 'Layanan untuk pengambilan produk-produk yang dikeluarkan oleh pengadilan.',
@@ -60,6 +64,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: '9PD',
         name: 'Layanan 9 Pajak Daerah',
         slug: 'layanan-9-pajak-daerah',
         desc: 'Layanan yang berkaitan dengan pembayaran dan pengelolaan pajak daerah.',
@@ -74,6 +79,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'ST',
         name: 'Setoran Tunai',
         slug: 'setoran-tunai',
         desc: 'Layanan untuk melakukan setoran tunai ke rekening tertentu.',
@@ -88,6 +94,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PT',
         name: 'Penarikan Tunai',
         slug: 'penarikan-tunai',
         desc: 'Layanan untuk melakukan penarikan tunai dari rekening tertentu.',
@@ -102,6 +109,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'KK',
         name: 'Kartu Keluarga (KK)',
         slug: 'kartu-keluarga-(kk)',
         desc: 'Dokumen resmi yang mencatat data lengkap anggota keluarga.',
@@ -116,6 +124,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'KTP',
         name: 'Kartu Tanda Elektronik (KTP-el)',
         slug: 'kartu-tanda-elektronik-(ktp-el)',
         desc: 'Kartu identitas resmi yang dikeluarkan pemerintah Indonesia untuk warga negara Indonesia.',
@@ -130,6 +139,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'IKD',
         name: 'Identitas Kependudukan Digital (IKD)',
         slug: 'identitas-kependudukan-digital-(ikd)',
         desc: 'Identitas digital yang memuat informasi kependudukan warga negara Indonesia.',
@@ -144,6 +154,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'KIA',
         name: 'Kartu Identitas Anak (KIA)',
         slug: 'kartu-identitas-anak-(kia)',
         desc: 'Kartu identitas resmi untuk anak-anak warga negara Indonesia.',
@@ -158,6 +169,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'SKP',
         name: 'Surat Keterangan Pindah',
         slug: 'surat-keterangan-pindah',
         desc: 'Surat yang menerangkan kepindahan seorang warga negara Indonesia dari satu tempat ke tempat lain.',
@@ -172,6 +184,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'SKK',
         name: 'Surat Keterangan Kependudukan Lainnya',
         slug: 'surat-keterangan-kependudukan-lainnya',
         desc: 'Surat keterangan yang berhubungan dengan kependudukan lainnya yang dikeluarkan oleh instansi terkait.',
@@ -186,6 +199,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'RLK',
         name: 'Rekomendasi Layanan Kesehatan',
         slug: 'rekomendasi-layanan-kesehatan',
         desc: 'Rekomendasi yang diberikan untuk layanan kesehatan tertentu.',
@@ -200,6 +214,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'SIP',
         name: 'Rekomendasi SIP Tenaga Kesehatan',
         slug: 'rekomendasi-sip-tenaga-kesehatan',
         desc: 'Rekomendasi untuk Surat Izin Praktik (SIP) bagi tenaga kesehatan.',
@@ -214,6 +229,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'IBG',
         name: 'Sistem Informasi Bangunan Gedung (SIMBG) Layanan',
         slug: 'sistem-informasi-bangunan-gedung-(simbg)-layanan',
         desc: 'Layanan yang menyediakan informasi tentang bangunan gedung melalui sistem informasi.',
@@ -228,6 +244,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PKK',
         name: 'Persetujuan Kesesuaian Kegiatan Pemanfaatan Ruang (PKKPR) untuk Kegiatan Berusaha Layanan',
         slug: 'persetujuan-kesesuaian-kegiatan-pemanfaatan-ruang-(pkkpr)-untuk-keg-berusaha-layanan',
         desc: 'Layanan yang menyediakan persetujuan untuk kesesuaian kegiatan pemanfaatan ruang untuk kegiatan berusaha.',
@@ -242,6 +259,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'MAB',
         name: 'Sewa Menyewa Alat Berat',
         slug: 'sewa-menyewa-alat-berat',
         desc: 'Layanan yang menyediakan penyewaan alat berat untuk berbagai keperluan.',
@@ -256,6 +274,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PKP',
         name: 'Layanan Persetujuan Lingkungn (PKPLH)',
         slug: 'layanan-persetujuan-lingkungn-(pkplh)',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -268,6 +287,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'DEL',
         name: 'Layanan Persetujuan DELH',
         slug: 'layanan-persetujuan-delh',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -280,6 +300,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'DPL',
         name: 'Layanan Persetujuan DPLH',
         slug: 'layanan-persetujuan-dplh',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -292,6 +313,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'SPP',
         name: 'Layanan Persetujuan SPPL',
         slug: 'layanan-persetujuan-sppl',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -304,6 +326,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PTP',
         name: 'Persetujuan Teknis Pembuangan dan atau Pemanfaatan Alir Limbah',
         slug: 'persetujuan-teknis-pembuangan-dan-atau-pemanfaatan-alir-limbah',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -316,6 +339,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'TPB',
         name: 'Persetujuan Teknis Pemenuhan Baku Mutu ',
         slug: 'persetujuan-teknis-pemenuhan-baku-mutu',
         syarat: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -328,6 +352,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PPP',
         name: 'Layanan Pengambilan Produk Pengadilan',
         slug: 'layanan-pengambilan-produk-pengadilan',
         desc: null,
@@ -340,246 +365,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
-        name: 'Layanan 9 Pajak daerah',
-        slug: 'layanan-9-pajak-daerah',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 4,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Setoran Tunai',
-        slug: 'setoran-tunai',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 4,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Penarikan Tunai',
-        slug: 'penarikan-tunai',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 4,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Kartu Keluarga (KK)',
-        slug: 'kartu-keluarga-(kk)',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Kartu Tanda Elektronik (KTP-el)',
-        slug: 'kartu-tanda-elektronik-(ktp-el)',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Identitas Kependudukan Digital (IKD)',
-        slug: 'identitas-kependudukan-digital-(ikd)',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Kartu Identitas Anak (KIA)',
-        slug: 'kartu-identitas-anak-(kia)',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Surat Keterangan Pindah',
-        slug: 'surat-keterangan-pindah',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Surat Keterangan Kependudukan Lainnya',
-        slug: 'surat-keterangan-kependudukan-lainnya',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 5,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Rekomendasi Layanan Kesehatan',
-        slug: 'rekomendasi-layanan-kesehatan',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 6,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Rekomendasi SIP tenaga Kesehatan',
-        slug: 'rekomendasi-sip-tenaga-kesehatan',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 6,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Sistem Informasi Bangunan Gedung (SIMBG) layanan',
-        slug: 'sistem-informasi-bangunan-gedung-(simbg)-layanan',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 7,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Persetujuan Kesesuain Kegiatan Pemanfaatan Ruang (PKKPR) untuk keg Berusaha Layanan',
-        slug: 'persetujuan-kesesuain-kegiatan-pemanfaatan-ruang-(pkkpr)-untuk-keg-berusaha-layanan',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 7,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Sewa Menyewa alat Berat',
-        slug: 'sewa-menyewa-alat-berat',
-        desc: null,
-        image: null,
-        status: true,
-        active_offline: true,
-        active_online: true,
-        instansi_id: 7,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Layanan Persetujuan Lingkungn (PKPLH)',
-        slug: 'layanan-persetujuan-lingkungn-(pkplh)',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Layanan Persetujuan DELH',
-        slug: 'layanan-persetujuan-delh',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Layanan Persetujuan DPLH',
-        slug: 'layanan-persetujuan-dplh',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Layanan Persetujuan SPPL',
-        slug: 'layanan-persetujuan-sppl',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Persetujuan Teknis Pembuangan dan atau Pemanfaatan Ailr Limbah',
-        slug: 'persetujuan-teknis-pembuangan-dan-atau-pemanfaatan-ailr-limbah',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        name: 'Persetujuan Teknis Pemenuhan Baku Mutu Emisi',
-        slug: 'persetujuan-teknis-pemenuhan-baku-mutu-emisi',
-        desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
-        image: null,
-        status: true,
-        active_offline: null,
-        active_online: null,
-        instansi_id: 8,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
+        code: 'SLO',
         name: 'Layanan Surat Kelayakan Operasional (SLO)',
         slug: 'layanan-surat-kelayakan-operasional-(slo)',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -592,6 +378,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:53:27.37+07')
       },
       {
+        code: 'AKI',
         name: 'AK I / Kartu Kuning',
         slug: 'ak-i-kartu-kuning',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -604,6 +391,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 16:57:17.758+07')
       },
       {
+        code: 'CPM',
         name: 'Layanan Rekomendasi CPMI',
         slug: 'layanan-rekomendasi-cpmi',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -616,6 +404,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 16:58:07.567+07')
       },
       {
+        code: "PPA",
         name: 'Layanan Pengaduan terhadap Perempuan dan Anak',
         slug: 'layanan-pengaduan-terhadap-perempuan-dan-anak',
         desc: 'Deskripsi',
@@ -628,6 +417,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 16:58:58.767+07')
       },
       {
+        code: 'KPH',
         name: 'Layanan Konseling Psikologi dan Hukum',
         slug: 'layanan-konseling-psikologi-dan-hukum',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -640,6 +430,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 16:59:39.509+07')
       },
       {
+        code: "DIK",
         name: 'Layanan Surat Keterangan DTKS untuk Pengaktifan BPJS dan PKH',
         slug: 'layanan-surat-keterangan-dtks-untuk-pengaktifan-bpjs-dan-pkh',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -652,6 +443,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:57:00.98+07')
       },
       {
+        code: "POT",
         name: 'Layanan Pemulangan/Penerusan Perjalanan Orang Terlantar',
         slug: 'layanan-pemulanganpenerusan-perjalanan-orang-terlantar',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -664,6 +456,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:57:45.321+07')
       },
       {
+        code: "PBB",
         name: 'Layanan Pemberian Bantuan Tanggap Bencana /Buffer stock',
         slug: 'layanan-pemberian-bantuan-tanggap-bencana-buffer-stock',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -676,6 +469,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:58:18.842+07')
       },
       {
+        code: "DGJ",
         name: 'Layanan rekomendasi gangguan jiwa (ODGJ) ke RS/LKS',
         slug: 'layanan-rekomendasi-gangguan-jiwa-(odgj)-ke-rslks',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -688,6 +482,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:59:06.733+07')
       },
       {
+        code: "RAA",
         name: 'Layanan Rekomendasi Pengangkatan/Adopsi Anak',
         slug: 'layanan-rekomendasi-pengangkatanadopsi-anak',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -700,6 +495,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 13:59:41.146+07')
       },
       {
+        code: "BBL",
         name: 'Layanan Pemberian Bantuan Bagi Lansia',
         slug: 'layanan-pemberian-bantuan-bagi-lansia',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -712,6 +508,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:00:21.49+07')
       },
       {
+        code: "BAT",
         name: 'Layanan Pemberian Bantuan Bagi Anak Terlantar',
         slug: 'layanan-pemberian-bantuan-bagi-anak-terlantar',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -724,6 +521,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:00:35.62+07')
       },
       {
+        code: "OOS",
         name: 'Layanan Pendaftaran dan Izin Operasional Organisasi Sosial (Karang Taruna, LKS, LKSA)',
         slug: 'layanan-pendaftaran-dan-izin-operasional-organisasi-sosial-(karang-taruna-lks-lksa)',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -736,6 +534,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:01:20.882+07')
       },
       {
+        code: "DTK",
         name: 'Layanan Pengecekan dan Surat Keteranagn DTKS ( Data Terpadu Kesejahteraan Sosial)',
         slug: 'layanan-pengecekan-dan-surat-keteranagn-dtks-(-data-terpadu-kesejahteraan-sosial)',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -748,6 +547,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:02:00.616+07')
       },
       {
+        code: "LPP",
         name: 'Layanan Pengusulan Pahlawan Daerah, Pahlawan Nasional, Penghargaan Untuk Masyarakat Bidang Sosial',
         slug: 'layanan-pengusulan-pahlawan-daerah-pahlawan-nasional-penghargaan-untuk-masyarakat-bidang-sosial',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -760,6 +560,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:02:49.665+07')
       },
       {
+        code: "KIP",
         name: 'Layanan Pemberian Rekomendasi Pembuatan KIP',
         slug: 'layanan-pemberian-rekomendasi-pembuatan-kip',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -772,6 +573,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:03:06.046+07')
       },
       {
+        code: "PJS",
         name: 'Pelayanan Informasi BPJS Ketenagakerjaan',
         slug: 'pelayanan-informasi-bpjs-ketenagakerjaan',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -784,6 +586,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:03:40.857+07')
       },
       {
+        code: "PPP",
         name: 'Pelayanan Pendaftaran Perusahaan',
         slug: 'pelayanan-pendaftaran-perusahaan',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',
@@ -796,6 +599,7 @@ module.exports = {
         updatedAt: new Date('2024-06-20 14:03:58.779+07')
       },
       {
+        code: "LPM",
         name: 'Layanan Pendaftaran Mandiri',
         slug: 'layanan-pendaftaran-mandiri',
         desc: '1. Fotokopi Kartu Tanda Penduduk (KTP) atau identitas pemohon.\n2. Fotokopi Nomor Pokok Wajib Pajak (NPWP).\n3. Fotokopi akta pendirian perusahaan dan perubahan terakhir (jika pemohon adalah badan usaha).\n4. Surat kuasa jika diwakilkan, dilengkapi dengan identitas pihak yang diberi kuasa.',

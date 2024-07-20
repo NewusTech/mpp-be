@@ -4,6 +4,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Instansis = [
       {
+        code: 'POL',
         name: 'POLRES',
         slug: 'polres',
         alamat: 'Jalan Letnan Adnan Sanjaya No.09, Terbanggi Marga, Kec. Sukadana',
@@ -22,6 +23,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'AGM',
         name: 'Kementerian Agama',
         slug: 'kementerian-agama',
         alamat: 'Jl. Sampoerna Jaya No.05 Desa Negara Nabung Kec. Sukadana Kab. Lampung Timur',
@@ -39,6 +41,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PAG',
         name: 'Pengadilan Agama',
         slug: 'pengadilan-agama',
         alamat: 'Jalan Ki Hajar Dewantara, Desa Pasar Sukadana, Sukadana - Lampung Timur.',
@@ -55,6 +58,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'BL',
         name: 'Bank Lampung',
         slug: 'bank-lampung',
         alamat: 'Jl. Soekarno Hatta No. 50 Sukadana, Lampung Timur',
@@ -71,6 +75,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'CPL',
         name: 'Dinas Kependudukan dan Catatan Sipil',
         slug: 'dinas-kependudukan-dan-catatan-sipil',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',
@@ -88,6 +93,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'KES',
         name: 'Dinas Kesehatan',
         slug: 'dinas-kesehatan',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',
@@ -103,6 +109,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'PU',
         name: 'Dinas PUPR',
         slug: 'dinas-pupr',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',
@@ -118,6 +125,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'DLH',
         name: 'Dinas Lingkungan Hidup',
         slug: 'dinas-lingkungan-hidup',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',
@@ -132,6 +140,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'KOP',
         name: 'Dinas Koperasi,UMKM,Tenaga Kerja',
         slug: 'dinas-koperasi,umkm,tenaga-kerja',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',
@@ -146,6 +155,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        code: 'DPP',
         name: 'Dinas Pemberdayaan Perempuan',
         slug: 'dinas-pemberdayaan-perempuan',
         alamat: 'Sukadana Ilir, Kec. Sukadana, Kabupaten Lampung Timur, Lampung',

@@ -1,8 +1,9 @@
 # konfigurasi umum projek
 WEB_NAME = "MPP BE"
 BASE_URL = "http://localhost:3000"
+SERVER_URL = "https://backend-mpp.newus.id"
 
-PATH_AWS = "dir_mpp"
+PATH_AWS = "dir_mpp_lokal"
 
 # auth secret untuk JWT
 AUTH_SECRET = ""

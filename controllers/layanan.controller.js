@@ -185,6 +185,7 @@ module.exports = {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
+            let instansiGets;
             let layananGets;
             let totalCount;
 
@@ -210,7 +211,12 @@ module.exports = {
                 whereCondition.deletedAt = null;
             }
 
-            [layananGets, totalCount] = await Promise.all([
+            [instansiGets, layananGets, totalCount] = await Promise.all([
+                Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                }),
                 Layanan.findAll({
                     where: whereCondition,
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
@@ -240,6 +246,7 @@ module.exports = {
                 status: 200,
                 message: 'success get layanan by dinas',
                 data: modifiedLayananGets,
+                instansi: instansiGets,
                 pagination: pagination
             });
 
