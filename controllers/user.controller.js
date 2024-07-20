@@ -160,7 +160,7 @@ module.exports = {
                             },
                             {
                                 model: Layanan,
-                                attributes: ['id', 'name', 'code']
+                                attributes: ['id', 'name', 'code', 'slug']
                             }
                         ],
                         where: {
@@ -193,12 +193,11 @@ module.exports = {
                 instansi_image: userinfo?.User?.Instansi?.image ?? undefined,
                 layanan: userinfo?.User?.Layanan?.name ?? undefined,
                 layanan_id: userinfo?.User?.Layanan?.id ?? undefined,
-                layanan_code: userinfo?.User?.Layanan?.code ?? undefined
+                layanan_code: userinfo?.User?.Layanan?.code ?? undefined,
+                layanan_slug: userinfo?.User?.Layanan?.slug ?? undefined
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
-
-            console.log("aaa", userinfo?.User?.layanan_id)
 
             res.status(200).json(response(200, 'login success', { token: token }));
 

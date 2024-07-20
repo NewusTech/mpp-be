@@ -68,29 +68,36 @@ module.exports = {
                     {
                         model: Surveyformnum,
                         attributes: ['kritiksaran'],
+                        include: [
+                            {
+                                model: Layanan,
+                                attributes: ['id', 'name'] ,
+                            },
+                        ]
                     }
                 ]
             });
 
-            if (!inputsurveyData || inputsurveyData.length < 1) {
+            if (!inputsurveyData || inputsurveyData?.length < 1) {
                 res.status(404).json(response(404, 'data not found'));
                 return;
             }
 
             // Assuming all records will have the same 'kritiksaran' since they share 'surveyformnum_id'
-            const kritiksaran = inputsurveyData[0].Surveyformnum.kritiksaran;
+            const kritiksaran = inputsurveyData[0]?.Surveyformnum?.kritiksaran;
+            const layanan_name = inputsurveyData[0]?.Surveyformnum?.Layanan?.name;
 
             let formatteddata = inputsurveyData.map(datafilter => {
                 return {
-                    id: datafilter.id,
-                    nilai: datafilter.nilai,
-                    surveyform_id: datafilter.surveyform_id,
-                    surveyformnum_id: datafilter.surveyformnum_id,
-                    surveyform_name: datafilter.Surveyform.field,
+                    id: datafilter?.id,
+                    nilai: datafilter?.nilai,
+                    surveyform_id: datafilter?.surveyform_id,
+                    surveyformnum_id: datafilter?.surveyformnum_id,
+                    surveyform_name: datafilter?.Surveyform?.field,
                 };
             });
 
-            res.status(200).json(response(200, 'success get data', { kritiksaran, formatteddata }));
+            res.status(200).json(response(200, 'success get data', { layanan_name, kritiksaran, formatteddata }));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
