@@ -253,6 +253,11 @@ module.exports = {
                             as: 'Instansi'
                         },
                         {
+                            model: Layanan,
+                            attributes: ['name', 'id'],
+                            as: 'Layanan'
+                        },
+                        {
                             model: Role,
                             attributes: ['name', 'id'],
                             as: 'Role'
@@ -293,6 +298,8 @@ module.exports = {
                     nik: user.Userinfo?.nik,
                     instansi_id: user.Instansi?.id,
                     instansi_name: user.Instansi?.name,
+                    layanan_id: user.Layanan?.id,
+                    layanan_name: user.Layanan?.name,
                     role_id: user.Role?.id,
                     role_name: user.Role?.name,
                     kecamatan_id: user.Userinfo?.Kecamatan?.id,
