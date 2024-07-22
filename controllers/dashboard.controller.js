@@ -630,8 +630,38 @@ module.exports = {
                 })
             ]);
 
+            const calculateNilai = (surveyformnums) => {
+                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
+                let totalNilai = 0;
+                let totalInputs = 0;
+
+                surveyformnums.forEach(surveyformnum => {
+                    surveyformnum.Surveyforminputs.forEach(input => {
+                        totalNilai += nilaiMap[input.nilai] || 0;
+                        totalInputs++;
+                    });
+                });
+
+                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+            };
+
             let totalNilai = 0;
             let totalLayanan = 0;
+
+            history.map(data => {
+                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
+                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
+
+                if (surveyformnumsNilai > 0) {
+                    totalNilai += surveyformnumsNilai;
+                    totalLayanan++;
+                }
+
+                return {
+                    id: data.id,
+                    layanan_name: data.name || null
+                };
+            });
 
             const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
 
