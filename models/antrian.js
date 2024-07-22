@@ -22,10 +22,13 @@ module.exports = (sequelize, DataTypes) => {
     layanan_id: DataTypes.INTEGER,
     userinfo_id: DataTypes.INTEGER,
     status: DataTypes.BOOLEAN,
-    audio: DataTypes.STRING
+    audio: DataTypes.STRING,
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Antrian',
+    timestamps: false
   });
   return Antrian;
 };

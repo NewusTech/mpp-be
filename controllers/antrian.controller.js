@@ -68,7 +68,8 @@ module.exports = {
                 code: codeBooking,
                 instansi_id: Number(req.body.instansi_id),
                 layanan_id: Number(req.body.layanan_id),
-                status: 0
+                status: 0,
+                createdAt: Date.now()
             };
 
             const validate = v.validate(antrianCreateObj, schema);
@@ -443,10 +444,11 @@ module.exports = {
 
             // Update status antrian menjadi true (sudah dipanggil)
             antrianBerikutnya.status = true;
+            antrianBerikutnya.updatedAt = Date.now();
             await antrianBerikutnya.save({ transaction });
 
             // Generate suara panggilan antrian
-            const panggilanAntrian = `Antrian ${antrianBerikutnya?.code}, silahkan ke loket ${antrianBerikutnya?.Layanan?.name}`;
+            const panggilanAntrian = `Antrian ${antrianBerikutnya?.code}, silahkan ke loket ${antrianBerikutnya?.Layanan?.code}`;
             const languageCode = 'id';
 
             const generateAndUploadAudio = async (text, language) => {
