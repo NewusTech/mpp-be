@@ -10,8 +10,8 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-route.get('/user/alluserinfo/get', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.getuserdata); 
-route.get('/user/alluserinfo/get/:slug', [mid.checkRolesAndLogout(['Super Admin', 'User'])], userinfoController.getuserByslug); 
+route.get('/user/alluserinfo/get', [mid.checkRolesAndLogout(['Super Admin', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan'])], userinfoController.getuserdata); 
+route.get('/user/alluserinfo/get/:slug', [mid.checkRolesAndLogout(['Super Admin', 'User', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan'])], userinfoController.getuserByslug); 
 route.delete('/user/alluserinfo/delete/:slug', [mid.checkRolesAndLogout(['Super Admin'])], userinfoController.deleteuser);
 
 route.post('/user/userinfo/create', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.fields([
