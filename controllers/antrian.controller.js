@@ -503,5 +503,136 @@ module.exports = {
             console.error(err);
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });
         }
-    }
+    },
+
+    pdfriwayatantrian: async (req, res) => {
+        try {
+            const idlayanan = data.layanan_id
+            const { status, code, range, start_date, end_date } = req.query;
+
+            const startOfToday = moment().startOf('day').toDate();
+            const endOfToday = moment().endOf('day').toDate();
+
+            let startOfToday2;
+            let endOfToday2;
+
+            if (range == 'today') {
+                startOfToday2 = moment().startOf('day').toDate();
+                endOfToday2 = moment().endOf('day').toDate();
+            } else {
+                if (start_date && end_date) {
+                    startOfToday2 = moment(start_date).startOf('day').toDate();
+                    endOfToday2 = moment(end_date).endOf('day').toDate();
+                } else if (start_date) {
+                    startOfToday2 = moment(start_date).startOf('day').toDate();
+                    endOfToday2 = moment('2080-01-01').endOf('day').toDate();
+                } else if (end_date) {
+                    startOfToday2 = moment('2010-01-01').startOf('day').toDate();
+                    endOfToday2 = moment(end_date).endOf('day').toDate();
+                } else {
+                    startOfToday2 = moment('2010-01-01').startOf('day').toDate();
+                    endOfToday2 = moment('2080-01-01').endOf('day').toDate();
+                }
+            }
+
+            let riwayatAntrian = await Promise.all([ 
+                Antrian.findAll({
+                    where: {
+                        createdAt: {
+                            [Op.between]: [startOfToday2, endOfToday2],
+                        },
+                        ...(status && { status: status }),
+                        ...(code && { code: { [Op.like]: `%${code}%` } }),
+                    },
+                    include: [{
+                        model: Layanan,
+                        attributes: ['name'],
+                        where: {
+                            id: idlayanan,
+                        },
+                    }],
+                    order: [['id', 'ASC']],
+                })
+            ]);
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/antrian.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let layananGet;
+
+            if (idlayanan) {
+                layananGet = await Layanan.findOne({
+                    where: {
+                        id: idlayanan
+                    },
+                });
+            }
+
+            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+            let tanggalInfo = '';
+            if (startOfToday2 || endOfToday2) {
+                const startDateFormatted = startOfToday2 ? new Date(startOfToday2).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = endOfToday2 ? new Date(endOfToday2).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+           
+            const reportTableRows = riwayatAntrian[0]?.map(antrian => {
+                const createdAtDate = new Date(antrian.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                const createdAtTime = new Date(antrian.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const updatedAtTime = new Date(antrian.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const statusText = antrian.status ? 'Selesai' : 'Menunggu';
+            
+                return `
+                    <tr>
+                        <td>${antrian.code}</td>
+                        <td class="center">${createdAtDate}</td>
+                        <td class="center">${createdAtTime} WIB</td>
+                        <td class="center">${updatedAtTime} WIB</td>
+                        <td class="center">${statusText}</td>
+                    </tr>
+                `;
+            }).join('');
+            // <td><img src="${layanan.image}" alt="${layanan.name}" width="50"/></td>
+
+            htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
 }
