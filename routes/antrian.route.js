@@ -18,4 +18,6 @@ route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['A
 route.get('/antrian/check/:idlayanan', antrianController.checkantrian); 
 route.get('/panggilantrian/get/:sluglayanan', antrianController.panggilAntrianBerikutnya); 
 
+route.get('/user/antrian/pdf', [mid.checkRolesAndLogout(['Admin Layanan'])], antrianController.pdfriwayatantrian); 
+
 module.exports = route;
