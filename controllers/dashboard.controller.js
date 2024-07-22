@@ -675,6 +675,7 @@ module.exports = {
                 Layananformnum.count({ 
                     where: { 
                         createdAt: { [Op.between]: dateRangeToday },
+                        status: 3,
                         layanan_id: data.layanan_id
                     }, 
                 }),
@@ -688,7 +689,8 @@ module.exports = {
                 Layananformnum.count({ 
                     where: { 
                         createdAt: { [Op.between]: dateRangeMonth },
-                        layanan_id: data.layanan_id
+                        layanan_id: data.layanan_id,
+                        status: 3,
                     }, 
                 }),
                 Layananformnum.count({ 
