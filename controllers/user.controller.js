@@ -126,10 +126,12 @@ module.exports = {
                     min: 3,
                 }
             };
-
+    
+            let isAdmin = req.query.admin;
             let nik = req.body.nik;
             let password = req.body.password;
-
+            console.log(isAdmin, "anjing")
+            // Validasi input
             const validate = v.validate({
                 nik: nik,
                 password: password,
@@ -138,13 +140,29 @@ module.exports = {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
+    
+            // Mencari data user berdasarkan nik atau email yang disimpan dalam nik
+            let whereClause = {
+                [Op.or]: [
+                    { nik: nik },
+                    { email: nik },
+                    { telepon: nik }
+                ]
+            };
 
-            // mendapatkan data user 
+            const adminCondition = {};
+            adminCondition.deletedAt = null;
+            whereClause.deletedAt = null;
+
+            if (isAdmin) {
+                adminCondition['$User.role_id$'] = {
+                    [Op.ne]: 5
+                };
+            }
+    
             let userinfo = await Userinfo.findOne({
-                where: {
-                    nik: nik,
-                },
-                attributes: ['nik', 'id'],
+                where: whereClause,
+                attributes: ['nik', 'email', 'id', 'telepon'],
                 include: [
                     {
                         model: User,
@@ -163,25 +181,23 @@ module.exports = {
                                 attributes: ['id', 'name', 'code', 'slug']
                             }
                         ],
-                        where: {
-                            deletedAt: null
-                        }
+                        where: adminCondition
                     },
                 ],
             });
-
-            // cek nik
+    
+            // cek apakah user ditemukan
             if (!userinfo) {
-                res.status(404).json(response(404, 'nik not found'));
+                res.status(404).json(response(404, 'User not found'));
                 return;
             }
-
+    
             // check password
             if (!passwordHash.verify(password, userinfo.User.password)) {
                 res.status(403).json(response(403, 'password wrong'));
                 return;
             }
-
+    
             // membuat token jwt
             let token = jwt.sign({
                 userId: userinfo.id,
@@ -198,9 +214,9 @@ module.exports = {
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
-
+    
             res.status(200).json(response(200, 'login success', { token: token }));
-
+    
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
