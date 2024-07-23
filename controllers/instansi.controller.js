@@ -133,21 +133,27 @@ module.exports = {
             let includeOptions = [];
             let isrequired = false
 
-            if (pengaduan) {
+            if (pengaduan && data?.role === 'User') {
                 isrequired = true
                 includeOptions = [{
                     model: Layananformnum,
                     attributes: [],
                     required: true,
+                    where: {
+                        userinfo_id: data?.user_akun_id
+                    }
                 }];
             }
 
-            if (skm) {
+            if (skm && data?.role === 'User') {
                 isrequired = true
                 includeOptions = [{
                     model: Surveyformnum,
                     attributes: [],
                     required: true,
+                    where: {
+                        userinfo_id: data?.user_akun_id
+                    }
                 }];
             }
 
