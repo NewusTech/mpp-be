@@ -11,4 +11,6 @@ route.get('/user/historydokumen', [mid.checkRolesAndLogout(['Admin Instansi', 'A
 
 route.get('/user/historyform/:idforminput', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], layananforminput.gethistorybyid);
 
+route.get('/historyform/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], layananforminput.pdfhistoryformuser);
+
 module.exports = route;

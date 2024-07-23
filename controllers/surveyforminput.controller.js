@@ -26,7 +26,30 @@ module.exports = {
 
             const { datainput } = req.body;
 
+            let dataLayanan = await Layanan.findOne({
+                where: {
+                    id: idlayanan
+                },
+                include: [
+                    {
+                        model: Instansi,
+                        attributes: ['name', 'code']
+                    },
+                ],
+                attributes: ['id', 'code'],
+            });
+
+            const count = await Surveyformnum.count({
+                where: {
+                    layanan_id: idlayanan
+                }
+            });
+
+            const urut = String(count + 1).padStart(1, '0');
+            const no_skm = `SKM${dataLayanan?.Instansi?.code}-${dataLayanan?.code}${urut}`;
+
             let layananID = {
+                no_skm: no_skm,
                 userinfo_id: Number(iduser),
                 layanan_id: Number(idlayanan),
                 date: req.body.date ?? null,
@@ -186,6 +209,105 @@ module.exports = {
                 status: 200,
                 message: 'success get',
                 data: formattedData,
+                pagination: pagination
+            });
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    gethistoryforuser: async (req, res) => {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let { start_date, end_date, search } = req.query;
+
+            let history;
+            let totalCount;
+
+            const WhereClause = {};
+
+            WhereClause.userinfo_id = data.userId
+
+            if (search) {
+                WhereClause[Op.or] = [
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.Instansi.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
+            }
+
+            [history, totalCount] = await Promise.all([
+                Surveyformnum.findAll({
+                    where: WhereClause,
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'DESC']],
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: ['name'],
+                            include: [
+                                {
+                                    model: Instansi,
+                                    attributes: ['name']
+                                }
+                            ],
+                        }
+                    ],
+                }),
+                Surveyformnum.count({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: ['name'],
+                            include: [
+                                {
+                                    model: Instansi,
+                                    attributes: ['name']
+                                }
+                            ],
+                        }
+                    ],
+                })
+            ]);
+
+            const transformedHistory = history.map(item => ({
+                id: item.id,
+                no_skm: item.no_skm,
+                userinfo_id: item.userinfo_id,
+                layanan_id: item.layanan_id,
+                date: item.date,
+                kritiksaran: item.kritiksaran,
+                createdAt: item?.createdAt,
+                updatedAt: item?.updatedAt,
+                layanan_name: item?.Layanan?.name,
+                instansi_name: item?.Layanan?.Instansi?.name
+            }));
+    
+            const pagination = generatePagination(totalCount, page, limit, `/api/user/userhistorysurvey`);
+    
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: transformedHistory,
                 pagination: pagination
             });
 

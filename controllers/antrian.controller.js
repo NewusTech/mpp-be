@@ -510,9 +510,6 @@ module.exports = {
             const idlayanan = data.layanan_id
             const { status, code, range, start_date, end_date } = req.query;
 
-            const startOfToday = moment().startOf('day').toDate();
-            const endOfToday = moment().endOf('day').toDate();
-
             let startOfToday2;
             let endOfToday2;
 

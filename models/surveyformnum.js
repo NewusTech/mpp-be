@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Surveyformnum.init({
+    no_skm: DataTypes.STRING,
     userinfo_id: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,
     date: DataTypes.STRING,
