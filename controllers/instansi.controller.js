@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Surveyformnum, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -115,7 +115,7 @@ module.exports = {
     //mendapatkan semua data instansi
     getinstansi: async (req, res) => {
         try {
-            let { search, pengaduan } = req.query;
+            let { search, pengaduan, skm } = req.query;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -137,6 +137,15 @@ module.exports = {
                 isrequired = true
                 includeOptions = [{
                     model: Layananformnum,
+                    attributes: [],
+                    required: true,
+                }];
+            }
+
+            if (skm) {
+                isrequired = true
+                includeOptions = [{
+                    model: Surveyformnum,
                     attributes: [],
                     required: true,
                 }];
