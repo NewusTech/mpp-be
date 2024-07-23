@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Contact.init({
+    website: DataTypes.STRING,
+    desc: DataTypes.TEXT,
     alamat: DataTypes.STRING,
     email: DataTypes.STRING,
     telp: DataTypes.STRING,
