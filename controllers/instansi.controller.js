@@ -1,12 +1,12 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const s3Client = new S3Client({
@@ -115,7 +115,7 @@ module.exports = {
     //mendapatkan semua data instansi
     getinstansi: async (req, res) => {
         try {
-            const search = req.query.search ?? null;
+            let { search, pengaduan } = req.query;
             const showDeleted = req.query.showDeleted ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -125,19 +125,43 @@ module.exports = {
 
             const whereCondition = {};
 
-            if (search) {
-                whereCondition[Op.or] = [{ name: { [Op.iLike]: `%${search}%` } }];
-            }
-
             if (data?.role === "Admin Instansi" || data?.role === "Super Admin" || data?.role === "Bupati" || data?.role === "Admin Verifikasi") {
             } else {
                 whereCondition.status = true;
+            }
+
+            let includeOptions = [];
+            let isrequired = false
+
+            if (pengaduan) {
+                isrequired = true
+                includeOptions = [{
+                    model: Layananformnum,
+                    attributes: [],
+                    required: true,
+                }];
             }
 
             if (showDeleted !== null) {
                 whereCondition.deletedAt = { [Op.not]: null };
             } else {
                 whereCondition.deletedAt = null;
+            }
+
+            if (search) {
+                whereCondition[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    {
+                        [Op.and]: Sequelize.literal(`
+                            EXISTS (
+                                SELECT 1 
+                                FROM "Layanans" 
+                                WHERE "Layanans"."instansi_id" = "Instansi"."id" 
+                                AND "Layanans"."name" ILIKE '%${search}%'
+                            )
+                        `)
+                    }
+                ];
             }
 
             [instansiGets, totalCount] = await Promise.all([
@@ -147,12 +171,13 @@ module.exports = {
                         { 
                             model: Layanan, 
                             as: 'Layanans', 
-                            attributes: ['id'],
+                            attributes: ['id', 'name'],
                             where: {
                                 status: true,
                                 deletedAt: null
                             },
-                            required: false
+                            include: includeOptions,
+                            required: isrequired
                         }
                     ],
                     offset: offset,
@@ -160,10 +185,24 @@ module.exports = {
                     order: [
                         ['status', 'DESC'],
                         ['id', 'ASC']
-                    ]
+                    ],
                 }),
                 Instansi.count({
-                    where: whereCondition
+                    where: whereCondition,
+                    include: [
+                        { 
+                            model: Layanan, 
+                            as: 'Layanans', 
+                            attributes: [],
+                            where: {
+                                status: true,
+                                deletedAt: null
+                            },
+                            include: includeOptions,
+                            required: isrequired
+                        }
+                    ],
+                    distinct: true
                 })
             ]);
 
