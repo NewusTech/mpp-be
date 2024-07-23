@@ -42,6 +42,8 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
+                website: { type: "string", min: 3, optional: true },
+                desc: { type: "string", min: 3, optional: true },
                 alamat: { type: "string", min: 3, optional: true },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
                 telp: { type: "string", min: 7, max: 15, optional: true },
@@ -51,6 +53,8 @@ module.exports = {
 
             //buat object contact
             let contactUpdateObj = {
+                website: req.body.website,
+                desc: req.body.desc,
                 alamat: req.body.alamat,
                 telp: req.body.telp,
                 email: req.body.email,
