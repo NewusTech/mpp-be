@@ -90,11 +90,17 @@ module.exports = {
                     },
                     {
                         model: Surveyformnum,
-                        attributes: ['kritiksaran'],
+                        attributes: ['kritiksaran', 'no_skm', 'date'],
                         include: [
                             {
                                 model: Layanan,
                                 attributes: ['id', 'name'] ,
+                                include: [
+                                    {
+                                        model: Instansi,
+                                        attributes: ['id', 'name'] ,
+                                    },
+                                ]
                             },
                         ]
                     }
@@ -108,7 +114,10 @@ module.exports = {
 
             // Assuming all records will have the same 'kritiksaran' since they share 'surveyformnum_id'
             const kritiksaran = inputsurveyData[0]?.Surveyformnum?.kritiksaran;
+            const no_skm = inputsurveyData[0]?.Surveyformnum?.no_skm;
+            const date = inputsurveyData[0]?.Surveyformnum?.date;
             const layanan_name = inputsurveyData[0]?.Surveyformnum?.Layanan?.name;
+            const instansi_name = inputsurveyData[0]?.Surveyformnum?.Layanan?.Instansi?.name;
 
             let formatteddata = inputsurveyData.map(datafilter => {
                 return {
@@ -120,7 +129,7 @@ module.exports = {
                 };
             });
 
-            res.status(200).json(response(200, 'success get data', { layanan_name, kritiksaran, formatteddata }));
+            res.status(200).json(response(200, 'success get data', { instansi_name, layanan_name, kritiksaran, no_skm, date, formatteddata }));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
