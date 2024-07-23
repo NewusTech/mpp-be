@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layanan, Layananformnum, Instansi } = require('../models');
+const { Layanan, Layananformnum, Surveyformnum, Instansi } = require('../models');
 require('dotenv').config()
 
 const slugify = require('slugify');
@@ -181,13 +181,38 @@ module.exports = {
         try {
             const instansi_id = req.params.instansi_id;
             const showDeleted = req.query.showDeleted === 'true' ?? false;
-            const search = req.query.search ?? null;
+            let { search, pengaduan, skm } = req.query;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
             let instansiGets;
             let layananGets;
             let totalCount;
+
+            let includeOptions = [{ model: Instansi, attributes: ['id', 'name'] }]
+
+            if (pengaduan && data?.role === 'User') {
+                includeOptions = [{
+                    model: Layananformnum,
+                    attributes: [],
+                    required: true,
+                    where: {
+                        userinfo_id: data?.user_akun_id
+                    }
+                }];
+            }
+
+            if (skm && data?.role === 'User') {
+                
+                includeOptions = [{
+                    model: Surveyformnum,
+                    attributes: [],
+                    required: true,
+                    where: {
+                        userinfo_id: data?.user_akun_id
+                    }
+                }];
+            }
 
             const whereCondition = {
                 instansi_id: instansi_id
@@ -219,7 +244,7 @@ module.exports = {
                 }),
                 Layanan.findAll({
                     where: whereCondition,
-                    include: [{ model: Instansi, attributes: ['id', 'name'] }],
+                    include: includeOptions,
                     limit: limit,
                     offset: offset,
                     order: [
@@ -228,7 +253,9 @@ module.exports = {
                     ]
                 }),
                 Layanan.count({
-                    where: whereCondition
+                    where: whereCondition,
+                    include: includeOptions,
+                    distinct: true
                 })
             ]);
 
