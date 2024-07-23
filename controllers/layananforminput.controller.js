@@ -5,6 +5,9 @@ require('dotenv').config()
 
 const Validator = require("fastest-validator");
 const v = new Validator();
+const fs = require('fs');
+const path = require('path');
+const puppeteer = require('puppeteer');
 const moment = require('moment-timezone');
 const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
@@ -447,25 +450,25 @@ module.exports = {
             const offset = (page - 1) * limit;
             let history;
             let totalCount;
-
+    
             const WhereClause = {};
             const WhereClause2 = {};
             const WhereClause3 = {};
-
+    
             if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
                 WhereClause2.instansi_id = data.instansi_id;
             }
-
+    
             if (data.role === 'Admin Layanan') {
                 WhereClause.layanan_id = data.layanan_id;
             }
-
+    
             if (range == 'today') {
                 WhereClause.createdAt = {
                     [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
                 };
             }
-
+    
             if (isonline) {
                 WhereClause.isonline = isonline;
             }
@@ -478,7 +481,7 @@ module.exports = {
             if (layanan_id) {
                 WhereClause.layanan_id = layanan_id;
             }
-
+    
             if (start_date && end_date) {
                 end_date = new Date(end_date);
                 end_date.setHours(23, 59, 59, 999);
@@ -496,17 +499,19 @@ module.exports = {
                     [Op.lte]: new Date(end_date)
                 };
             }
-
+    
             if (instansi_id) {
                 WhereClause2.instansi_id = instansi_id;
             }
 
             if (search) {
-                WhereClause3.name = {
-                    [Op.iLike]: `%${search}%`
-                };
+                WhereClause3[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } }, 
+                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } }
+                ];
             }
-
+    
             if (year && month) {
                 WhereClause.createdAt = {
                     [Op.between]: [
@@ -522,7 +527,6 @@ module.exports = {
                     ]
                 };
             } else if (month) {
-                // Hanya bulan ditentukan
                 const currentYear = new Date().getFullYear();
                 WhereClause.createdAt = {
                     [Op.and]: [
@@ -531,7 +535,7 @@ module.exports = {
                     ]
                 };
             }
-
+    
             [history, totalCount] = await Promise.all([
                 Layananformnum.findAll({
                     where: WhereClause,
@@ -560,6 +564,9 @@ module.exports = {
                     include: [
                         {
                             model: Layanan,
+                            include: [{
+                                model: Instansi
+                            }],
                             where: WhereClause2,
                         },
                         {
@@ -569,7 +576,7 @@ module.exports = {
                     ],
                 })
             ]);
-
+    
             let formattedData = history.map(data => {
                 return {
                     id: data.id,
@@ -592,21 +599,21 @@ module.exports = {
                     no_request: data?.no_request,
                 };
             });
-
+    
             const pagination = generatePagination(totalCount, page, limit, `/api/user/historyform`);
-
+    
             res.status(200).json({
                 status: 200,
                 message: 'success get',
                 data: formattedData,
                 pagination: pagination
             });
-
+    
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },
+    },    
 
     gethistorydokumen: async (req, res) => {
         try {
@@ -776,7 +783,6 @@ module.exports = {
         }
     },
 
-
     gethistorybyid: async (req, res) => {
         try {
 
@@ -833,6 +839,269 @@ module.exports = {
             };
 
             res.status(200).json(response(200, 'success get', formattedData));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    pdfhistoryformuser: async (req, res) => {
+        try {
+            const search = req.query.search ?? null;
+            const status = req.query.status ?? null;
+            const range = req.query.range;
+            const isonline = req.query.isonline ?? null;
+            const userinfo_id = data.role === "User" ? data.userId : null;
+            let instansi_id = Number(req.query.instansi_id);
+            let layanan_id = Number(req.query.layanan_id);
+            const start_date = req.query.start_date;
+            let end_date = req.query.end_date;
+            const year = req.query.year ? parseInt(req.query.year) : null;
+            const month = req.query.month ? parseInt(req.query.month) : null;
+
+            let history;
+
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                instansi_id = data.instansi_id;
+            }
+
+            if (data.role === 'Admin Layanan') {
+                layanan_id = data.layanan_id;
+            }
+
+            if (range == 'today') {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
+                };
+            }
+
+            if (isonline) {
+                WhereClause.isonline = isonline;
+            }
+            if (userinfo_id) {
+                WhereClause.userinfo_id = userinfo_id;
+            }
+            if (status) {
+                WhereClause.status = status;
+            }
+            if (layanan_id) {
+                WhereClause.layanan_id = layanan_id;
+            }
+
+            if (start_date && end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.between]: [new Date(start_date), new Date(end_date)]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: new Date(start_date)
+                };
+            } else if (end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.lte]: new Date(end_date)
+                };
+            }
+
+            if (instansi_id) {
+                WhereClause2.instansi_id = instansi_id;
+            }
+
+            if (search) {
+                WhereClause3[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } } 
+                ];
+            }
+
+            if (year && month) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, month - 1, 1),
+                        new Date(year, month, 0, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (year) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, 0, 1),
+                        new Date(year, 11, 31, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (month) {
+                // Hanya bulan ditentukan
+                const currentYear = new Date().getFullYear();
+                WhereClause.createdAt = {
+                    [Op.and]: [
+                        { [Op.gte]: new Date(currentYear, month - 1, 1) },
+                        { [Op.lte]: new Date(currentYear, month, 0, 23, 59, 59, 999) }
+                    ]
+                };
+            }
+
+            history = await Promise.all([
+                Layananformnum.findAll({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            include: [{
+                                model: Instansi,
+                                attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            attributes: ['name', 'nik'],
+                            where: WhereClause3,
+                        }
+                    ],
+                    order: [['id', 'DESC']]
+                })
+            ]);
+
+            let formattedData = history[0].map(data => {
+                return {
+                    id: data.id,
+                    userinfo_id: data?.userinfo_id,
+                    name: data?.Userinfo?.name,
+                    nik: data?.Userinfo?.nik,
+                    pesan: data?.pesan,
+                    status: data?.status,
+                    tgl_selesai: data?.tgl_selesai,
+                    isonline: data?.isonline,
+                    layanan_id: data?.layanan_id,
+                    layanan_name: data?.Layanan ? data?.Layanan?.name : null,
+                    layanan_image: data?.Layanan ? data?.Layanan?.image : null,
+                    instansi_id: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.id : null,
+                    instansi_name: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.name : null,
+                    instansi_image: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.image : null,
+                    createdAt: data?.createdAt,
+                    updatedAt: data?.updatedAt,
+                    fileoutput: data?.fileoutput,
+                    no_request: data?.no_request,
+                };
+            });
+
+            console.log("aaaa", formattedData)
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/permohonanperlayanan.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let layananGet, instansiGet;
+
+            if (layanan_id) {
+                layananGet = await Layanan.findOne({
+                    where: {
+                        id: layanan_id
+                    },
+                });
+            }
+
+            if (instansi_id) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                });
+            }
+
+            const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
+            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+            let tanggalInfo = '';
+            if (start_date || end_date) {
+                const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = end_date ? new Date(end_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+
+            if (range === 'today') {
+                tanggalInfo = `<p>Periode Tanggal : Hari ini </p>`;
+            }
+
+            const getStatusText = (status) => {
+                switch (status) {
+                    case 0:
+                        return 'Belum Divalidasi';
+                    case 1:
+                        return 'Sudah Divalidasi';
+                    case 2:
+                        return 'Sudah Disetujui';
+                    case 3:
+                        return 'Proses Selesai';
+                    case 4:
+                        return 'Ditolak';
+                    case 5:
+                        return 'Perbaikan/Revisi';
+                    case 6:
+                        return 'Diperbaiki';
+                    default:
+                        return 'Status Tidak Diketahui';
+                }
+            };
+
+            const reportTableRows = formattedData?.map(permohonan => {
+                const createdAtDate = new Date(permohonan.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                const createdAtTime = new Date(permohonan.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const statusText = getStatusText(permohonan.status);
+
+                return `
+                    <tr>
+                        <td class="center">${createdAtDate}</td>
+                        <td class="center">${createdAtTime} WIB</td>
+                        <td>${permohonan.nik}</td>
+                        <td>${permohonan.name}</td>
+                        <td class="center">${statusText}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
+            htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
 
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));

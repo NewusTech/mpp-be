@@ -4,6 +4,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     const Surveyformnums = [
       {
+        no_skm: 'SKMPOL-PMC1',
         userinfo_id: 5,
         layanan_id:1,
         kritiksaran:"Aplikasi sudah bagus dan sangat membantu. Saran dari saya pelayanannya lebih cepat.",
@@ -12,6 +13,7 @@ module.exports = {
         updatedAt: new Date()
       },
       {
+        no_skm: 'SKMPOL-PMC2',
         userinfo_id: 6,
         layanan_id:1,
         kritiksaran:"Saya sebagai orang tua kesulitan.",

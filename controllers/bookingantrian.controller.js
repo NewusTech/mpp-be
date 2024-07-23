@@ -184,11 +184,33 @@ module.exports = {
 
     getbookingantrianforuser: async (req, res) => {
         try {
-            const whereCondition = { userinfo_id: data.userId };
+            let whereCondition = { userinfo_id: data.userId };
+            const WhereClause = {};
+
+            let { start_date, end_date, search, status } = req.query;
 
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
+
+            if (start_date && end_date) {
+                whereCondition.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+            } else if (start_date) {
+                whereCondition.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+            } else if (end_date) {
+                whereCondition.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+            }
+
+            if (status) {
+                whereCondition.status = status
+            }
+
+            if (search) {
+                WhereClause[Op.or] = [
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } }, 
+                    { '$Instansi.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
 
             let bookingantrianForUser;
             let totalCount;
@@ -199,11 +221,12 @@ module.exports = {
                     include: [
                         {
                             model: Instansi,
-                            attributes: ['name', 'code'],
+                            attributes: ['name', 'code']
                         },
                         {
                             model: Layanan,
                             attributes: ['name', 'code'],
+                            where: WhereClause,
                         }
                     ],
                     limit: limit,
@@ -213,9 +236,15 @@ module.exports = {
                 Bookingantrian.count(
                     {
                         where: whereCondition,
-                        include: [{
-                            model: Instansi,
-                        }]
+                        include: [
+                            {
+                                model: Instansi
+                            },
+                            {
+                                model: Layanan,
+                                where: WhereClause,
+                            }
+                        ],
                     }
                 )
             ]);
