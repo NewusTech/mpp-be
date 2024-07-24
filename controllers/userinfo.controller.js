@@ -159,6 +159,7 @@ module.exports = {
                     goldar: user.goldar,
                     pendidikan: user.pendidikan,
                     foto: user.foto,
+                    fotoprofil: user.fotoprofil,
                     aktalahir: user.aktalahir,
                     filektp: user.filektp,
                     filekk: user.filekk,
