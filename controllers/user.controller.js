@@ -126,7 +126,7 @@ module.exports = {
                     min: 3,
                 }
             };
-    
+
             let isAdmin = req.query.admin;
             let nik = req.body.nik;
             let password = req.body.password;
@@ -140,7 +140,7 @@ module.exports = {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
-    
+
             // Mencari data user berdasarkan nik atau email yang disimpan dalam nik
             let whereClause = {
                 [Op.or]: [
@@ -159,7 +159,7 @@ module.exports = {
                     [Op.ne]: 5
                 };
             }
-    
+
             let userinfo = await Userinfo.findOne({
                 where: whereClause,
                 attributes: ['nik', 'email', 'id', 'telepon'],
@@ -185,19 +185,19 @@ module.exports = {
                     },
                 ],
             });
-    
+
             // cek apakah user ditemukan
             if (!userinfo) {
                 res.status(404).json(response(404, 'User not found'));
                 return;
             }
-    
+
             // check password
             if (!passwordHash.verify(password, userinfo.User.password)) {
                 res.status(403).json(response(403, 'password wrong'));
                 return;
             }
-    
+
             // membuat token jwt
             let token = jwt.sign({
                 userId: userinfo.id,
@@ -214,9 +214,9 @@ module.exports = {
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
-    
+
             res.status(200).json(response(200, 'login success', { token: token }));
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -549,4 +549,35 @@ module.exports = {
         }
     },
 
+    changePassword: async (req, res) => {
+        const slug= req.params.slug;
+        const { oldPassword, newPassword, confirmNewPassword } = req.body;
+
+        if (!oldPassword || !newPassword || !confirmNewPassword) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ message: 'New passwords do not match.' });
+        }
+
+        try {
+            const user = await User.findOne({ where: { slug } });
+            if (!user) {
+              return res.status(404).json({ message: 'User not found.' });
+            }
+      
+            if (!passwordHash.verify(oldPassword, user.password)) {
+              return res.status(400).json({ message: 'Old password is incorrect.' });
+            }
+      
+            user.password = passwordHash.generate(newPassword);
+            await user.save();
+      
+            return res.status(200).json({ message: 'Password has been updated.' });
+          } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error.' });
+          }
+    }
 }

@@ -17,4 +17,6 @@ route.delete('/user/alluser/delete/:slug', [mid.checkRolesAndLogout(['Admin Inst
 //API BUAT USER
 route.get('/user/getforuser', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Super Admin'])], userController.getforuser); 
 
+route.post('/user/changepassword/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], userController.changePassword); 
+
 module.exports = route;
