@@ -601,7 +601,7 @@ module.exports = {
                 fileijazahsma: "dir_mpp/datauser/fileijazahsma",
                 fileijazahlain: "dir_mpp/datauser/fileijazahlain",
             };
-    
+
             // Mendapatkan data userinfo untuk pengecekan
             let userinfoGet = await Userinfo.findOne({
                 where: {
@@ -610,14 +610,14 @@ module.exports = {
                 },
                 transaction
             });
-    
+
             // Cek apakah data userinfo ada
             if (!userinfoGet) {
                 await transaction.rollback();
                 res.status(404).json(response(404, 'userinfo not found'));
                 return;
             }
-    
+
             const oldImageUrls = {
                 aktalahir: userinfoGet.aktalahir,
                 foto: userinfoGet.foto,
@@ -628,21 +628,21 @@ module.exports = {
                 fileijazahsma: userinfoGet.fileijazahsma,
                 fileijazahlain: userinfoGet.fileijazahlain,
             };
-    
+
             const files = req.files;
             let uploadResults = {};
-    
+
             const uploadPromises = Object.keys(files).map(async (key) => {
                 if (files[key] && files[key][0]) {
                     const file = files[key][0];
                     const { mimetype, buffer, originalname } = file;
                     const base64 = Buffer.from(buffer).toString('base64');
                     const dataURI = `data:${mimetype};base64,${base64}`;
-    
+
                     const now = new Date();
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-    
+
                     const uploadParams = {
                         Bucket: process.env.AWS_S3_BUCKET,
                         Key: `${folderPaths[key]}/${uniqueFilename}`,
@@ -650,23 +650,23 @@ module.exports = {
                         ACL: 'public-read',
                         ContentType: mimetype
                     };
-    
+
                     const command = new PutObjectCommand(uploadParams);
                     await s3Client.send(command);
-    
+
                     const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
                     uploadResults[key] = fileUrl;
                 }
             });
-    
+
             await Promise.all(uploadPromises);
-    
+
             let userinfoUpdateObj = {};
-    
+
             for (const key in folderPaths) {
                 userinfoUpdateObj[key] = uploadResults[key] || oldImageUrls[key];
             }
-    
+
             // Update userinfo
             await Userinfo.update(userinfoUpdateObj, {
                 where: {
@@ -674,7 +674,7 @@ module.exports = {
                 },
                 transaction
             });
-    
+
             // Mendapatkan data userinfo setelah update
             let userinfoAfterUpdate = await Userinfo.findOne({
                 where: {
@@ -682,12 +682,12 @@ module.exports = {
                 },
                 transaction
             });
-    
+
             await transaction.commit();
-    
+
             // Response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
-    
+
         } catch (err) {
             await transaction.rollback();
             res.status(500).json(response(500, 'internal server error', err));
@@ -756,6 +756,79 @@ module.exports = {
             // Rollback transaksi jika terjadi kesalahan
             await transaction.rollback();
             res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    //mengupdate berdasarkan user
+    updateprofil: async (req, res) => {
+        try {
+            //mendapatkan data fotoprofil untuk pengecekan
+
+            let fotoprofilGet = await Userinfo.findOne({
+                where: {
+                    slug: req.params.slug,
+                    deletedAt: null
+                },
+            });
+
+            //cek apakah data fotoprofil ada
+            if (!fotoprofilGet) {
+                res.status(404).json(response(404, 'fotoprofil not found'));
+                return;
+            }
+
+            //membuat schema untuk validasi
+            const schema = {
+                fotoprofil: {
+                    type: "string",
+                    optional: true
+                }
+            }
+
+            if (req.file) {
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `${process.env.PATH_AWS}/fotoprofil/${uniqueFileName}`,
+                    Body: req.file.buffer,
+                    ACL: 'public-read',
+                    ContentType: req.file.mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+
+                await s3Client.send(command);
+
+                fotoprofilKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+            }
+
+            //buat object fotoprofil
+            let fotoprofilUpdateObj = {
+                fotoprofil: req.file ? fotoprofilKey : undefined,
+            }
+
+            //validasi menggunakan module fastest-validator
+            const validate = v.validate(fotoprofilUpdateObj, schema);
+            if (validate.length > 0) {
+                res.status(400).json(response(400, 'validation failed', validate));
+                return;
+            }
+
+            //update fotoprofil
+            await Userinfo.update(fotoprofilUpdateObj, {
+                where: {
+                    slug: fotoprofilGet.slug,
+                },
+            });
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update fotoprofil'));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },
