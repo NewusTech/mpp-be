@@ -29,7 +29,9 @@ module.exports = (sequelize, DataTypes) => {
     layanan_id: DataTypes.INTEGER,
     role_id: DataTypes.INTEGER,
     userinfo_id: DataTypes.INTEGER,
-    deletedAt: DataTypes.DATE
+    deletedAt: DataTypes.DATE,
+    resetpasswordtoken: DataTypes.STRING,
+    resetpasswordexpires: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'User',

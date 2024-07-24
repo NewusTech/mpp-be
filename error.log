@@ -47,3 +47,4 @@ TROUBLESHOOTING: https://pptr.dev/troubleshooting
 2024-07-15T04:13:34.899Z error: 500 - Unexpected field - /api/user/manualbook/update - PUT - ::1
 2024-07-15T04:13:57.766Z error: 500 - Unexpected field - /api/user/manualbook/update - PUT - ::1
 2024-07-15T04:14:11.033Z error: 500 - Unexpected field - /api/user/manualbook/update - PUT - ::1
+2024-07-24T09:06:18.501Z error: 500 - Unexpected field - /api/user/video/update - PUT - ::1

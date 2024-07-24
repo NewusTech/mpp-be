@@ -8,6 +8,16 @@ const { generatePagination } = require('../pagination/pagination');
 const Validator = require("fastest-validator");
 const v = new Validator();
 const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: process.env.EMAIL_NAME,
+        pass: process.env.EMAIL_PW,
+    }
+});
 
 module.exports = {
 
@@ -550,7 +560,7 @@ module.exports = {
     },
 
     changePassword: async (req, res) => {
-        const slug= req.params.slug;
+        const slug = req.params.slug;
         const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
         if (!oldPassword || !newPassword || !confirmNewPassword) {
@@ -564,20 +574,108 @@ module.exports = {
         try {
             const user = await User.findOne({ where: { slug } });
             if (!user) {
-              return res.status(404).json({ message: 'User not found.' });
+                return res.status(404).json({ message: 'User not found.' });
             }
-      
+
             if (!passwordHash.verify(oldPassword, user.password)) {
-              return res.status(400).json({ message: 'Old password is incorrect.' });
+                return res.status(400).json({ message: 'Old password is incorrect.' });
             }
-      
+
             user.password = passwordHash.generate(newPassword);
             await user.save();
-      
+
             return res.status(200).json({ message: 'Password has been updated.' });
-          } catch (err) {
+        } catch (err) {
             console.error(err);
             return res.status(500).json({ message: 'Internal server error.' });
-          }
+        }
+    },
+
+    forgotPassword: async (req, res) => {
+        const { email } = req.body;
+
+        try {
+            const user = await User.findOne({
+                include: [
+                    {
+                        model: Userinfo,
+                        attributes: ['email'],
+                        where: { email },
+                    }
+                ]
+            },);
+
+            if (!user) {
+                return res.status(404).json({ message: 'Email tidak terdaftar.' });
+            }
+
+            console.log("aaaaaaa", user?.Userinfo?.email)
+            const token = crypto.randomBytes(20).toString('hex');
+            const resetpasswordexpires = Date.now() + 3600000;
+
+            console.log("rokwen", token)
+            user.resetpasswordtoken = token;
+            user.resetpasswordexpires = resetpasswordexpires;
+
+            await user.save();
+
+            const mailOptions = {
+                to: user?.Userinfo?.email,
+                from: process.env.EMAIL_NAME,
+                subject: 'Password Reset',
+                text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+                Please click on the following link, or paste this into your browser to complete the process:\n\n
+                ${process.env.WEBSITE_URL}reset/${token}\n\n
+                If you did not request this, please ignore this email and your password will remain unchanged.\n`
+            };
+
+            transporter.sendMail(mailOptions, (err) => {
+                if (err) {
+                    console.error('There was an error: ', err);
+                    return res.status(500).json({ message: 'Error sending the email.' });
+                }
+                res.status(200).json({ message: 'An email has been sent to  with further instructions.' });
+            });
+
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+    },
+
+    resetPassword: async (req, res) => {
+        const { token } = req.params;
+        const { newPassword, confirmNewPassword } = req.body;
+
+        if (!newPassword || !confirmNewPassword) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ message: 'New passwords do not match.' });
+        }
+
+        try {
+            const user = await User.findOne({
+                where: {
+                    resetpasswordtoken: token,
+                    resetpasswordexpires: { [Op.gt]: Date.now() }
+                }
+            });
+
+            if (!user) {
+                return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+            }
+
+            user.password = passwordHash.generate(newPassword);
+            user.resetpasswordtoken = null;
+            user.resetpasswordexpires = null;
+            await user.save();
+
+            return res.status(200).json({ message: 'Password has been reset.' });
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
     }
 }
