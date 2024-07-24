@@ -94,11 +94,11 @@ module.exports = {
                         include: [
                             {
                                 model: Layanan,
-                                attributes: ['id', 'name'] ,
+                                attributes: ['id', 'name'],
                                 include: [
                                     {
                                         model: Instansi,
-                                        attributes: ['id', 'name'] ,
+                                        attributes: ['id', 'name'],
                                     },
                                 ]
                             },
@@ -310,9 +310,9 @@ module.exports = {
                 layanan_name: item?.Layanan?.name,
                 instansi_name: item?.Layanan?.Instansi?.name
             }));
-    
+
             const pagination = generatePagination(totalCount, page, limit, `/api/user/userhistorysurvey`);
-    
+
             res.status(200).json({
                 status: 200,
                 message: 'success get',
@@ -368,21 +368,21 @@ module.exports = {
             ]);
 
             const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-    
+
             const calculateNilai = (surveyformnums) => {
                 let totalNilai = 0;
                 let totalInputs = 0;
-    
+
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
                         totalNilai += nilaiMap[input.nilai] || 0;
                         totalInputs++;
                     });
                 });
-    
+
                 return totalInputs > 0 ? totalNilai / totalInputs : 0;
             };
-    
+
 
             let formattedData = history.map(data => {
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
@@ -410,7 +410,7 @@ module.exports = {
             }
 
             const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
-        
+
             const reportTableRows = formattedData.map(survey => `
                 <tr>
                     <td>${survey.layanan_name}</td>
@@ -702,6 +702,40 @@ module.exports = {
             res.setHeader('Content-type', 'application/pdf');
             res.send(pdfBuffer);
 
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getCheckUserSKM: async (req, res) => {
+        const { id_layanan } = req.params;
+        const id_user = data?.user_akun_id;
+
+        if (!id_user || !id_layanan) {
+            return res.status(400).json({ message: 'Bad Request: Missing required parameters' });
+        }
+
+        try {
+            const survey = await Surveyformnum.findOne({
+                where: {
+                    userinfo_id: id_user,
+                    layanan_id: id_layanan,
+                },
+                attributes: ['id']
+            });
+
+            if (survey) {
+                res.status(700).json({
+                    status: 700,
+                    message: 'Sudah pernah input survey pada layanan ini',
+                });
+            } else {
+                res.status(200).json({
+                    status: 200,
+                    message: 'Sukses',
+                });
+            }
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);

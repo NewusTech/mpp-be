@@ -17,4 +17,6 @@ route.get('/user/historysurvey/:idlayanan/pdf', [mid.checkRolesAndLogout(['Admin
 
 route.get('/user/userhistorysurvey/', [mid.checkRolesAndLogout(['User'])], surveyforminput.gethistoryforuser);
 
+route.get('/user/getCheckUserSKM/:id_layanan', [mid.checkRolesAndLogout(['User'])], surveyforminput.getCheckUserSKM);
+
 module.exports = route;
