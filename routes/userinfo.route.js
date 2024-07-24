@@ -36,4 +36,6 @@ route.put('/user/userinfo/updatedocs/:slug', [mid.checkRolesAndLogout(['Admin In
     { name: 'fileijazahlain', maxCount: 1 }
 ]), userinfoController.updateuserdocs);
 
+route.put('/user/userinfo/updatefoto/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], upload.single('fotoprofil'), userinfoController.updateprofil); 
+
 module.exports = route;
