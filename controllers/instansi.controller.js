@@ -148,7 +148,7 @@ module.exports = {
             if (skm && data?.role === 'User') {
                 isrequired = true
                 includeOptions = [{
-                    model: Surveyformnum,
+                    model: Layananformnum,
                     attributes: [],
                     required: true,
                     where: {
