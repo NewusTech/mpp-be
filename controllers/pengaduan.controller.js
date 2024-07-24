@@ -95,9 +95,7 @@ module.exports = {
             const userinfo_id = data.role === "User" ? data.userId : null;
 
             const instansi_id = req.query.instansi_id ?? null;
-            const search = req.query.search ?? null;
-            const start_date = req.query.start_date;
-            const end_date = req.query.end_date;
+            let { start_date, end_date, search, status } = req.query;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
@@ -110,7 +108,15 @@ module.exports = {
                 whereCondition.instansi_id = instansi_id;
             }
             if (search) {
-                whereCondition[Op.or] = [{ judul: { [Op.iLike]: `%${search}%` } }];
+                whereCondition[Op.or] = [
+                    { judul: { [Op.iLike]: `%${search}%` } },
+                    { aduan: { [Op.iLike]: `%${search}%` } },
+                    { '$Instansi.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+            if (status) {
+                whereCondition.status = status;
             }
             if (userinfo_id) {
                 whereCondition.userinfo_id = userinfo_id;
@@ -142,11 +148,12 @@ module.exports = {
                     order: [['id', 'DESC']]
                 }),
                 Pengaduan.count({
-                    where: {
-                        [Op.or]: [
-                            { judul: { [Op.iLike]: `%${search}%` } }
-                        ]
-                    }
+                    where: whereCondition,
+                    include: [
+                        { model: Layanan },
+                        { model: Instansi },
+                        { model: Userinfo }
+                    ],
                 })
             ]);
 
