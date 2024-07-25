@@ -388,7 +388,9 @@ module.exports = {
                     subject = 'Notifikasi Permohonan Perlu Revisi';
                     text = `Yth. ${layananGet?.Userinfo?.name},\nKami ingin memberitahukan bahwa permohonan Anda dengan nomor permohonan ${layananGet?.no_request} memerlukan revisi/perbaikan data.\n\nDetail permohonan Anda adalah sebagai berikut:\n\t- Dinas = ${layananGet?.Layanan?.Instansi?.name}\n\t- Permohonan = ${layananGet?.Layanan?.name}\n\t- Tanggal Permohonan = ${formattedDate}\n\t- Status = Perlu Revisi\n\t- Alasan Revisi: ${layananUpdateObj.pesan || 'Tidak ada alasan yang diberikan.'}\n\nSilakan mengunjungi Mal Pelayanan Publik atau mengakses portal kami untuk memperbaiki data permohonan Anda. Jika Anda membutuhkan informasi lebih lanjut, jangan ragu untuk menghubungi kami melalui kontak dibawah ini.\n\t- Email = ${layananGet?.Layanan?.Instansi?.email}\n\t- Nomor = ${layananGet?.Layanan?.Instansi?.telp}.\n\nTerima kasih atas perhatian dan kerjasama Anda.\n\nSalam hormat,\n${layananGet?.Layanan?.Instansi?.name}`;
                 }
-                sendEmailNotification(subject, text);
+                if (layananGet?.Userinfo?.email) {
+                    sendEmailNotification(subject, text);
+                }
             }
 
             //validasi menggunakan module fastest-validator
