@@ -12,6 +12,17 @@ const moment = require('moment-timezone');
 const { Op } = require('sequelize');
 const { generatePagination } = require('../pagination/pagination');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const nodemailer = require('nodemailer');
+const { format } = require('date-fns');
+const { id } = require('date-fns/locale');
+
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: process.env.EMAIL_NAME,
+        pass: process.env.EMAIL_PW,
+    }
+});
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -305,7 +316,23 @@ module.exports = {
             let layananGet = await Layananformnum.findOne({
                 where: {
                     id: req.params.idlayanannum
-                }
+                },
+                include: [
+                    {
+                        model: Userinfo,
+                        attributes: ['email', 'name'],
+                    },
+                    {
+                        model: Layanan,
+                        attributes: ['name'],
+                        include: [
+                            {
+                                model: Instansi,
+                                attributes: ['email', 'name', 'telp'],
+                            },
+                        ]
+                    }
+                ],
             })
 
             //cek apakah data layanan ada
@@ -331,8 +358,37 @@ module.exports = {
                 pesan: req.body.pesan,
             }
 
-            if (layananUpdateObj.status === 3) {
-                layananUpdateObj.tgl_selesai = Date.now();
+            const sendEmailNotification = (subject, text) => {
+                const mailOptions = {
+                    to: layananGet?.Userinfo?.email,
+                    from: process.env.EMAIL_NAME,
+                    subject,
+                    text
+                };
+                transporter.sendMail(mailOptions, (err) => {
+                    if (err) {
+                        console.error('There was an error: ', err);
+                        return res.status(500).json({ message: 'Error sending the email.' });
+                    }
+                    res.status(200).json({ message: 'An email has been sent with further instructions.' });
+                });
+            };
+
+            if (layananUpdateObj.status === 3 || layananUpdateObj.status === 4 || layananUpdateObj.status === 5) {
+                const formattedDate = format(new Date(layananGet?.createdAt), "EEEE, dd MMMM yyyy (HH.mm 'WIB')", { locale: id });
+                let subject, text;
+                if (layananUpdateObj.status === 3) {
+                    subject = 'Notifikasi Permohonan Selesai';
+                    text = `Yth. ${layananGet?.Userinfo?.name},\nKami ingin memberitahukan bahwa permohonan Anda dengan nomor permohonan ${layananGet?.no_request} telah selesai diproses.\n\nDetail permohonan Anda adalah sebagai berikut:\n\t- Dinas = ${layananGet?.Layanan?.Instansi?.name}\n\t- Permohonan = ${layananGet?.Layanan?.name}\n\t- Tanggal Permohonan = ${formattedDate}\n\t- Status = Selesai\n\nSilakan mengunjungi Mal Pelayanan Publik atau mengakses portal kami untuk mengambil hasil permohonan Anda. Jika Anda membutuhkan informasi lebih lanjut, jangan ragu untuk menghubungi kami melalui kontak dibawah ini.\n\t- Email = ${layananGet?.Layanan?.Instansi?.email}\n\t- Nomor = ${layananGet?.Layanan?.Instansi?.telp}\n\nTerima kasih atas kepercayaan Anda menggunakan layanan kami.\n\nSalam hormat,\n${layananGet?.Layanan?.Instansi?.name}`;
+                    layananUpdateObj.tgl_selesai = Date.now();
+                } else if (layananUpdateObj.status === 4) {
+                    subject = 'Notifikasi Permohonan Ditolak';
+                    text = `Yth. ${layananGet?.Userinfo?.name},\nKami ingin memberitahukan bahwa permohonan Anda dengan nomor permohonan ${layananGet?.no_request} telah ditolak.\n\nDetail permohonan Anda adalah sebagai berikut:\n\t- Dinas = ${layananGet?.Layanan?.Instansi?.name}\n\t- Permohonan = ${layananGet?.Layanan?.name}\n\t- Tanggal Permohonan = ${formattedDate}\n\t- Status = Ditolak\n\t- Alasan Penolakan: ${layananUpdateObj.pesan || 'Tidak ada alasan yang diberikan.'}\n\nSilakan mengunjungi Mal Pelayanan Publik atau mengakses portal kami untuk mendapatkan informasi lebih lanjut mengenai penolakan ini. Jika Anda membutuhkan informasi lebih lanjut, jangan ragu untuk menghubungi kami melalui kontak dibawah ini.\n\t- Email = ${layananGet?.Layanan?.Instansi?.email}\n\t- Nomor = ${layananGet?.Layanan?.Instansi?.telp}.\n\nKami mohon maaf atas ketidaknyamanan yang terjadi dan berharap dapat melayani Anda lebih baik di masa mendatang.\n\nTerima kasih atas pengertian Anda.\n\nSalam hormat,\n${layananGet?.Layanan?.Instansi?.name}`;
+                } else if (layananUpdateObj.status === 5) {
+                    subject = 'Notifikasi Permohonan Perlu Revisi';
+                    text = `Yth. ${layananGet?.Userinfo?.name},\nKami ingin memberitahukan bahwa permohonan Anda dengan nomor permohonan ${layananGet?.no_request} memerlukan revisi/perbaikan data.\n\nDetail permohonan Anda adalah sebagai berikut:\n\t- Dinas = ${layananGet?.Layanan?.Instansi?.name}\n\t- Permohonan = ${layananGet?.Layanan?.name}\n\t- Tanggal Permohonan = ${formattedDate}\n\t- Status = Perlu Revisi\n\t- Alasan Revisi: ${layananUpdateObj.pesan || 'Tidak ada alasan yang diberikan.'}\n\nSilakan mengunjungi Mal Pelayanan Publik atau mengakses portal kami untuk memperbaiki data permohonan Anda. Jika Anda membutuhkan informasi lebih lanjut, jangan ragu untuk menghubungi kami melalui kontak dibawah ini.\n\t- Email = ${layananGet?.Layanan?.Instansi?.email}\n\t- Nomor = ${layananGet?.Layanan?.Instansi?.telp}.\n\nTerima kasih atas perhatian dan kerjasama Anda.\n\nSalam hormat,\n${layananGet?.Layanan?.Instansi?.name}`;
+                }
+                sendEmailNotification(subject, text);
             }
 
             //validasi menggunakan module fastest-validator
@@ -450,25 +506,25 @@ module.exports = {
             const offset = (page - 1) * limit;
             let history;
             let totalCount;
-    
+
             const WhereClause = {};
             const WhereClause2 = {};
             const WhereClause3 = {};
-    
+
             if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
                 WhereClause2.instansi_id = data.instansi_id;
             }
-    
+
             if (data.role === 'Admin Layanan') {
                 WhereClause.layanan_id = data.layanan_id;
             }
-    
+
             if (range == 'today') {
                 WhereClause.createdAt = {
                     [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
                 };
             }
-    
+
             if (isonline) {
                 WhereClause.isonline = isonline;
             }
@@ -481,7 +537,7 @@ module.exports = {
             if (layanan_id) {
                 WhereClause.layanan_id = layanan_id;
             }
-    
+
             if (start_date && end_date) {
                 end_date = new Date(end_date);
                 end_date.setHours(23, 59, 59, 999);
@@ -499,7 +555,7 @@ module.exports = {
                     [Op.lte]: new Date(end_date)
                 };
             }
-    
+
             if (instansi_id) {
                 WhereClause2.instansi_id = instansi_id;
             }
@@ -507,11 +563,11 @@ module.exports = {
             if (search) {
                 WhereClause3[Op.or] = [
                     { name: { [Op.iLike]: `%${search}%` } },
-                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } }, 
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
                     { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } }
                 ];
             }
-    
+
             if (year && month) {
                 WhereClause.createdAt = {
                     [Op.between]: [
@@ -535,7 +591,7 @@ module.exports = {
                     ]
                 };
             }
-    
+
             [history, totalCount] = await Promise.all([
                 Layananformnum.findAll({
                     where: WhereClause,
@@ -576,7 +632,7 @@ module.exports = {
                     ],
                 })
             ]);
-    
+
             let formattedData = history.map(data => {
                 return {
                     id: data.id,
@@ -599,21 +655,21 @@ module.exports = {
                     no_request: data?.no_request,
                 };
             });
-    
+
             const pagination = generatePagination(totalCount, page, limit, `/api/user/historyform`);
-    
+
             res.status(200).json({
                 status: 200,
                 message: 'success get',
                 data: formattedData,
                 pagination: pagination
             });
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },    
+    },
 
     gethistorydokumen: async (req, res) => {
         try {
@@ -919,7 +975,7 @@ module.exports = {
                 WhereClause3[Op.or] = [
                     { name: { [Op.iLike]: `%${search}%` } },
                     { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
-                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } } 
+                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } }
                 ];
             }
 
