@@ -632,8 +632,7 @@ module.exports = {
             transporter.sendMail(mailOptions, (err) => {
                 if (err) {
                     console.error('There was an error: ', err);
-                    return res.status(500).json({ message: `${process.env.EMAIL_NAME}
-                        Error sending the email.  ${err}` });
+                    return res.status(500).json({ message: `${process.env.EMAIL_NAME} ${process.env.EMAIL_PW}Error sending the email.  ${err}` });
                 }
                 res.status(200).json({ message: 'An email has been sent to  with further instructions.' });
             });
