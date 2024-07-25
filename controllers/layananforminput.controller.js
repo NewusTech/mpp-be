@@ -365,7 +365,6 @@ module.exports = {
                     subject,
                     text
                 };
-
                 transporter.sendMail(mailOptions, (err) => {
                     if (err) {
                         console.error('There was an error: ', err);
