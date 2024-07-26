@@ -10,7 +10,7 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-route.post('/user/antrian/create', [mid.checkRolesAndLogout(['User'])], antrianController.createantrian);
+route.post('/user/antrian/create', antrianController.createantrian);
 route.post('/antrian/createfrombarcode', antrianController.createAntrianFromQRCode);
 route.get('/user/antrian/get/instansi/:slugdinas', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Layanan', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbyinstansi); 
 route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Layanan', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbylayanan); 
