@@ -225,7 +225,6 @@ module.exports = {
 
             if (search) {
                 whereCondition[Op.and] = [
-                    whereCondition,
                     { name: { [Op.iLike]: `%${search}%` } }
                 ];
             }
