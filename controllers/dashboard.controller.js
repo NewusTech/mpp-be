@@ -533,7 +533,7 @@ module.exports = {
                     },
                     include: [{
                         model: Layanan,
-                        attributes: ['name'],
+                        attributes: ['name', 'code'],
                         where: {
                             id: idlayanan,
                         },

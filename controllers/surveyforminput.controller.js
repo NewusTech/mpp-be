@@ -9,6 +9,28 @@ const moment = require('moment-timezone');
 const puppeteer = require('puppeteer');
 const { generatePagination } = require('../pagination/pagination');
 
+const pendidikanList = [
+    { id: 1, key: 'Tidak Sekolah' },
+    { id: 2, key: 'SD' },
+    { id: 3, key: 'SMP' },
+    { id: 4, key: 'SMA' },
+    { id: 5, key: 'D1' },
+    { id: 6, key: 'D2' },
+    { id: 7, key: 'D3' },
+    { id: 8, key: 'S1' },
+    { id: 9, key: 'S2' },
+    { id: 10, key: 'S3' }
+  ];
+  
+  const getPendidikanKey = (id) => {
+    const found = pendidikanList.find(p => p.id === id);
+    return found ? found.key : 'Unknown';
+  };
+  
+  const getGenderKey = (id) => {
+    return id === 1 ? 'Laki-Laki' : id === 2 ? 'Perempuan' : 'Unknown';
+  };
+
 module.exports = {
 
     //input survey user
@@ -558,7 +580,7 @@ module.exports = {
             let history;
             const start_date = req.query.start_date;
             const end_date = req.query.end_date;
-
+    
             const WhereClause = {};
             if (idlayanan) {
                 WhereClause.layanan_id = idlayanan;
@@ -576,7 +598,7 @@ module.exports = {
                     [Op.lte]: moment(end_date).endOf('day').toDate()
                 };
             }
-
+    
             [history, totalCount] = await Promise.all([
                 Surveyformnum.findAll({
                     include: [
@@ -594,57 +616,57 @@ module.exports = {
                     where: WhereClause,
                 })
             ]);
-
+    
             const calculateNilai = (surveyforminputs) => {
                 const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
                 let totalNilai = 0;
                 let totalInputs = 0;
-
+    
                 surveyforminputs.forEach(input => {
                     totalNilai += nilaiMap[input.nilai] || 0;
                     totalInputs++;
                 });
-
+    
                 return totalInputs > 0 ? totalNilai / totalInputs : 0;
             };
-
+    
             let totalNilaiAll = 0;
             let totalEntries = 0;
-
+    
             const formatTanggal = (tanggal) => {
                 const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 const dateObj = new Date(tanggal);
                 const hari = dateObj.getDate();
                 const bulanFormatted = bulan[dateObj.getMonth()];
                 const tahun = dateObj.getFullYear();
-
+    
                 return `${hari} ${bulanFormatted} ${tahun}`;
             };
-
+    
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
-
+    
                 totalNilaiAll += surveyforminputsNilai;
                 totalEntries++;
-
+    
                 return {
                     id: data.id,
                     date: formatTanggal(data.date),
                     kritiksaran: data.kritiksaran,
                     nilai: surveyforminputsNilai,
                     name: data.Userinfo ? data.Userinfo.name : null,
-                    pendidikan: data.Userinfo ? data.Userinfo.pendidikan : null,
-                    gender: data.Userinfo ? data.Userinfo.gender : null
+                    pendidikan: data.Userinfo ? getPendidikanKey(data.Userinfo.pendidikan) : null,
+                    gender: data.Userinfo ? getGenderKey(data.Userinfo.gender) : null
                 };
             });
-
+    
             const total_nilai = totalEntries > 0 ? (totalNilaiAll / totalEntries).toFixed(2) : 0;
-
+    
             // Generate HTML content for PDF
             const templatePath = path.resolve(__dirname, '../views/surveybylayanan.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
             let layananGet;
-
+    
             if (idlayanan) {
                 layananGet = await Layanan.findOne({
                     where: {
@@ -653,33 +675,36 @@ module.exports = {
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
                 });
             }
-
+    
             const instansiInfo = layananGet?.Instansi?.name ? `<p>Instansi : ${layananGet?.Instansi?.name}</p>` : '';
             const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
-
+    
             const reportTableRows = formattedData.map(survey => `
                 <tr>
                     <td>${survey.date}</td>
                     <td>${survey.name}</td>
+                    <td>${survey.pendidikan}</td>
+                    <td>${survey.gender}</td>
+                    <td>${survey.kritiksaran}</td>
                     <td class="center">${survey.nilai}</td>
                 </tr>
             `).join('');
-
+    
             htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
             htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
             htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
             htmlContent = htmlContent.replace('{{total_nilai}}', total_nilai);
-
+    
             // Launch Puppeteer
             const browser = await puppeteer.launch({
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
             const page = await browser.newPage();
-
+    
             // Set HTML content
             await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
+    
             // Generate PDF
             const pdfBuffer = await page.pdf({
                 format: 'A4',
@@ -690,18 +715,18 @@ module.exports = {
                     left: '1.16in'
                 }
             });
-
+    
             await browser.close();
-
+    
             // Generate filename
             const currentDate = new Date().toISOString().replace(/:/g, '-');
             const filename = `laporan-${currentDate}.pdf`;
-
+    
             // Send PDF buffer
             res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
             res.setHeader('Content-type', 'application/pdf');
             res.send(pdfBuffer);
-
+    
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
