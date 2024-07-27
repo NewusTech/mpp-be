@@ -462,7 +462,7 @@ module.exports = {
                     const response = await axios({
                         url,
                         method: 'GET',
-                        responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Node.js
+                        responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Nodejs
                     });
 
                     const now = new Date();
