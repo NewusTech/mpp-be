@@ -16,7 +16,7 @@ route.get('/user/antrian/get/instansi/:slugdinas', [mid.checkRolesAndLogout(['Ad
 route.get('/user/antrian/get/layanan/:sluglayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Layanan', 'Super Admin', 'Admin Verifikasi', 'Bupati'])], antrianController.getantrianbylayanan); 
 
 route.get('/antrian/check/:idlayanan', antrianController.checkantrian); 
-route.get('/panggilantrian/get/:sluglayanan', antrianController.panggilAntrianBerikutnya); 
+route.post('/panggilantrian/get/:sluglayanan', antrianController.panggilAntrianBerikutnya); 
 
 route.get('/user/antrian/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], antrianController.pdfriwayatantrian); 
 

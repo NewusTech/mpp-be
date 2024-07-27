@@ -506,21 +506,21 @@ module.exports = {
                         status: true
                     },
                 }),
-                Antrian.findOne({
+                Antrian.findAll({
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
                         status: true,
                         layanan_id: idlayanan
                     },
+                    limit: 2,
                     order: [['id', 'DESC']]
                 }),
-                Antrian.findAll({
+                Antrian.findOne({
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
                         status: false,
                         layanan_id: idlayanan,
                     },
-                    limit: 2,
                     order: [['id', 'ASC']]
                 }),
                 Antrian.findAll({
@@ -566,9 +566,9 @@ module.exports = {
             const dataget = {
                 AntrianCount,
                 AntrianSelesaiCount,
-                AntrianSebelumnya: AntrianSebelumnya?.code ?? null,
-                AntrianProses: AntrianNext[0]?.code ?? null,
-                AntrianNext: AntrianNext[1]?.code ?? null,
+                AntrianSebelumnya: AntrianSebelumnya[1]?.code ?? null,
+                AntrianProses: AntrianSebelumnya[0]?.code ?? null,
+                AntrianNext: AntrianNext?.code ?? null,
                 riwayatAntrian,
                 pagination: pagination
             };
