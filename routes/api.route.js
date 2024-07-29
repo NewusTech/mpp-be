@@ -29,6 +29,7 @@ const manualbookRoute = require('./manualbook.route');
 const inputformRoute = require('./inputform.route');
 const inputsurveyRoute = require('./inputsurvey.route');
 const historyformRoute = require('./historyform.route');
+const bukutamuRoute = require('./bukutamu.route');
 
 module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
@@ -62,4 +63,5 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, inputformRoute);
     app.use(urlApi, inputsurveyRoute);
     app.use(urlApi, historyformRoute);
+    app.use(urlApi, bukutamuRoute);
 }
