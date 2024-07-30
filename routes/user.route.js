@@ -23,4 +23,8 @@ route.post('/user/forgotpassword', userController.forgotPassword);
 
 route.post('/user/reset/:token', userController.resetPassword); 
 
+route.put('/user/permissions', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin'])],userController.updateUserpermissions);
+
+route.get('/user/permissions/:userId', userController.getUserPermissions);
+
 module.exports = route;
