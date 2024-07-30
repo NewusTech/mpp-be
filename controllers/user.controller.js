@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { User, Token, Instansi, Layanan, Role, Userinfo, Kecamatan, Desa, sequelize } = require('../models');
+const { User, Token, Instansi, Layanan, Role, Userinfo, Kecamatan, Desa, Userpermission, Permission, sequelize } = require('../models');
 const baseConfig = require('../config/base.config');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -10,6 +10,7 @@ const v = new Validator();
 const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const logger = require('../errorHandler/logger');
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -140,7 +141,7 @@ module.exports = {
             let isAdmin = req.query.admin;
             let nik = req.body.nik;
             let password = req.body.password;
-            console.log(isAdmin, "anjing")
+
             // Validasi input
             const validate = v.validate({
                 nik: nik,
@@ -176,7 +177,7 @@ module.exports = {
                 include: [
                     {
                         model: User,
-                        attributes: ['password', 'id', 'role_id', 'layanan_id'],
+                        attributes: ['password', 'id', 'role_id', 'layanan_id', 'instansi_id'],
                         include: [
                             {
                                 model: Role,
@@ -185,6 +186,11 @@ module.exports = {
                             {
                                 model: Instansi,
                                 attributes: ['id', 'name', 'image']
+                            },
+                            {
+                                model: Permission,
+                                through: Userpermission,
+                                as: 'permissions'
                             },
                             {
                                 model: Layanan,
@@ -220,7 +226,9 @@ module.exports = {
                 layanan: userinfo?.User?.Layanan?.name ?? undefined,
                 layanan_id: userinfo?.User?.Layanan?.id ?? undefined,
                 layanan_code: userinfo?.User?.Layanan?.code ?? undefined,
-                layanan_slug: userinfo?.User?.Layanan?.slug ?? undefined
+                layanan_slug: userinfo?.User?.Layanan?.slug ?? undefined,
+                // permissions: userinfo?.User?.permissions,
+                permission: userinfo.User.permissions.map(permission => permission.name)
             }, baseConfig.auth_secret, { // auth secret
                 expiresIn: 864000 // expired 24 jam
             });
@@ -228,6 +236,9 @@ module.exports = {
             res.status(200).json(response(200, 'login success', { token: token }));
 
         } catch (err) {
+
+            logger.error(`Error : ${err}`);
+            logger.error(`Error message: ${err.message}`);
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
@@ -676,6 +687,79 @@ module.exports = {
         } catch (err) {
             console.error(err);
             return res.status(500).json({ message: 'Internal server error.' });
+        }
+    },
+
+    getUserPermissions: async (req, res) => {
+        const { userId } = req.params;
+
+        try {
+            // Find the user
+            const user = await User.findByPk(userId, {
+                include: {
+                    model: Permission,
+                    through: Userpermission,
+                    as: 'permissions'
+                }
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            res.status(200).json(response(200, 'success get data', { permissions: user?.permissions  }));
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.error('Error fetching user permissions:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+
+    updateUserpermissions: async (req, res) => {
+        const { userId, permissions } = req.body;
+
+        try {
+            // Find the user
+            const user = await User.findByPk(userId);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Find all permission records that match the given permission names
+            const permissionRecords = await Permission.findAll({
+                where: {
+                    name: permissions
+                }
+            });
+
+            if (permissionRecords.length !== permissions.length) {
+                return res.status(400).json({ message: 'Some permissions not found' });
+            }
+
+            // Get the ids of the found permissions
+            const permissionIds = permissionRecords.map(permission => permission.id);
+
+            // Remove old permissions
+            await Userpermission.destroy({
+                where: { user_id: userId }
+            });
+
+            // Add new permissions
+            const userPermissions = permissionIds.map(permissionId => ({
+                user_id: userId,
+                permission_id: permissionId
+            }));
+
+            await Userpermission.bulkCreate(userPermissions);
+
+            res.status(200).json({ message: 'Permissions updated successfully' });
+        } catch (error) {
+            logger.error(`Error : ${error}`);
+            logger.error(`Error message: ${error.message}`);
+            console.error('Error updating permissions:', error);
+            res.status(500).json({ message: 'Internal server error' });
         }
     }
 }
