@@ -1,6 +1,7 @@
 const userRoute = require('./user.route');
 const userinfoRoute = require('./userinfo.route');
 const roleRoute = require('./role.route');
+const permissionRoute = require('./permission.route');
 const artikelRoute = require('./artikel.route');
 const dashboardRoute = require('./dashboard.route');
 const statistikRoute = require('./statistik.route');
@@ -35,6 +36,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, userRoute);
     app.use(urlApi, userinfoRoute);
     app.use(urlApi, roleRoute);
+    app.use(urlApi, permissionRoute);
     app.use(urlApi, artikelRoute);
     app.use(urlApi, faqRoute);
     app.use(urlApi, contactRoute);

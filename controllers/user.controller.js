@@ -730,7 +730,7 @@ module.exports = {
             // Find all permission records that match the given permission names
             const permissionRecords = await Permission.findAll({
                 where: {
-                    name: permissions
+                    id: permissions
                 }
             });
 
