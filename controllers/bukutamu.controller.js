@@ -1,14 +1,14 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Bukutamu, sequelize } = require('../models');
+const { Bukutamu, Instansi } = require('../models');
 
-const tts = require('google-tts-api');
-const axios = require('axios');
+const path = require('path');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const puppeteer = require('puppeteer');
+const fs = require('fs');
 const { generatePagination } = require('../pagination/pagination');
-
-const { Sequelize, Op } = require('sequelize');
+const { Op } = require('sequelize');
 
 module.exports = {
 
@@ -52,6 +52,7 @@ module.exports = {
     getbukutamu: async (req, res) => {
         try {
             const { instansi_id, start_date, end_date } = req.query;
+            const search = req.query.search ?? null;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
@@ -62,12 +63,24 @@ module.exports = {
             if (instansi_id) {
                 WhereClause.instansi_id = instansi_id;
             }
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                WhereClause.instansi_id = data.instansi_id;
+            }
+
             if (start_date && end_date) {
                 WhereClause.createdAt = { [Op.between]: [new Date(start_date), new Date(end_date)] };
             } else if (start_date) {
                 WhereClause.createdAt = { [Op.gte]: new Date(start_date) };
             } else if (end_date) {
                 WhereClause.createdAt = { [Op.lte]: new Date(end_date) };
+            }
+
+            if (search) {
+                WhereClause[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { pekerjaan: { [Op.iLike]: `%${search}%` } },
+                ];
             }
 
             [BukutamuGets, totalCount] = await Promise.all([
@@ -92,6 +105,121 @@ module.exports = {
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    pdfbukutamu: async (req, res) => {
+        try {
+            let { instansi_id, start_date, end_date } = req.query;
+            const search = req.query.search ?? null;
+            let BukutamuGets;
+
+            const WhereClause = {};
+            if (instansi_id) {
+                WhereClause.instansi_id = instansi_id;
+            }
+
+            if (search) {
+                WhereClause[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { pekerjaan: { [Op.iLike]: `%${search}%` } },
+                ];
+            }
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                instansi_id = data.instansi_id;
+                WhereClause.instansi_id = data.instansi_id;
+            }
+
+            if (start_date && end_date) {
+                WhereClause.createdAt = { [Op.between]: [new Date(start_date), new Date(end_date)] };
+            } else if (start_date) {
+                WhereClause.createdAt = { [Op.gte]: new Date(start_date) };
+            } else if (end_date) {
+                WhereClause.createdAt = { [Op.lte]: new Date(end_date) };
+            }
+
+            BukutamuGets = await Promise.all([
+                Bukutamu.findAll({
+                    where: WhereClause,
+                })
+            ]);
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/bukutamu.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let instansiGet;
+
+            if (instansi_id) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                });
+            }
+
+            const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
+            let tanggalInfo = '';
+            if (start_date || end_date) {
+                const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = end_date ? new Date(end_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+
+            const reportTableRows = BukutamuGets[0]?.map(bukutamu => {
+                const createdAtDate = new Date(bukutamu.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                const createdAtTime = new Date(bukutamu.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <tr>
+                        <td class="center">${createdAtDate}</td>
+                        <td class="center">${createdAtTime} WIB</td>
+                        <td>${bukutamu.name}</td>
+                        <td>${bukutamu.pekerjaan}</td>
+                         <td>${bukutamu.tujuan}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
     },
