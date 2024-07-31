@@ -5,6 +5,9 @@ const Validator = require("fastest-validator");
 const v = new Validator();
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
+const puppeteer = require('puppeteer');
 const moment = require('moment-timezone');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -95,6 +98,7 @@ module.exports = {
             const userinfo_id = data.role === "User" ? data.userId : null;
 
             const instansi_id = req.query.instansi_id ?? null;
+            const layanan_id = req.query.layanan_id ?? null;
             let { start_date, end_date, search, status } = req.query;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -107,6 +111,19 @@ module.exports = {
             if (instansi_id) {
                 whereCondition.instansi_id = instansi_id;
             }
+
+            if (layanan_id) {
+                whereCondition.layanan_id = layanan_id;
+            }
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                whereCondition.instansi_id = data.instansi_id;
+            }
+
+            if (data.role === 'Admin Layanan') {
+                whereCondition.layanan_id = data.layanan_id;
+            }
+
             if (search) {
                 whereCondition[Op.or] = [
                     { judul: { [Op.iLike]: `%${search}%` } },
@@ -165,6 +182,161 @@ module.exports = {
                 data: pengaduanGets,
                 pagination: pagination
             });
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    pdfpengaduan: async (req, res) => {
+        try {
+            const userinfo_id = data.role === "User" ? data.userId : null;
+
+            let instansi_id = req.query.instansi_id ?? null;
+            let layanan_id = req.query.layanan_id ?? null;
+            let { start_date, end_date, search, status } = req.query;
+            let pengaduanGets;
+
+            const whereCondition = {};
+
+            if (instansi_id) {
+                whereCondition.instansi_id = instansi_id;
+            }
+
+            if (layanan_id) {
+                whereCondition.layanan_id = layanan_id;
+            }
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                instansi_id = data.instansi_id;
+                whereCondition.instansi_id = data.instansi_id;
+            }
+
+            if (data.role === 'Admin Layanan') {
+                layanan_id = data.layanan_id;
+                whereCondition.layanan_id = data.layanan_id;
+            }
+
+            if (search) {
+                whereCondition[Op.or] = [
+                    { judul: { [Op.iLike]: `%${search}%` } },
+                    { aduan: { [Op.iLike]: `%${search}%` } },
+                    { '$Instansi.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+            if (status) {
+                whereCondition.status = status;
+            }
+            if (userinfo_id) {
+                whereCondition.userinfo_id = userinfo_id;
+            }
+            if (start_date && end_date) {
+                whereCondition.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                whereCondition.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                whereCondition.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
+            }
+
+            pengaduanGets = await Promise.all([
+                Pengaduan.findAll({
+                    where: whereCondition,
+                    include: [
+                        { model: Layanan, attributes: ['id', 'name'] },
+                        { model: Instansi, attributes: ['id', 'name'] },
+                        { model: Userinfo, attributes: ['id', 'name', 'nik'] }
+                    ],
+                    order: [['id', 'DESC']]
+                })
+            ]);
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/pengaduan.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let instansiGet, layananGet;
+
+            if (instansi_id) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                });
+            }
+
+            if (layanan_id) {
+                layananGet = await Layanan.findOne({
+                    where: {
+                        id: layanan_id
+                    },
+                });
+            }
+
+            const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
+            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+            let tanggalInfo = '';
+            if (start_date || end_date) {
+                const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = end_date ? new Date(end_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+
+            const reportTableRows = pengaduanGets[0]?.map(pengaduan => {
+                const createdAtDate = new Date(pengaduan.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+
+                return `
+                     <tr>
+                         <td class="center">${createdAtDate}</td>
+                         <td>${pengaduan?.Layanan?.name}</td>
+                         <td>${pengaduan?.Userinfo?.name}</td>
+                         <td>${pengaduan?.judul}</td>
+                     </tr>
+                 `;
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
+            htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
