@@ -244,7 +244,7 @@ module.exports = {
     //dari sisi admin, jika user offline belum punya akun
     createuserinfo: async (req, res) => {
         const transaction = await sequelize.transaction();
-
+    
         try {
             const folderPaths = {
                 aktalahir: "dir_mpp/datauser/aktalahir",
@@ -256,8 +256,8 @@ module.exports = {
                 fileijazahsma: "dir_mpp/datauser/fileijazahsma",
                 fileijazahlain: "dir_mpp/datauser/fileijazahlain",
             };
-
-            //membuat schema untuk validasi
+    
+            // Membuat schema untuk validasi
             const schema = {
                 name: { type: "string", min: 2 },
                 nik: { type: "string", length: 16 },
@@ -285,11 +285,11 @@ module.exports = {
                 fileijazahsma: { type: "string", optional: true },
                 fileijazahlain: { type: "string", optional: true },
             }
-
+    
             const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, "");
             const slug = `${req.body.name}-${timestamp}`;
-
-            //buat object userinfo
+    
+            // Buat object userinfo
             let userinfoObj = {
                 name: req.body.name,
                 nik: req.body.nik,
@@ -310,67 +310,63 @@ module.exports = {
                 pendidikan: req.body.pendidikan ? Number(req.body.pendidikan) : null,
                 slug: slug
             };
-
+    
             // Process image upload
             const files = req.files;
             let imageUrls = {};
-
-            for (const key in files) {
+    
+            const uploadPromises = Object.keys(files).map(async (key) => {
                 if (files[key] && files[key][0]) {
                     const file = files[key][0];
                     const { mimetype, buffer, originalname } = file;
-                    const base64 = Buffer.from(buffer).toString('base64');
-                    const dataURI = `data:${mimetype};base64,${base64}`;
-
+    
                     const now = new Date();
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-
-                    const uploadParams = {
-                        Bucket: process.env.AWS_S3_BUCKET,
-                        Key: `${folderPaths[key]}/${uniqueFilename}`,
-                        Body: buffer,
-                        ACL: 'public-read',
-                        ContentType: mimetype
-                    };
-
-                    const command = new PutObjectCommand(uploadParams);
-                    await s3Client.send(command);
-
-                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
+    
+                    const redisKey = `upload:${slug}:${key}`;
+                    await redisClient.set(redisKey, JSON.stringify({
+                        buffer,
+                        mimetype,
+                        originalname,
+                        uniqueFilename,
+                        folderPath: folderPaths[key]
+                    }), 'EX', 60 * 60); // Expire in 1 hour
+    
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${folderPaths[key]}/${uniqueFilename}`;
                     imageUrls[key] = fileUrl;
-                    // Menambahkan URL gambar ke objek userinfo
                     userinfoObj[key] = fileUrl;
                 }
-            }
-
+            });
+    
+            await Promise.all(uploadPromises);
+    
             // Cek apakah nik sudah terdaftar di tabel userinfos
             let userinfoGets = await Userinfo.findOne({
                 where: {
                     nik: req.body.nik
                 }
             });
-
+    
             // Cek apakah nik sudah terdaftar
             if (userinfoGets) {
                 res.status(409).json(response(409, 'nik already registered'));
                 return;
             }
-
-            //validasi menggunakan module fastest-validator
+    
+            // Validasi menggunakan module fastest-validator
             const validate = v.validate(userinfoObj, schema);
             if (validate.length > 0) {
                 res.status(400).json(response(400, 'validation failed', validate));
                 return;
             }
-
-            //update userinfo
+    
+            // Update userinfo
             let userinfoCreate = await Userinfo.create(userinfoObj)
-
+    
             const firstName = req.body.name.split(' ')[0].toLowerCase();
             const generatedPassword = firstName + "123";
-
+    
             // Membuat object untuk create user
             let userCreateObj = {
                 password: passwordHash.generate(generatedPassword),
@@ -378,14 +374,36 @@ module.exports = {
                 userinfo_id: userinfoCreate.id,
                 slug: slug
             };
-
+    
             // Membuat user baru
             await User.create(userCreateObj);
-
-            //response menggunakan helper response.formatter
+    
+            // Mulai proses background untuk mengunggah ke S3
+            setTimeout(async () => {
+                for (const key in files) {
+                    const redisKey = `upload:${slug}:${key}`;
+                    const fileData = await redisClient.get(redisKey);
+    
+                    if (fileData) {
+                        const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
+                        const uploadParams = {
+                            Bucket: process.env.AWS_S3_BUCKET,
+                            Key: `${folderPath}/${uniqueFilename}`,
+                            Body: Buffer.from(buffer),
+                            ACL: 'public-read',
+                            ContentType: mimetype
+                        };
+                        const command = new PutObjectCommand(uploadParams);
+                        await s3Client.send(command);
+                        await redisClient.del(redisKey); // Hapus dari Redis setelah berhasil diunggah
+                    }
+                }
+            }, 0); // Jalankan segera dalam background
+    
+            // Response menggunakan helper response.formatter
             await transaction.commit();
             res.status(200).json(response(200, 'success create userinfo', userinfoCreate));
-
+    
         } catch (err) {
             await transaction.rollback();
             res.status(500).json(response(500, 'internal server error', err));
@@ -588,8 +606,6 @@ module.exports = {
                 for (const key in files) {
                     const redisKey = `upload:${req.params.slug}:${key}`;
                     const fileData = await redisClient.get(redisKey);
-
-                    console.log("baaaaa" , fileData)
                   
                     if (fileData) {
                         const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
