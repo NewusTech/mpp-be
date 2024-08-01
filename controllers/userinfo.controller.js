@@ -691,6 +691,7 @@ module.exports = {
 
             await transaction.commit();
 
+            
             // Mulai proses background untuk mengunggah ke S3
             setTimeout(async () => {
                 for (const key in files) {
