@@ -10,7 +10,7 @@ const { generatePagination } = require('../pagination/pagination');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-// const Redis = require("ioredis");
+const Redis = require("ioredis");
 // const redisClient = new Redis({
 //     host: process.env.REDIS_HOST,
 //     port: process.env.REDIS_PORT,
