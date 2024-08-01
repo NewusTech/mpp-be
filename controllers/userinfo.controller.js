@@ -10,6 +10,13 @@ const { generatePagination } = require('../pagination/pagination');
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
+const Redis = require("ioredis");
+const redisClient = new Redis({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
+});
+
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
@@ -644,18 +651,16 @@ module.exports = {
                     const timestamp = now.toISOString().replace(/[-:.]/g, '');
                     const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
 
-                    const uploadParams = {
-                        Bucket: process.env.AWS_S3_BUCKET,
-                        Key: `${folderPaths[key]}/${uniqueFilename}`,
-                        Body: buffer,
-                        ACL: 'public-read',
-                        ContentType: mimetype
-                    };
+                    const redisKey = `upload:${req.params.slug}:${key}`;
+                    await redisClient.set(redisKey, JSON.stringify({
+                        buffer,
+                        mimetype,
+                        originalname,
+                        uniqueFilename,
+                        folderPath: folderPaths[key]
+                    }), 'EX', 60 * 60); // Expire in 1 hour
 
-                    const command = new PutObjectCommand(uploadParams);
-                    await s3Client.send(command);
-
-                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${folderPaths[key]}/${uniqueFilename}`;
                     uploadResults[key] = fileUrl;
                 }
             });
@@ -685,6 +690,27 @@ module.exports = {
             });
 
             await transaction.commit();
+
+            // Mulai proses background untuk mengunggah ke S3
+            setTimeout(async () => {
+                for (const key in files) {
+                    const redisKey = `upload:${req.params.slug}:${key}`;
+                    const fileData = await redisClient.get(redisKey);
+                    if (fileData) {
+                        const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
+                        const uploadParams = {
+                            Bucket: process.env.AWS_S3_BUCKET,
+                            Key: `${folderPath}/${uniqueFilename}`,
+                            Body: Buffer.from(buffer),
+                            ACL: 'public-read',
+                            ContentType: mimetype
+                        };
+                        const command = new PutObjectCommand(uploadParams);
+                        await s3Client.send(command);
+                        await redisClient.del(redisKey); // Hapus dari Redis setelah berhasil diunggah
+                    }
+                }
+            }, 0); // Jalankan segera dalam background
 
             // Response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
