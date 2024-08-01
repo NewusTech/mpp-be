@@ -484,6 +484,113 @@ module.exports = {
         }
     },
 
+    updateuserdocs: async (req, res) => {
+        const transaction = await sequelize.transaction();
+        try {
+            const folderPaths = {
+                aktalahir: "dir_mpp/datauser/aktalahir",
+                foto: "dir_mpp/datauser/foto",
+                filektp: "dir_mpp/datauser/filektp",
+                filekk: "dir_mpp/datauser/filekk",
+                fileijazahsd: "dir_mpp/datauser/fileijazahsd",
+                fileijazahsmp: "dir_mpp/datauser/fileijazahsmp",
+                fileijazahsma: "dir_mpp/datauser/fileijazahsma",
+                fileijazahlain: "dir_mpp/datauser/fileijazahlain",
+            };
+
+            // Mendapatkan data userinfo untuk pengecekan
+            let userinfoGet = await Userinfo.findOne({
+                where: {
+                    slug: req.params.slug,
+                    deletedAt: null
+                },
+                transaction
+            });
+
+            // Cek apakah data userinfo ada
+            if (!userinfoGet) {
+                await transaction.rollback();
+                res.status(404).json(response(404, 'userinfo not found'));
+                return;
+            }
+
+            const oldImageUrls = {
+                aktalahir: userinfoGet.aktalahir,
+                foto: userinfoGet.foto,
+                filektp: userinfoGet.filektp,
+                filekk: userinfoGet.filekk,
+                fileijazahsd: userinfoGet.fileijazahsd,
+                fileijazahsmp: userinfoGet.fileijazahsmp,
+                fileijazahsma: userinfoGet.fileijazahsma,
+                fileijazahlain: userinfoGet.fileijazahlain,
+            };
+
+            const files = req.files;
+            let uploadResults = {};
+
+            const uploadPromises = Object.keys(files).map(async (key) => {
+                if (files[key] && files[key][0]) {
+                    const file = files[key][0];
+                    const { mimetype, buffer, originalname } = file;
+                    const base64 = Buffer.from(buffer).toString('base64');
+                    const dataURI = `data:${mimetype};base64,${base64}`;
+
+                    const now = new Date();
+                    const timestamp = now.toISOString().replace(/[-:.]/g, '');
+                    const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
+
+                    const uploadParams = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: `${folderPaths[key]}/${uniqueFilename}`,
+                        Body: buffer,
+                        ACL: 'public-read',
+                        ContentType: mimetype
+                    };
+
+                    const command = new PutObjectCommand(uploadParams);
+                    await s3Client.send(command);
+
+                    const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+                    uploadResults[key] = fileUrl;
+                }
+            });
+
+            await Promise.all(uploadPromises);
+
+            let userinfoUpdateObj = {};
+
+            for (const key in folderPaths) {
+                userinfoUpdateObj[key] = uploadResults[key] || oldImageUrls[key];
+            }
+
+            // Update userinfo
+            await Userinfo.update(userinfoUpdateObj, {
+                where: {
+                    slug: req.params.slug,
+                },
+                transaction
+            });
+
+            // Mendapatkan data userinfo setelah update
+            let userinfoAfterUpdate = await Userinfo.findOne({
+                where: {
+                    slug: req.params.slug,
+                },
+                transaction
+            });
+
+            await transaction.commit();
+
+            // Response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
+
+        } catch (err) {
+            await transaction.rollback();
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
     //update data person
     //user update sendiri
     // updateuserdocs: async (req, res) => {
