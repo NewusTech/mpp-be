@@ -691,12 +691,13 @@ module.exports = {
 
             await transaction.commit();
 
-            
+
             // Mulai proses background untuk mengunggah ke S3
             setTimeout(async () => {
                 for (const key in files) {
                     const redisKey = `upload:${req.params.slug}:${key}`;
                     const fileData = await redisClient.get(redisKey);
+        
                     if (fileData) {
                         const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
                         const uploadParams = {
