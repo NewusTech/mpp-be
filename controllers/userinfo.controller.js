@@ -588,6 +588,8 @@ module.exports = {
                 for (const key in files) {
                     const redisKey = `upload:${req.params.slug}:${key}`;
                     const fileData = await redisClient.get(redisKey);
+
+                    console.log("baaaaa" , fileData)
                   
                     if (fileData) {
                         const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
