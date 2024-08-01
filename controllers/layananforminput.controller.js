@@ -267,11 +267,11 @@ module.exports = {
 
     updatedata: async (req, res) => {
         const transaction = await sequelize.transaction();
-
+    
         try {
             const { datainput, status } = req.body;
             const idlayanannum = req.params.idlayanannum;
-
+    
             // Update data entries
             let updateDataPromises = [];
             if (datainput && Array.isArray(datainput)) {
@@ -285,58 +285,79 @@ module.exports = {
                     })
                 );
             }
-
+    
             const files = req.files;
             const folderPath = { fileinput: "dir_mpp/file_pemohon" };
-
-            let fileUpdatePromises = files.map(async (file) => {
+    
+            let redisUploadPromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
                 const base64 = Buffer.from(buffer).toString('base64');
                 const dataURI = `data:${mimetype};base64,${base64}`;
-
+    
                 const now = new Date();
                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-
-                const uploadParams = {
-                    Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `${folderPath}/${uniqueFilename}`,
-                    Body: buffer,
-                    ACL: 'public-read',
-                    ContentType: mimetype
-                };
-
-                const command = new PutObjectCommand(uploadParams);
-                await s3Client.send(command);
-
-                const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
+    
+                const redisKey = `upload:${idlayanannum}:${fieldname}`;
+                await redisClient.set(redisKey, JSON.stringify({
+                    buffer,
+                    mimetype,
+                    originalname,
+                    uniqueFilename,
+                    folderPath: folderPath.fileinput
+                }), 'EX', 60 * 60); // Expire in 1 hour
+    
+                const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${folderPath.fileinput}/${uniqueFilename}`;
+    
                 // Extract index from fieldname (e.g., 'datafile[0][data]' -> 0)
                 const index = parseInt(fieldname.match(/\d+/)[0], 10);
-
+    
                 // Assuming datafile[index].id is available in req.body to identify the correct record
                 await Layananforminput.update(
                     { data: fileUrl },
                     { where: { id: req.body.datafile[index].id, layananformnum_id: idlayanannum }, transaction }
                 );
             });
-
+    
             Layananformnum.update(
                 { status: status },
                 { where: { id: idlayanannum }, transaction }
             );
-
-            console.log("asddasdasasd", status)
-            await Promise.all([...updateDataPromises, ...fileUpdatePromises]);
-
+    
+            await Promise.all([...updateDataPromises, ...redisUploadPromises]);
+    
             await transaction.commit();
+    
+            // Mulai proses background untuk mengunggah ke S3
+            setTimeout(async () => {
+                for (const file of files) {
+                    const { fieldname } = file;
+                    const redisKey = `upload:${idlayanannum}:${fieldname}`;
+                    const fileData = await redisClient.get(redisKey);
+    
+                    if (fileData) {
+                        const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
+                        const uploadParams = {
+                            Bucket: process.env.AWS_S3_BUCKET,
+                            Key: `${folderPath}/${uniqueFilename}`,
+                            Body: Buffer.from(buffer),
+                            ACL: 'public-read',
+                            ContentType: mimetype
+                        };
+                        const command = new PutObjectCommand(uploadParams);
+                        await s3Client.send(command);
+                        await redisClient.del(redisKey); // Hapus dari Redis setelah berhasil diunggah
+                    }
+                }
+            }, 0); // Jalankan segera dalam background
+    
             res.status(200).json(response(200, 'Success update layananforminput'));
         } catch (err) {
             await transaction.rollback();
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },
+    },    
 
     updatestatuspengajuan: async (req, res) => {
         try {
