@@ -10,7 +10,6 @@ const socketIo = require('socket.io'); //socket
 const app = express();
 const server = http.createServer(app); //socket
 const io = socketIo(server); //socket
-const port = 3004;
 const urlApi = "/api";
 
 global.io = io;
@@ -44,6 +43,6 @@ io.on('connection', (socket) => {
 });
 
 //listen
-app.listen(port, () => {
-    console.log(`server is running on port ${port} and url ${baseConfig.base_url}`);
+app.listen(process.env.PORT, () => {
+    console.log(`server is running on port ${process.env.PORT} and url ${baseConfig.base_url}`);
 });
