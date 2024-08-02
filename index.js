@@ -10,7 +10,7 @@ const socketIo = require('socket.io'); //socket
 const app = express();
 const server = http.createServer(app); //socket
 const io = socketIo(server); //socket
-const port = 3000;
+const port = 3004;
 const urlApi = "/api";
 
 global.io = io;
