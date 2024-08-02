@@ -1,14 +1,19 @@
 const baseConfig =  require('./config/base.config');
-
 const path = require('path');
 const express = require('express')
 const cors = require('cors');
 const logger = require('./errorHandler/logger');
 const error = require('./errorHandler/errorHandler')
+const http = require('http'); //socket
+const socketIo = require('socket.io'); //socket
 
 const app = express();
+const server = http.createServer(app); //socket
+const io = socketIo(server); //socket
 const port = 3000;
 const urlApi = "/api";
+
+global.io = io;
 
 app.use(cors());
 
@@ -29,6 +34,14 @@ app.use((err, req, res, next) => {
 app.use(error)
 
 app.use('/static', express.static('public'))
+
+//socket
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+});
 
 //listen
 app.listen(port, () => {
