@@ -66,6 +66,11 @@ module.exports = {
                     min: 3,
                     optional: true
                 },
+                desc_text: {
+                    type: "string",
+                    min: 3,
+                    optional: true
+                },
             }
 
             let descKey, privasiKey;
@@ -113,6 +118,7 @@ module.exports = {
               // Buat object desc
               let descUpdateObj = {
                 desc: req.files.desc ? descKey : undefined,
+                desc_text: req.body.desc_text,
                 privasi: req.files.privasi ? privasiKey : undefined,
                 privasi_text: req.body.privasi_text,
             };

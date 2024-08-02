@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Termcond.init({
     desc: DataTypes.TEXT,
+    desc_text: DataTypes.TEXT,
     privasi: DataTypes.STRING,
     privasi_text: DataTypes.TEXT,
   }, {

@@ -9,6 +9,17 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const moment = require('moment-timezone');
+const nodemailer = require('nodemailer');
+const { format } = require('date-fns');
+const { id } = require('date-fns/locale');
+
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: process.env.EMAIL_NAME,
+        pass: process.env.EMAIL_PW,
+    }
+});
 
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
@@ -261,7 +272,7 @@ module.exports = {
             // Generate HTML content for PDF
             const templatePath = path.resolve(__dirname, '../views/pengaduan.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
-            let instansiGet, layananGet;
+            let instansiGet, pengaduanGet;
 
             if (instansi_id) {
                 instansiGet = await Instansi.findOne({
@@ -272,7 +283,7 @@ module.exports = {
             }
 
             if (layanan_id) {
-                layananGet = await Layanan.findOne({
+                pengaduanGet = await Layanan.findOne({
                     where: {
                         id: layanan_id
                     },
@@ -280,7 +291,7 @@ module.exports = {
             }
 
             const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
-            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+            const layananInfo = pengaduanGet?.name ? `<p>Layanan : ${pengaduanGet?.name}</p>` : '';
             let tanggalInfo = '';
             if (start_date || end_date) {
                 const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
@@ -380,7 +391,21 @@ module.exports = {
             let pengaduanGet = await Pengaduan.findOne({
                 where: {
                     id: req.params.id
-                }
+                }, 
+                include: [
+                    {
+                        model: Userinfo,
+                        attributes: ['email', 'name'],
+                    },
+                    {
+                        model: Layanan,
+                        attributes: ['name'],
+                    },
+                    {
+                        model: Instansi,
+                        attributes: ['name', 'email', 'telp'],
+                    }
+                ],
             })
 
             //cek apakah data pengaduan ada
@@ -399,6 +424,36 @@ module.exports = {
             let pengaduanUpdateObj = {
                 status: Number(req.body.status),
                 jawaban: req.body.jawaban,
+            }
+
+            const sendEmailNotification = (subject, text) => {
+                const mailOptions = {
+                    to: pengaduanGet?.Userinfo?.email,
+                    from: process.env.EMAIL_NAME,
+                    subject,
+                    text
+                };
+                transporter.sendMail(mailOptions, (err) => {
+                    if (err) {
+                        console.error('There was an error: ', err);
+                        return res.status(500).json({ message: 'Error sending the email.' });
+                    }
+                    res.status(200).json({ message: 'An email has been sent with further instructions.' });
+                });
+            };
+
+            if (pengaduanUpdateObj.status) {
+                const formattedDate = format(new Date(pengaduanGet?.createdAt), "EEEE, dd MMMM yyyy (HH.mm 'WIB')", { locale: id });
+                let subject, text;
+                if (pengaduanUpdateObj.status) {
+                    subject = 'Pengaduan Direspon';
+                    text = `Yth. ${pengaduanGet?.Userinfo?.name},\nKami ingin memberitahukan bahwa pengaduan anda telah direspon.\n\nDetail pengaduan anda adalah sebagai berikut:\n\t- Dinas = ${pengaduanGet?.Instansi?.name}\n\t- Layanan = ${pengaduanGet?.Layanan?.name}\n\t- Tanggal Pengaduan = ${formattedDate}\n\t- Judul pengaduan = ${pengaduanGet?.judul}\n\t- Detail pengaduan = ${pengaduanGet?.aduan}\n\t- Respon / Jawaban = ${pengaduanUpdateObj?.jawaban}\n\n. Jika Anda membutuhkan informasi lebih lanjut, jangan ragu untuk menghubungi kami melalui kontak dibawah ini.\n\t- Email = ${pengaduanGet?.Instansi?.email}\n\t- Nomor = ${pengaduanGet?.Instansi?.telp}\n\nTerima kasih atas kepercayaan Anda menggunakan layanan kami.\n\nSalam hormat,\n${pengaduanGet?.Instansi?.name}`;
+                    pengaduanUpdateObj.tgl_selesai = Date.now();
+                }
+
+                if (pengaduanGet?.Userinfo?.email) {
+                    sendEmailNotification(subject, text);
+                }
             }
 
             //validasi menggunakan module fastest-validator
