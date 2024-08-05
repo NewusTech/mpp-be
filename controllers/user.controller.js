@@ -602,6 +602,34 @@ module.exports = {
         }
     },
 
+    changePasswordFromAdmin: async (req, res) => {
+        const slug = req.params.slug;
+        const { newPassword, confirmNewPassword } = req.body;
+
+        if ( !newPassword || !confirmNewPassword) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return res.status(400).json({ message: 'New passwords do not match.' });
+        }
+
+        try {
+            const user = await User.findOne({ where: { slug } });
+            if (!user) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+
+            user.password = passwordHash.generate(newPassword);
+            await user.save();
+
+            return res.status(200).json({ message: 'Password has been updated.' });
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+    },
+
     forgotPassword: async (req, res) => {
         const { email } = req.body;
 
