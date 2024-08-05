@@ -19,6 +19,8 @@ route.get('/user/getforuser', [mid.checkRolesAndLogout(['User', 'Admin Instansi'
 
 route.post('/user/changepassword/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], userController.changePassword); 
 
+route.post('/user/changepwadmin/:slug', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], userController.changePasswordFromAdmin); 
+
 route.post('/user/forgotpassword', userController.forgotPassword); 
 
 route.post('/user/reset/:token', userController.resetPassword); 
