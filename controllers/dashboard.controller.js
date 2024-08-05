@@ -85,12 +85,12 @@ module.exports = {
                         createdAt: { [Op.between]: [startDate, endDate] }
                     }
                 });
-                const skmCount = await Surveyformnum.count({
+                const antrianCount = await Antrian.count({
                     where: {
                         createdAt: { [Op.between]: [startDate, endDate] }
                     }
                 });
-                return { month: monthName, permohonanCount, skmCount };
+                return { month: monthName, permohonanCount, antrianCount };
             }));
 
             // Fetch counts by Instansi
@@ -137,7 +137,7 @@ module.exports = {
                 whereClause2.createdAt = { [Op.lte]: new Date(end_date) };
             }
 
-            const [permohonanCount, skmCount, layananGets, totalCount] = await Promise.all([
+            const [permohonanCount, skmCount, antrianCount, layananGets, totalCount] = await Promise.all([
                 Layananformnum.count({
                     where: {
                         createdAt: { [Op.between]: [new Date(currentYear, 0, 1), new Date(currentYear, 11, 31, 23, 59, 59)] }
@@ -148,13 +148,19 @@ module.exports = {
                         createdAt: { [Op.between]: [new Date(currentYear, 0, 1), new Date(currentYear, 11, 31, 23, 59, 59)] }
                     }
                 }),
+                Antrian.count({
+                    where: {
+                        createdAt: { [Op.between]: [new Date(currentYear, 0, 1), new Date(currentYear, 11, 31, 23, 59, 59)] }
+                    }
+                }),
                 Layanan.findAll({
                     attributes: ['id', 'name', 'createdAt'],
                     where: whereClause,
                     include: [
                         { model: Instansi, attributes: ['id', 'name'], where: whereClause2 },
                         { model: Layananformnum, attributes: ['id'] },
-                        { model: Surveyformnum, attributes: ['id'] }
+                        { model: Surveyformnum, attributes: ['id'] },
+                        { model: Antrian, attributes: ['id'] }
                     ],
                     limit: pageSize,
                     offset: offset
@@ -176,7 +182,7 @@ module.exports = {
                     instansi_id: Instansi.id,
                     instansi_name: Instansi.name,
                     permohonanCount: layanan.Layananformnums.length,
-                    skmCount: layanan.Surveyformnums.length
+                    skmCount: layanan.Surveyformnums.length,
                 };
             });
 
@@ -187,6 +193,7 @@ module.exports = {
             const data = {
                 permohonanCount,
                 skmCount,
+                antrianCount,
                 monthlyCounts,
                 countbyInstansi: formattedCountByInstansi,
                 layananData: modifiedLayananGets,
