@@ -195,6 +195,7 @@ module.exports = {
                     {
                         model: Userinfo,
                     },
+                    { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] },
                     {
                         model: Layanan,
                         attributes: ['id', 'name', 'desc'],
@@ -251,6 +252,7 @@ module.exports = {
                 tgl_selesai: layananformnumData?.tgl_selesai,
                 userinfo_id: layananformnumData?.userinfo_id,
                 userinfo: layananformnumData?.Userinfo,
+                admin_updated: layananformnumData?.Adminupdate,
                 createdAt: layananformnumData?.createdAt,
                 updatedAt: layananformnumData?.updatedAt,
                 Layananforminputs: formattedInputData ?? null,
@@ -406,6 +408,7 @@ module.exports = {
             let layananUpdateObj = {
                 status: Number(req.body.status),
                 pesan: req.body.pesan,
+                updated_by: data.userId
             }
 
             const sendEmailNotification = (subject, text) => {
@@ -661,7 +664,8 @@ module.exports = {
                             model: Userinfo,
                             attributes: ['name', 'nik'],
                             where: WhereClause3,
-                        }
+                        },
+                        { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] },
                     ],
                     limit: limit,
                     offset: offset,
@@ -680,7 +684,8 @@ module.exports = {
                         {
                             model: Userinfo,
                             where: WhereClause3,
-                        }
+                        },
+                        { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] },
                     ],
                 })
             ]);
@@ -692,6 +697,7 @@ module.exports = {
                     name: data?.Userinfo?.name,
                     nik: data?.Userinfo?.nik,
                     pesan: data?.pesan,
+                    admin_updated: data?.Adminupdate,
                     status: data?.status,
                     tgl_selesai: data?.tgl_selesai,
                     isonline: data?.isonline,
@@ -910,7 +916,8 @@ module.exports = {
                     {
                         model: Userinfo,
                         attributes: ['name'],
-                    }
+                    },
+                    { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] },
                 ],
             });
 
@@ -932,6 +939,7 @@ module.exports = {
                 name: Layananformnumget?.Userinfo ? Layananformnumget?.Userinfo?.name : null,
                 status: Layananformnumget?.status,
                 pesan: Layananformnumget?.pesan,
+                admin_updated: Layananformnumget?.Adminupdate,
                 tgl_selesai: data?.tgl_selesai,
                 layanan_id: Layananformnumget?.layanan_id,
                 layanan_name: Layananformnumget?.Layanan ? Layananformnumget?.Layanan?.name : null,

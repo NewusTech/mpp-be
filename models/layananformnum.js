@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
       Layananformnum.belongsTo(models.Userinfo, {
         foreignKey: 'userinfo_id',
       });
+      Layananformnum.belongsTo(models.Userinfo, {
+        foreignKey: 'updated_by',
+        as: 'Adminupdate'
+      });
     }
   }
   Layananformnum.init({
@@ -25,6 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     tgl_selesai: DataTypes.DATEONLY,
     isonline: DataTypes.INTEGER,
     status: DataTypes.SMALLINT,
+    updated_by: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Layananformnum',

@@ -42,6 +42,7 @@ module.exports = {
             const schema = {
                 judul: { type: "string", min: 3 },
                 instansi_id: { type: "number" },
+                admin_id: { type: "number", optional: true },
                 layanan_id: { type: "number" },
                 status: { type: "number" },
                 aduan: { type: "string", min: 3, optional: true },
@@ -78,6 +79,7 @@ module.exports = {
                 judul: req.body.judul,
                 aduan: req.body.aduan,
                 instansi_id: Number(req.body.instansi_id),
+                admin_id: req.body.admin_id ? Number(req.body.admin_id) : undefined,
                 layanan_id: Number(req.body.layanan_id),
                 status: Number(req.body.status),
                 jawaban: req.body.jawaban,
@@ -110,6 +112,7 @@ module.exports = {
 
             const instansi_id = req.query.instansi_id ?? null;
             const layanan_id = req.query.layanan_id ?? null;
+            const admin_id = req.query.admin_id ?? null;
             let { start_date, end_date, search, status } = req.query;
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
@@ -121,6 +124,10 @@ module.exports = {
 
             if (instansi_id) {
                 whereCondition.instansi_id = instansi_id;
+            }
+
+            if (admin_id) {
+                whereCondition.admin_id = admin_id;
             }
 
             if (layanan_id) {
@@ -169,7 +176,9 @@ module.exports = {
                     include: [
                         { model: Layanan, attributes: ['id', 'name'] },
                         { model: Instansi, attributes: ['id', 'name'] },
-                        { model: Userinfo, attributes: ['id', 'name', 'nik'] }
+                        { model: Userinfo, attributes: ['id', 'name', 'nik'] },
+                        { model: Userinfo, as: 'Admin', attributes: ['id', 'name', 'nik'] },
+                        { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] }
                     ],
                     limit: limit,
                     offset: offset,
@@ -366,7 +375,9 @@ module.exports = {
                 include: [
                     { model: Layanan, attributes: ['id', 'name'] },
                     { model: Instansi, attributes: ['id', 'name'] },
-                    { model: Userinfo, attributes: ['id', 'name', 'nik'] }
+                    { model: Userinfo, attributes: ['id', 'name', 'nik'] },
+                    { model: Userinfo, as: 'Admin', attributes: ['id', 'name', 'nik'] },
+                    { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] }
                 ],
             });
 
@@ -424,7 +435,10 @@ module.exports = {
             let pengaduanUpdateObj = {
                 status: Number(req.body.status),
                 jawaban: req.body.jawaban,
+                updated_by: data.userId
             }
+
+            console.log(pengaduanUpdateObj)
 
             const sendEmailNotification = (subject, text) => {
                 const mailOptions = {
