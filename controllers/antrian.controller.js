@@ -507,6 +507,49 @@ module.exports = {
         }
     },
 
+    finishAntrian: async (req, res) => {
+        try {
+            //mendapatkan data Antrian untuk pengecekan
+            let GetAntrian = await Antrian.findOne({
+                where: {
+                    id: req.params.idantrian
+                }
+            })
+
+            //cek apakah data Antrian ada
+            if (!GetAntrian) {
+                res.status(404).json(response(404, 'Antrian not found'));
+                return;
+            }
+
+            //buat object Antrian
+            let AntrianUpdateObj = {
+                finishedAt: Date.now()
+            }
+
+            //update Antrian
+            await GetAntrian.update(AntrianUpdateObj, {
+                where: {
+                    id: req.params.idantrian,
+                }
+            })
+
+            //mendapatkan data Antrian setelah update
+            let AntrianAfterUpdate = await Antrian.findOne({
+                where: {
+                    id: req.params.idantrian,
+                }
+            })
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success update Antrian', AntrianAfterUpdate));
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
     pdfriwayatantrian: async (req, res) => {
         try {
             const idlayanan = data.layanan_id

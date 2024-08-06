@@ -4,6 +4,7 @@ const { Instansi, Layanan, Layananformnum, Surveyforminput, Surveyformnum, Useri
 const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 const moment = require('moment-timezone');
+const { finished } = require('nodemailer/lib/xoauth2');
 
 module.exports = {
 
@@ -211,19 +212,19 @@ module.exports = {
     web_admin_layanan: async (req, res) => {
         try {
             const today = new Date();
-    
+
             const firstDaythisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const lastDaythisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-    
+
             const dateRangethisMonth = [firstDaythisMonth, lastDaythisMonth];
-    
+
             const instansiWhere = { instansi_id: data.instansi_id };
-    
+
             const datainstansi = await Instansi.findAll({
                 where: { id: data.instansi_id },
                 attributes: ['id', 'name', 'desc', 'image'],
             });
-    
+
             const getTopLayanan = async (range) => {
                 const layanan = await Layanan.findAll({
                     where: instansiWhere,
@@ -234,13 +235,13 @@ module.exports = {
                         where: { createdAt: { [Op.between]: range } },
                     },
                 });
-    
+
                 return layanan
                     .map(l => ({ LayananId: l.id, LayananName: l.name, LayananformnumCount: l.Layananformnums.length }))
                     .sort((a, b) => b.LayananformnumCount - a.LayananformnumCount)
                     .slice(0, 3);
             };
-    
+
             const getLast7Days = () => {
                 const dates = [];
                 for (let i = 6; i >= 0; i--) {
@@ -253,19 +254,19 @@ module.exports = {
                 }
                 return dates;
             };
-    
+
             const totalLayananPerDay = await Promise.all(
                 getLast7Days().map(async ({ start, end }) => {
                     const range = [start, end];
                     const layanan = await getTopLayanan(range);
-    
+
                     return {
                         date: start.toISOString(),
                         top3: layanan,
                     };
                 })
             );
-    
+
             const calculateTotal7Days = (totalLayananPerDay) => {
                 const totalLayanan7Days = {};
                 totalLayananPerDay.forEach(day => {
@@ -290,14 +291,14 @@ module.exports = {
                 getTopLayanan(dateRangethisMonth),
                 calculateTotal7Days(totalLayananPerDay),
             ]);
-    
+
             res.status(200).json(response(200, 'success get data', {
                 datainstansi,
                 top3LayananMonth,
                 totalLayananPerDay,
                 totalLayanan7Days,
             }));
-    
+
         } catch (err) {
             console.error(err);
             res.status(500).json(response(500, 'internal server error', err));
@@ -321,10 +322,10 @@ module.exports = {
 
             if (year) {
                 const startDate = new Date(year, month ? month - 1 : 0, 1);
-                const endDate = month 
-                    ? new Date(year, month, 0, 23, 59, 59, 999) 
+                const endDate = month
+                    ? new Date(year, month, 0, 23, 59, 59, 999)
                     : new Date(year, 11, 31, 23, 59, 59, 999);
-    
+
                 WhereClause2.createdAt = {
                     [Op.between]: [startDate, endDate]
                 };
@@ -499,7 +500,7 @@ module.exports = {
                 }
             }
 
-            const [AntrianCount, AntrianSelesaiCount, AntrianSebelumnya, AntrianNext, riwayatAntrian, riwayatCount] = await Promise.all([
+            const [AntrianCount, AntrianSelesaiCount, AntrianSebelumnya, AntrianProses, AntrianNext, riwayatAntrian, riwayatCount] = await Promise.all([
                 Antrian.count({
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
@@ -510,16 +511,26 @@ module.exports = {
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
                         layanan_id: idlayanan,
-                        status: true
+                        status: true,
+                        finishedAt: { [Op.ne]: null }
                     },
                 }),
-                Antrian.findAll({
+                Antrian.findOne({
                     where: {
                         createdAt: { [Op.between]: [startOfToday, endOfToday] },
                         status: true,
-                        layanan_id: idlayanan
+                        layanan_id: idlayanan,
+                        finishedAt: { [Op.ne]: null }
                     },
-                    limit: 2,
+                    order: [['id', 'DESC']]
+                }),
+                Antrian.findOne({
+                    where: {
+                        createdAt: { [Op.between]: [startOfToday, endOfToday] },
+                        status: true,
+                        layanan_id: idlayanan,
+                        finishedAt: { [Op.is]: null }
+                    },
                     order: [['id', 'DESC']]
                 }),
                 Antrian.findOne({
@@ -568,15 +579,30 @@ module.exports = {
                 )
             ]);
 
+            // Add timeprocess field
+            const processedRiwayatAntrian = riwayatAntrian.map(item => {
+                let timeprocess = null;
+                if (item.finishedAt && item.updatedAt) {
+                    const finishedAt = moment(item.finishedAt);
+                    const updatedAt = moment(item.updatedAt);
+                    const duration = moment.duration(finishedAt.diff(updatedAt));
+                    timeprocess = `${duration.minutes()} menit`;
+                }
+                return {
+                    ...item.toJSON(),
+                    timeprocess
+                };
+            });
+
             const pagination = generatePagination(riwayatCount, page, limit, `/api/dashboard/adminlayanan`);
 
             const dataget = {
                 AntrianCount,
                 AntrianSelesaiCount,
-                AntrianSebelumnya: AntrianSebelumnya[1]?.code ?? null,
-                AntrianProses: AntrianSebelumnya[0]?.code ?? null,
+                AntrianSebelumnya: AntrianSebelumnya?.code ?? null,
+                AntrianProses: AntrianProses?.code ?? null,
                 AntrianNext: AntrianNext?.code ?? null,
-                riwayatAntrian,
+                riwayatAntrian: processedRiwayatAntrian,
                 pagination: pagination
             };
 
@@ -622,7 +648,7 @@ module.exports = {
                     [Op.between]: [startDate, endDate]
                 };
             }
-            
+
             [history, totalCount] = await Promise.all([
                 Layanan.findAll({
                     include: [{
@@ -709,33 +735,33 @@ module.exports = {
             const dateRangeToday = [new Date().setHours(0, 0, 0, 0), new Date().setHours(23, 59, 59, 999)];
 
             const counts = await Promise.all([
-                Layananformnum.count({ 
-                    where: { 
+                Layananformnum.count({
+                    where: {
                         createdAt: { [Op.between]: dateRangeToday },
                         status: 3,
                         layanan_id: data.layanan_id
-                    }, 
+                    },
                 }),
-                Layananformnum.count({ 
-                    where: { 
-                        createdAt: { [Op.between]: dateRangeToday }, 
+                Layananformnum.count({
+                    where: {
+                        createdAt: { [Op.between]: dateRangeToday },
                         status: 4,
                         layanan_id: data.layanan_id
-                    }, 
+                    },
                 }),
-                Layananformnum.count({ 
-                    where: { 
+                Layananformnum.count({
+                    where: {
                         createdAt: { [Op.between]: dateRangeMonth },
                         layanan_id: data.layanan_id,
                         status: 3,
-                    }, 
+                    },
                 }),
-                Layananformnum.count({ 
-                    where: { 
+                Layananformnum.count({
+                    where: {
                         createdAt: { [Op.between]: dateRangeMonth },
                         status: 4,
                         layanan_id: data.layanan_id
-                     }, 
+                    },
                 }),
             ]);
 

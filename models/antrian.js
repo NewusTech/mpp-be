@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     userinfo_id: DataTypes.INTEGER,
     status: DataTypes.BOOLEAN,
     audio: DataTypes.STRING,
+    finishedAt: DataTypes.DATE,
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE
   }, {
