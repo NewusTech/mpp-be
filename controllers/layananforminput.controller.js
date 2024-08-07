@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, Userinfo, Surveyformnum, sequelize } = require('../models');
+const { Layananforminput, Layananformnum, Layananform, Layanan, Instansi, Userinfo, Surveyformnum, Desa, Kecamatan, sequelize } = require('../models');
 require('dotenv').config()
 
 const Validator = require("fastest-validator");
@@ -45,33 +45,33 @@ module.exports = {
     //input form user
     inputform: async (req, res) => {
         const transaction = await sequelize.transaction();
-    
+
         try {
             const folderPaths = {
                 fileinput: "dir_mpp/file_pemohon",
             };
-    
+
             const idlayanan = req.params.idlayanan;
             const iduser = data.role === "User" ? data.userId : req.body.userId;
             const statusinput = data.role === "User" ? 0 : 1;
-    
+
             if (!iduser) {
                 throw new Error('User ID is required');
             }
-    
+
             const { datainput } = req.body;
             let { datafile } = req.body;
-    
+
             let dataLayanan = await Layanan.findOne({
                 where: {
                     id: idlayanan
                 },
                 attributes: ['id', 'code'],
             });
-    
+
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
-    
+
             const countToday = await Layananformnum.count({
                 where: {
                     createdAt: {
@@ -81,11 +81,11 @@ module.exports = {
                     layanan_id: idlayanan
                 }
             });
-    
+
             const urut = String(countToday + 1).padStart(4, '0'); // Menambah 1 pada count dan pad dengan '0' hingga 4 digit
             const tanggalFormat = today.toISOString().slice(2, 10).replace(/-/g, ''); // Format YYMMDD
             const noRequest = `${dataLayanan.code}-${tanggalFormat}-${urut}`;
-    
+
             let layananID = {
                 userinfo_id: Number(iduser),
                 no_request: noRequest,
@@ -93,22 +93,22 @@ module.exports = {
                 isonline: true,
                 status: Number(statusinput)
             };
-    
+
             const createdLayananformnum = await Layananformnum.create(layananID, { transaction });
-    
+
             const updatedDatainput = datainput.map(item => ({
                 ...item,
                 layananformnum_id: createdLayananformnum.id
             }));
-    
+
             const files = req.files;
             let redisUploadPromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
-    
+
                 const now = new Date();
                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-    
+
                 const redisKey = `upload:${iduser}:${fieldname}`;
                 await redisClient.set(redisKey, JSON.stringify({
                     buffer,
@@ -117,16 +117,16 @@ module.exports = {
                     uniqueFilename,
                     folderPath: folderPaths.fileinput
                 }), 'EX', 60 * 60); // Expire in 1 hour
-    
+
                 const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${folderPaths.fileinput}/${uniqueFilename}`;
-    
+
                 // Extract index from fieldname (e.g., 'datafile[0][data]' -> 0)
                 const index = parseInt(fieldname.match(/\d+/)[0], 10);
                 datafile[index].data = fileUrl;
             });
-    
+
             await Promise.all(redisUploadPromises);
-    
+
             // Update datafile with layananformnum_id
             if (datafile) {
                 datafile = datafile.map(item => ({
@@ -134,22 +134,22 @@ module.exports = {
                     layananformnum_id: createdLayananformnum.id
                 }));
             }
-    
+
             const createdLayananforminput = await Layananforminput.bulkCreate(updatedDatainput, { transaction });
             let createdLayananformfile;
             if (datafile) {
                 createdLayananformfile = await Layananforminput.bulkCreate(datafile, { transaction });
             }
-    
+
             await transaction.commit();
-    
+
             // Mulai proses background untuk mengunggah ke S3
             setTimeout(async () => {
                 for (const file of files) {
                     const { fieldname } = file;
                     const redisKey = `upload:${iduser}:${fieldname}`;
                     const fileData = await redisClient.get(redisKey);
-    
+
                     if (fileData) {
                         const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
                         const uploadParams = {
@@ -165,7 +165,7 @@ module.exports = {
                     }
                 }
             }, 0); // Jalankan segera dalam background
-    
+
             res.status(201).json(response(201, 'Success create layananforminput', { input: createdLayananforminput, file: createdLayananformfile }));
         } catch (err) {
             await transaction.rollback();
@@ -194,6 +194,16 @@ module.exports = {
                     },
                     {
                         model: Userinfo,
+                        include: [
+                            {
+                                model: Desa,
+                                attributes: { exclude: ['createdAt', 'updatedAt'] },
+                            },
+                            {
+                                model: Kecamatan,
+                                attributes: { exclude: ['createdAt', 'updatedAt'] },
+                            }
+                        ]
                     },
                     { model: Userinfo, as: 'Adminupdate', attributes: ['id', 'name', 'nik'] },
                     {
@@ -269,11 +279,11 @@ module.exports = {
 
     updatedata: async (req, res) => {
         const transaction = await sequelize.transaction();
-    
+
         try {
             const { datainput, status } = req.body;
             const idlayanannum = req.params.idlayanannum;
-    
+
             // Update data entries
             let updateDataPromises = [];
             if (datainput && Array.isArray(datainput)) {
@@ -287,19 +297,19 @@ module.exports = {
                     })
                 );
             }
-    
+
             const files = req.files;
             const folderPath = { fileinput: "dir_mpp/file_pemohon" };
-    
+
             let redisUploadPromises = files.map(async (file) => {
                 const { fieldname, mimetype, buffer, originalname } = file;
                 const base64 = Buffer.from(buffer).toString('base64');
                 const dataURI = `data:${mimetype};base64,${base64}`;
-    
+
                 const now = new Date();
                 const timestamp = now.toISOString().replace(/[-:.]/g, '');
                 const uniqueFilename = `${originalname.split('.')[0]}_${timestamp}`;
-    
+
                 const redisKey = `upload:${idlayanannum}:${fieldname}`;
                 await redisClient.set(redisKey, JSON.stringify({
                     buffer,
@@ -308,35 +318,35 @@ module.exports = {
                     uniqueFilename,
                     folderPath: folderPath.fileinput
                 }), 'EX', 60 * 60); // Expire in 1 hour
-    
+
                 const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${folderPath.fileinput}/${uniqueFilename}`;
-    
+
                 // Extract index from fieldname (e.g., 'datafile[0][data]' -> 0)
                 const index = parseInt(fieldname.match(/\d+/)[0], 10);
-    
+
                 // Assuming datafile[index].id is available in req.body to identify the correct record
                 await Layananforminput.update(
                     { data: fileUrl },
                     { where: { id: req.body.datafile[index].id, layananformnum_id: idlayanannum }, transaction }
                 );
             });
-    
+
             Layananformnum.update(
                 { status: status },
                 { where: { id: idlayanannum }, transaction }
             );
-    
+
             await Promise.all([...updateDataPromises, ...redisUploadPromises]);
-    
+
             await transaction.commit();
-    
+
             // Mulai proses background untuk mengunggah ke S3
             setTimeout(async () => {
                 for (const file of files) {
                     const { fieldname } = file;
                     const redisKey = `upload:${idlayanannum}:${fieldname}`;
                     const fileData = await redisClient.get(redisKey);
-    
+
                     if (fileData) {
                         const { buffer, mimetype, originalname, uniqueFilename, folderPath } = JSON.parse(fileData);
                         const uploadParams = {
@@ -352,14 +362,14 @@ module.exports = {
                     }
                 }
             }, 0); // Jalankan segera dalam background
-    
+
             res.status(200).json(response(200, 'Success update layananforminput'));
         } catch (err) {
             await transaction.rollback();
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    },    
+    },
 
     updatestatuspengajuan: async (req, res) => {
         try {
