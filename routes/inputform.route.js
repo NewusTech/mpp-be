@@ -11,10 +11,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 route.post('/user/inputform/create/:idlayanan', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.any(), layananforminput.inputform);
-route.put('/user/inputform/update/:idlayanannum', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan'])], upload.any(), layananforminput.updatedata);
+route.put('/user/inputform/update/:idlayanannum', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.any(), layananforminput.updatedata);
 route.get('/user/inputform/detail/:idlayanannum', [mid.checkRolesAndLogout(['User', 'Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], layananforminput.getdetailinputform);
 
-route.put('/user/inputform/updatestatus/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan'])], upload.any(), layananforminput.updatestatuspengajuan);
+route.put('/user/inputform/updatestatus/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.any(), layananforminput.updatestatuspengajuan);
 
 route.put('/user/inputform/file/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.single('file'), layananforminput.uploadfilehasil);
 
