@@ -599,9 +599,9 @@ module.exports = {
             const dataget = {
                 AntrianCount,
                 AntrianSelesaiCount,
-                AntrianSebelumnya: AntrianSebelumnya?.code ?? null,
-                AntrianProses: AntrianProses?.code ?? null,
-                AntrianNext: AntrianNext?.code ?? null,
+                AntrianSebelumnya: AntrianSebelumnya?.code ?? '-',
+                AntrianProses: AntrianProses?.code ?? '-',
+                AntrianNext: AntrianNext?.code ?? '-',
                 riwayatAntrian: processedRiwayatAntrian,
                 pagination: pagination
             };
