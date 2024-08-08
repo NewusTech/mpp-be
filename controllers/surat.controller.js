@@ -18,7 +18,7 @@ module.exports = {
                 include: [
                     {
                         model: Instansi,
-                        attributes: ['id', 'name', 'alamat', 'image', 'pj'],
+                        attributes: ['id', 'name', 'alamat', 'image', 'pj', 'nip_pj'],
                     },
                     {
                         model: Layanansurat,
