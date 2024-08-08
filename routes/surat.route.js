@@ -5,7 +5,7 @@ const mid = require('../middlewares/auth.middleware');
 const express = require('express');
 const route = express.Router();
 
-route.get('/user/detailsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], suratController.get); 
+route.get('/user/detailsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User', 'Admin Layanan'])], suratController.get); 
 
 //untuk admin get template pdf
 route.get('/user/surat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], suratController.getsurat); 
