@@ -66,13 +66,13 @@ module.exports = {
                 // Format pesan error dalam bahasa Indonesia
                 const errorMessages = validate.map(error => {
                     if (error.type === 'stringMin') {
-                        return `Field ${error.field} minimal ${error.expected} karakter`;
+                        return `${error.field} minimal ${error.expected} karakter`;
                     } else if (error.type === 'stringMax') {
-                        return `Field ${error.field} maksimal ${error.expected} karakter`;
+                        return `${error.field} maksimal ${error.expected} karakter`;
                     } else if (error.type === 'stringPattern') {
-                        return `Field ${error.field} format tidak valid`;
+                        return `${error.field} format tidak valid`;
                     } else {
-                        return `Field ${error.field} tidak valid`;
+                        return `${error.field} tidak valid`;
                     }
                 });
 
