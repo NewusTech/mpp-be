@@ -321,7 +321,7 @@ module.exports = {
                 name: { type: "string", min: 2 },
                 nik: { type: "string", length: 16 },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
-                telepon: { type: "string", min: 7, max: 15, optional: true },
+                telepon: { type: "string", min: 7, max: 15, pattern: /^[0-9]+$/, optional: true },
                 kecamatan_id: { type: "string", min: 1, optional: true },
                 desa_id: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
@@ -400,23 +400,26 @@ module.exports = {
 
             await Promise.all(uploadPromises);
 
-            // Cek apakah nik sudah terdaftar di tabel userinfos
-            let userinfoGets = await Userinfo.findOne({
-                where: {
-                    nik: req.body.nik
-                }
-            });
-
-            // Cek apakah nik sudah terdaftar
-            if (userinfoGets) {
-                res.status(409).json(response(409, 'nik already registered'));
-                return;
-            }
-
             // Validasi menggunakan module fastest-validator
             const validate = v.validate(userinfoObj, schema);
             if (validate.length > 0) {
-                res.status(400).json(response(400, 'validation failed', validate));
+                // Format pesan error dalam bahasa Indonesia
+                const errorMessages = validate.map(error => {
+                    if (error.type === 'stringMin') {
+                        return `Field ${error.field} minimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringMax') {
+                        return `Field ${error.field} maksimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringPattern') {
+                        return `Field ${error.field} format tidak valid`;
+                    } else {
+                        return `Field ${error.field} tidak valid`;
+                    }
+                });
+
+                res.status(400).json({
+                    status: 400,
+                    message: errorMessages.join(', ')
+                });
                 return;
             }
 
@@ -465,7 +468,16 @@ module.exports = {
 
         } catch (err) {
             await transaction.rollback();
-            res.status(500).json(response(500, 'internal server error', err));
+            if (err.name === 'SequelizeUniqueConstraintError') {
+                // Menangani error khusus untuk constraint unik
+                res.status(400).json({
+                    status: 400,
+                    message: `${err.errors[0].path} sudah terdaftar`
+                });
+            } else {
+                // Menangani error lainnya
+                res.status(500).json(response(500, 'terjadi kesalahan pada server', err));
+            }
             console.log(err);
         }
     },
@@ -493,7 +505,7 @@ module.exports = {
                 name: { type: "string", min: 2, optional: true },
                 nik: { type: "string", length: 16, optional: true },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
-                telepon: { type: "string", min: 7, max: 15, optional: true },
+                telepon: { type: "string", min: 7, max: 15, pattern: /^[0-9]+$/, optional: true },
                 kecamatan_id: { type: "string", min: 1, optional: true },
                 desa_id: { type: "string", min: 1, optional: true },
                 rt: { type: "string", min: 1, optional: true },
@@ -533,7 +545,23 @@ module.exports = {
             //validasi menggunakan module fastest-validator
             const validate = v.validate(userinfoUpdateObj, schema);
             if (validate.length > 0) {
-                res.status(400).json(response(400, 'validation failed', validate));
+                // Format pesan error dalam bahasa Indonesia
+                const errorMessages = validate.map(error => {
+                    if (error.type === 'stringMin') {
+                        return `Field ${error.field} minimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringMax') {
+                        return `Field ${error.field} maksimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringPattern') {
+                        return `Field ${error.field} format tidak valid`;
+                    } else {
+                        return `Field ${error.field} tidak valid`;
+                    }
+                });
+
+                res.status(400).json({
+                    status: 400,
+                    message: errorMessages.join(', ')
+                });
                 return;
             }
 
@@ -556,7 +584,16 @@ module.exports = {
             res.status(200).json(response(200, 'success update userinfo', userinfoAfterUpdate));
 
         } catch (err) {
-            res.status(500).json(response(500, 'internal server error', err));
+            if (err.name === 'SequelizeUniqueConstraintError') {
+                // Menangani error khusus untuk constraint unik
+                res.status(400).json({
+                    status: 400,
+                    message: `${err.errors[0].path} sudah terdaftar`
+                });
+            } else {
+                // Menangani error lainnya
+                res.status(500).json(response(500, 'terjadi kesalahan pada server', err));
+            }
             console.log(err);
         }
     },

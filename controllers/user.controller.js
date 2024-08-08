@@ -33,8 +33,8 @@ module.exports = {
                 name: { type: "string", min: 3 },
                 nik: { type: "string", min: 3 },
                 email: { type: "string", min: 5, max: 50, pattern: /^\S+@\S+\.\S+$/, optional: true },
-                telepon: { type: "string", min: 7, max: 15, optional: true },
-                password: { type: "string", min: 3 },
+                telepon: { type: "string", min: 7, max: 15, pattern: /^[0-9]+$/, optional: true },
+                password: { type: "string", min: 5, max: 16 },
                 instansi_id: { type: "number", optional: true },
                 layanan_id: { type: "number", optional: true },
                 role_id: { type: "number", optional: true },
@@ -63,20 +63,23 @@ module.exports = {
             }, schema);
 
             if (validate.length > 0) {
-                res.status(400).json(response(400, 'validation failed', validate));
-                return;
-            }
+                // Format pesan error dalam bahasa Indonesia
+                const errorMessages = validate.map(error => {
+                    if (error.type === 'stringMin') {
+                        return `Field ${error.field} minimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringMax') {
+                        return `Field ${error.field} maksimal ${error.expected} karakter`;
+                    } else if (error.type === 'stringPattern') {
+                        return `Field ${error.field} format tidak valid`;
+                    } else {
+                        return `Field ${error.field} tidak valid`;
+                    }
+                });
 
-            // Cek apakah nik sudah terdaftar di tabel userinfos
-            let userinfoGets = await Userinfo.findOne({
-                where: {
-                    nik: req.body.nik
-                }
-            });
-
-            // Cek apakah nik sudah terdaftar
-            if (userinfoGets) {
-                res.status(409).json(response(409, 'nik already registered'));
+                res.status(400).json({
+                    status: 400,
+                    message: errorMessages.join(', ')
+                });
                 return;
             }
 
@@ -119,7 +122,16 @@ module.exports = {
 
         } catch (err) {
             await transaction.rollback();
-            res.status(500).json(response(500, 'internal server error', err));
+            if (err.name === 'SequelizeUniqueConstraintError') {
+                // Menangani error khusus untuk constraint unik
+                res.status(400).json({
+                    status: 400,
+                    message: `${err.errors[0].path} sudah terdaftar`
+                });
+            } else {
+                // Menangani error lainnya
+                res.status(500).json(response(500, 'terjadi kesalahan pada server', err));
+            }
             console.log(err);
         }
     },
@@ -606,7 +618,7 @@ module.exports = {
         const slug = req.params.slug;
         const { newPassword, confirmNewPassword } = req.body;
 
-        if ( !newPassword || !confirmNewPassword) {
+        if (!newPassword || !confirmNewPassword) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
@@ -735,7 +747,7 @@ module.exports = {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            res.status(200).json(response(200, 'success get data', { permissions: user?.permissions  }));
+            res.status(200).json(response(200, 'success get data', { permissions: user?.permissions }));
         } catch (error) {
             logger.error(`Error : ${error}`);
             logger.error(`Error message: ${error.message}`);

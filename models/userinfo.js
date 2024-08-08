@@ -24,9 +24,15 @@ module.exports = (sequelize, DataTypes) => {
   }
   Userinfo.init({
     name: DataTypes.STRING,
-    nik: DataTypes.STRING,
+    nik: {
+      type: DataTypes.STRING,
+      unique: true, // Menetapkan nik sebagai unik
+    },
     slug: DataTypes.STRING,
-    email: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      unique: true, // Menetapkan email sebagai unik
+    },
     telepon: DataTypes.STRING,
     kecamatan_id: DataTypes.INTEGER,
     desa_id: DataTypes.INTEGER,
