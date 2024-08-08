@@ -13,6 +13,6 @@ route.get('/user/surat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 
 //untuk print pdf berserta permohonan user
 route.get('/user/surat/:idlayanan/:idforminput', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], suratController.getsurat); 
 
-route.put('/user/editsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User'])], suratController.editinfosurat); 
+route.put('/user/editsurat/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Super Admin', 'User', 'Admin Layanan'])], suratController.editinfosurat); 
 
 module.exports = route;
