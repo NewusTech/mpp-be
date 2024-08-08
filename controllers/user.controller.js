@@ -673,7 +673,7 @@ module.exports = {
                     console.error('There was an error: ', err);
                     return res.status(500).json({ message: `${process.env.EMAIL_NAME} ${process.env.EMAIL_PW}Error sending the email.  ${err}` });
                 }
-                res.status(200).json({ message: 'An email has been sent to  with further instructions.' });
+                res.status(200).json({ message: 'Email telah dikirim ke dengan instruksi lebih lanjut.' });
             });
 
         } catch (err) {
@@ -703,7 +703,7 @@ module.exports = {
             });
 
             if (!user) {
-                return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+                return res.status(400).json({ message: 'Token reset kata sandi tidak valid atau telah kedaluwarsa.' });
             }
 
             user.password = passwordHash.generate(newPassword);
@@ -711,7 +711,7 @@ module.exports = {
             user.resetpasswordexpires = null;
             await user.save();
 
-            return res.status(200).json({ message: 'Password has been reset.' });
+            return res.status(200).json({ message: 'Password berhasil diganti.' });
         } catch (err) {
             console.error(err);
             return res.status(500).json({ message: 'Internal server error.' });
