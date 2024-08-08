@@ -5,13 +5,13 @@ module.exports = {
     await queryInterface.addConstraint('Userinfos', {
       fields: ['nik'],
       type: 'unique',
-      name: 'unique_nik'
+      name: 'unique_nik2'
     });
     
     await queryInterface.addConstraint('Userinfos', {
       fields: ['email'],
       type: 'unique',
-      name: 'unique_email'
+      name: 'unique_email2'
     });
   },
 
