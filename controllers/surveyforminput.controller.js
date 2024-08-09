@@ -489,6 +489,7 @@ module.exports = {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const offset = (page - 1) * limit;
+            let layanan;
             let history;
             let totalCount;
             const start_date = req.query.start_date;
@@ -512,7 +513,13 @@ module.exports = {
                 };
             }
 
-            [history, totalCount] = await Promise.all([
+            [layanan, history, totalCount] = await Promise.all([
+                Layanan.findOne({
+                    where: {
+                        id: idlayanan
+                    },
+                    attributes: ['id', 'name'],
+                }),
                 Surveyformnum.findAll({
                     include: [
                         {
@@ -565,6 +572,7 @@ module.exports = {
                 status: 200,
                 message: 'success get',
                 data: formattedData,
+                layanan: layanan,
                 pagination: pagination
             });
 
