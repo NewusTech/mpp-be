@@ -79,7 +79,7 @@ module.exports = {
 
             const newAntrian = await Antrian.create(antrianCreateObj);
 
-            global.io.emit('newAntrian', newAntrian);
+            global.io.emit('newAntrian');
 
             res.status(201).json({ status: 201, message: 'Antrian created successfully', data: newAntrian });
         } catch (err) {
