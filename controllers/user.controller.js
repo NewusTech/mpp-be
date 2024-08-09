@@ -587,21 +587,21 @@ module.exports = {
         const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
         if (!oldPassword || !newPassword || !confirmNewPassword) {
-            return res.status(400).json({ message: 'All fields are required.' });
+            return res.status(400).json({ message: 'Semua kolom wajib diisi.' });
         }
 
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ message: 'New passwords do not match.' });
+            return res.status(400).json({ message: 'Kata sandi baru tidak cocok.' });
         }
 
         try {
             const user = await User.findOne({ where: { slug } });
             if (!user) {
-                return res.status(404).json({ message: 'User not found.' });
+                return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
             }
 
             if (!passwordHash.verify(oldPassword, user.password)) {
-                return res.status(400).json({ message: 'Old password is incorrect.' });
+                return res.status(400).json({ message: 'Kata sandi lama salah.' });
             }
 
             user.password = passwordHash.generate(newPassword);
@@ -619,17 +619,17 @@ module.exports = {
         const { newPassword, confirmNewPassword } = req.body;
 
         if (!newPassword || !confirmNewPassword) {
-            return res.status(400).json({ message: 'All fields are required.' });
+            return res.status(400).json({ message: 'Semua kolom wajib diisi.' });
         }
 
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ message: 'New passwords do not match.' });
+            return res.status(400).json({ message: 'Kata sandi baru tidak cocok.' });
         }
 
         try {
             const user = await User.findOne({ where: { slug } });
             if (!user) {
-                return res.status(404).json({ message: 'User not found.' });
+                return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
             }
 
             user.password = passwordHash.generate(newPassword);
@@ -699,11 +699,11 @@ module.exports = {
         const { newPassword, confirmNewPassword } = req.body;
 
         if (!newPassword || !confirmNewPassword) {
-            return res.status(400).json({ message: 'All fields are required.' });
+            return res.status(400).json({ message: 'Semua kolom wajib diisi.' });
         }
 
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ message: 'New passwords do not match.' });
+            return res.status(400).json({ message: 'Kata sandi baru tidak cocok.' });
         }
 
         try {
