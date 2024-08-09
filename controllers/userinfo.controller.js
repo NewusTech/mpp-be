@@ -465,7 +465,6 @@ module.exports = {
             // Response menggunakan helper response.formatter
             await transaction.commit();
             res.status(200).json(response(200, 'success create userinfo', userinfoCreate));
-
         } catch (err) {
             await transaction.rollback();
             if (err.name === 'SequelizeUniqueConstraintError') {
