@@ -600,7 +600,6 @@ module.exports = {
 
     //update data person
     //user update sendiri
-
     updateuserdocs: async (req, res) => {
         const transaction = await sequelize.transaction();
         try {

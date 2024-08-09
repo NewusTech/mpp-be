@@ -454,7 +454,7 @@ module.exports = {
     getforuser: async (req, res) => {
         try {
             const showDeleted = req.query.showDeleted ?? null;
-            const whereCondition = { id: data.userId };
+            const whereCondition = { id: data.user_akun_id };
 
             if (showDeleted !== null) {
                 whereCondition.deletedAt = { [Op.not]: null };
