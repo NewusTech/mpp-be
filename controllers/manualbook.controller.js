@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Manualbook } = require('../models');
+const { Manualbook, Role } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();
@@ -21,8 +21,25 @@ module.exports = {
     //mendapatkan data manualbook berdasarkan id
     getmanualbook: async (req, res) => {
         try {
+            let { search } = req.query;
+
+            const whereCondition = {};
+            
+            if (search) {
+                whereCondition[Op.or] = [
+                    { '$Role.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+
             //mendapatkan data manualbook berdasarkan id
-            let manualbookGet = await Manualbook.findOne();
+            let manualbookGet = await Manualbook.findAll({
+                include: [
+                    {
+                        model: Role,
+                    }
+                ],
+                where: whereCondition,
+            });
 
             //cek jika manualbook tidak ada
             if (!manualbookGet) {
@@ -30,8 +47,56 @@ module.exports = {
                 return;
             }
 
+            let modifiedManualbookGet = manualbookGet.map(item => ({
+                id: item.id,
+                dokumen: item.dokumen,
+                video: item.video,
+                role_id: item.role_id,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+                role_name: item.Role.name // Mengambil nama role dari hasil join
+            }));
+
             //response menggunakan helper response.formatter
-            res.status(200).json(response(200, 'success get manualbook by id', manualbookGet));
+            res.status(200).json(response(200, 'success get', modifiedManualbookGet));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getmanualbookbyid: async (req, res) => {
+        try {
+            //mendapatkan data manualbook berdasarkan id
+            let manualbookGet = await Manualbook.findOne({
+                where: {
+                    id: req.params.id
+                },
+                include: [
+                    {
+                        model: Role,
+                    }
+                ]
+            });
+
+            //cek jika manualbook tidak ada
+            if (!manualbookGet) {
+                res.status(404).json(response(404, 'manualbook not found'));
+                return;
+            }
+
+            let modifiedManualbookGet = {
+                id: manualbookGet.id,
+                dokumen: manualbookGet.dokumen,
+                video: manualbookGet.video,
+                role_id: manualbookGet.role_id,
+                createdAt: manualbookGet.createdAt,
+                updatedAt: manualbookGet.updatedAt,
+                role_name: manualbookGet.Role.name // Mengambil nama role dari hasil join
+            };
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get', modifiedManualbookGet));
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
@@ -42,7 +107,11 @@ module.exports = {
     updatemanualbook: async (req, res) => {
         try {
             // Mendapatkan data manualbook untuk pengecekan
-            let manualbookGet = await Manualbook.findOne();
+            let manualbookGet = await Manualbook.findOne({
+                where: {
+                    id: req.params.id
+                },
+            });
 
             // Cek apakah data manualbook ada
             if (!manualbookGet) {
@@ -113,11 +182,15 @@ module.exports = {
 
             // Update manualbook
             await Manualbook.update(manualbookUpdateObj, {
-                where: { id: manualbookGet.id },
+                where: { id: req.params.id },
             });
 
             // Mendapatkan data manualbook setelah update
-            let manualbookAfterUpdate = await Manualbook.findOne();
+            let manualbookAfterUpdate = await Manualbook.findOne({
+                where: {
+                    id: req.params.id
+                },
+            });
 
             // Response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update manualbook', manualbookAfterUpdate));
