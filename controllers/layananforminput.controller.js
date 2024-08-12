@@ -382,7 +382,7 @@ module.exports = {
                 include: [
                     {
                         model: Userinfo,
-                        attributes: ['email', 'name'],
+                        attributes: ['id' ,'email', 'name'],
                     },
                     {
                         model: Layanan,
@@ -469,6 +469,24 @@ module.exports = {
                     id: req.params.idlayanannum,
                 }
             })
+
+            let pesansocket;
+            
+            if(req.body.status == 1 || req.body.status == 2) {
+                pesansocket = 'sedang diproses';
+            } else if(req.body.status == 3) {
+                pesansocket = 'selesai';
+            } else if(req.body.status == 4) {
+                pesansocket = 'ditolak';
+            } else if(req.body.status == 5) {
+                pesansocket = 'harus direvisi';
+            } else if(req.body.status == 6) {
+                pesansocket = 'sudah direvisi';
+            }
+
+            console.log(pesansocket, "ktl", layananGet.Userinfo.id)
+            
+            global.io.emit('UpdateStatus', { pesansocket, iduser : layananGet.Userinfo.id });
 
             //mendapatkan data layanan setelah update
             let layananAfterUpdate = await Layananformnum.findOne({
