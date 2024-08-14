@@ -53,6 +53,7 @@ module.exports = {
 
             const idlayanan = req.params.idlayanan;
             const iduser = data.role === "User" ? data.userId : req.body.userId;
+            const isonline = req.body.isonline ?? 'true';
             const statusinput = data.role === "User" ? 0 : 1;
 
             if (!iduser) {
@@ -90,7 +91,7 @@ module.exports = {
                 userinfo_id: Number(iduser),
                 no_request: noRequest,
                 layanan_id: Number(idlayanan),
-                isonline: true,
+                isonline: isonline,
                 status: Number(statusinput)
             };
 
