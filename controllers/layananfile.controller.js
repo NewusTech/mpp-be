@@ -195,7 +195,6 @@ module.exports = {
                     { 
                         file: fileUrl, 
                         name: req.body.datafile[index].name,
-                        link: req.body.datafile[index].link 
                     },
                     { where: { id: req.body.datafile[index].id, layanan_id: idlayanan }, transaction }
                 );
