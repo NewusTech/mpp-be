@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Surveyformnum, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Apkinstansi, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -273,7 +273,10 @@ module.exports = {
                             deletedAt: null
                         },
                         required: false
-                    }
+                    },
+                    { 
+                        model: Apkinstansi, 
+                    },
                 ]
             });
 
@@ -283,12 +286,12 @@ module.exports = {
                 return;
             }
 
-            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans } = instansiGet.toJSON();
+            console.log(instansiGet.Apkinstansis)
+            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan,
-                Layanans // Include the services
+                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis // Include the services
             };
 
             res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
