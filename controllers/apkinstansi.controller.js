@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layananfile, Layanan } = require('../models');
+const { Apkinstansi, Instansi } = require('../models');
 require('dotenv').config()
 
 const Validator = require("fastest-validator");
@@ -25,7 +25,9 @@ module.exports = {
             //membuat schema untuk validasi
             const schema = {
                 name: { type: "string" },
-                layanan_id: { type: "number" }
+                instansi_id: { type: "number" },
+                desc: { type: "string", optional: true },
+                link: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -34,7 +36,7 @@ module.exports = {
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
-                    Key: `${process.env.PATH_AWS}/layanan_file/${uniqueFileName}`,
+                    Key: `${process.env.PATH_AWS}/apkinstansi/${uniqueFileName}`,
                     Body: req.file.buffer,
                     ACL: 'public-read',
                     ContentType: req.file.mimetype
@@ -50,7 +52,9 @@ module.exports = {
             //buat object layanan
             let layananCreateObj = {
                 name: req.body.name,
-                layanan_id: Number(req.params.idlayanan),
+                link: req.body.link,
+                desc: req.body.desc,
+                instansi_id: Number(req.params.id),
                 file: req.file ? fileKey : undefined,
             }
 
@@ -62,7 +66,7 @@ module.exports = {
             }
 
             //buat layanan
-            let layananCreate = await Layananfile.create(layananCreateObj);
+            let layananCreate = await Apkinstansi.create(layananCreateObj);
 
             //response menggunakan helper response.formatter
             res.status(201).json(response(201, 'success create', layananCreate));
@@ -74,16 +78,16 @@ module.exports = {
 
     get: async (req, res) => {
         try {
-            const idlayanan = req.params.idlayanan;
+            const id = req.params.id;
 
-            let layananData = await Layanan.findOne({
+            let layananData = await Instansi.findOne({
                 where: {
-                    id: idlayanan
+                    id: id
                 },
                 attributes: ['id' ,'name', 'desc', 'image'],
                 include: [
                     {
-                        model: Layananfile,
+                        model: Apkinstansi,
                     },
                 ]
             });
@@ -103,7 +107,7 @@ module.exports = {
     update: async (req, res) => {
         try {
             //mendapatkan data layanan untuk pengecekan
-            let layananGet = await Layananfile.findOne({
+            let layananGet = await Apkinstansi.findOne({
                 where: {
                     id: req.params.id,
                 }
@@ -118,6 +122,8 @@ module.exports = {
             //membuat schema untuk validasi
             const schema = {
                 name: { type: "string", optional: true },
+                desc: { type: "string", optional: true },
+                link: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -142,6 +148,8 @@ module.exports = {
             //buat object layanan
             let layananUpdateObj = {
                 name: req.body.name,
+                link: req.body.link,
+                desc: req.body.desc,
                 file: req.file ? fileKey : layananGet.file,
             }
 
@@ -153,7 +161,7 @@ module.exports = {
             }
 
             //update layanan
-            await Layananfile.update(layananUpdateObj, {
+            await Apkinstansi.update(layananUpdateObj, {
                 where: {
                     id: req.params.id,
                 }
@@ -171,26 +179,26 @@ module.exports = {
     delete: async (req, res) => {
         try {
 
-            //mendapatkan data Layananfile untuk pengecekan
-            let LayananfileGet = await Layananfile.findOne({
+            //mendapatkan data Apkinstansi untuk pengecekan
+            let ApkinstansiGet = await Apkinstansi.findOne({
                 where: {
-                    id: req.params.idlayanan
+                    id: req.params.id
                 }
             })
 
-            //cek apakah data Layananfile ada
-            if (!LayananfileGet) {
-                res.status(404).json(response(404, 'Layananfile not found'));
+            //cek apakah data Apkinstansi ada
+            if (!ApkinstansiGet) {
+                res.status(404).json(response(404, 'Apkinstansi not found'));
                 return;
             }
 
-            await Layananfile.destroy({
+            await Apkinstansi.destroy({
                 where: {
-                    id: req.params.idlayanan,
+                    id: req.params.id,
                 }
             })
 
-            res.status(200).json(response(200, 'success delete Layananfile'));
+            res.status(200).json(response(200, 'success delete Apkinstansi'));
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));

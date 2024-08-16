@@ -11,6 +11,9 @@ module.exports = (sequelize, DataTypes) => {
       Instansi.hasMany(models.Layanan, {
         foreignKey: 'instansi_id',
       });
+      Instansi.hasMany(models.Apkinstansi, {
+        foreignKey: 'instansi_id',
+      });
       Instansi.hasMany(models.Artikel, {
         foreignKey: 'instansi_id',
       });
