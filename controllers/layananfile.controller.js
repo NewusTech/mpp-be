@@ -192,7 +192,11 @@ module.exports = {
 
                 // Assuming datafile[index].id is available in req.body to identify the correct record
                 await Layananfile.update(
-                    { file: fileUrl, name: req.body.datafile[index].name },
+                    { 
+                        file: fileUrl, 
+                        name: req.body.datafile[index].name,
+                        link: req.body.datafile[index].link 
+                    },
                     { where: { id: req.body.datafile[index].id, layanan_id: idlayanan }, transaction }
                 );
             });

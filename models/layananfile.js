@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     layanan_id: DataTypes.INTEGER,
     name: DataTypes.STRING,
     file: DataTypes.STRING,
+    link: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Layananfile',
