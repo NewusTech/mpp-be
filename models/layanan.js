@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
       Layanan.hasMany(models.Layananformnum, {
         foreignKey: 'layanan_id',
       });
+      Layanan.hasMany(models.Layananfile, {
+        foreignKey: 'layanan_id',
+      });
     }
   }
   Layanan.init({
