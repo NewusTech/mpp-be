@@ -104,7 +104,7 @@ module.exports = {
                 where: {
                     id: idlayanan
                 },
-                attributes: ['id' ,'name', 'desc', 'file'],
+                attributes: ['id' ,'name', 'desc', 'image'],
                 include: [
                     {
                         model: Layananfile,
