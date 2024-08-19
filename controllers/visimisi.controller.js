@@ -51,6 +51,11 @@ module.exports = {
                     type: "string",
                     min: 3,
                     optional: true
+                },
+                motto: {
+                    type: "string",
+                    min: 3,
+                    optional: true
                 }
             }
 
@@ -58,6 +63,7 @@ module.exports = {
             let visimisiUpdateObj = {
                 visi: req.body.visi,
                 misi: req.body.misi,
+                motto: req.body.motto,
             }
 
             //validasi menggunakan module fastest-validator

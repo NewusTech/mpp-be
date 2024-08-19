@@ -9,7 +9,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Visimisi.init({
     visi: DataTypes.STRING,
-    misi: DataTypes.STRING
+    misi: DataTypes.STRING,
+    motto: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Visimisi',
