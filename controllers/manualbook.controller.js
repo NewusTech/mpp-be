@@ -48,13 +48,13 @@ module.exports = {
             }
 
             let modifiedManualbookGet = manualbookGet.map(item => ({
-                id: item.id,
-                dokumen: item.dokumen,
-                video: item.video,
-                role_id: item.role_id,
-                createdAt: item.createdAt,
-                updatedAt: item.updatedAt,
-                role_name: item.Role.name // Mengambil nama role dari hasil join
+                id: item?.id,
+                dokumen: item?.dokumen,
+                video: item?.video,
+                role_id: item?.role_id,
+                createdAt: item?.createdAt,
+                updatedAt: item?.updatedAt,
+                role_name: item?.Role?.name // Mengambil nama role dari hasil join
             }));
 
             //response menggunakan helper response.formatter
@@ -86,13 +86,13 @@ module.exports = {
             }
 
             let modifiedManualbookGet = {
-                id: manualbookGet.id,
-                dokumen: manualbookGet.dokumen,
-                video: manualbookGet.video,
-                role_id: manualbookGet.role_id,
-                createdAt: manualbookGet.createdAt,
-                updatedAt: manualbookGet.updatedAt,
-                role_name: manualbookGet.Role.name // Mengambil nama role dari hasil join
+                id: manualbookGet?.id,
+                dokumen: manualbookGet?.dokumen,
+                video: manualbookGet?.video,
+                role_id: manualbookGet?.role_id,
+                createdAt: manualbookGet?.createdAt,
+                updatedAt: manualbookGet?.updatedAt,
+                role_name: manualbookGet?.Role?.name // Mengambil nama role dari hasil join
             };
 
             //response menggunakan helper response.formatter
