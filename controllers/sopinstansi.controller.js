@@ -82,9 +82,9 @@ module.exports = {
                 include: [
                     {
                         model: Sopinstansi,
+                        order: [['id', 'DESC']]
                     },
                 ],
-                order: [['id', 'ASC']]
             });
 
             if (!layananData) {
