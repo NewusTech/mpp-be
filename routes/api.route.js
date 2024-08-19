@@ -11,6 +11,7 @@ const pengaduanRoute = require('./pengaduan.route');
 const kecamatanRoute = require('./kecamatan.route');
 const desaRoute = require('./desa.route');
 const visimisiRoute = require('./visimisi.route');
+const logoRoute = require('./logo.route');
 const apkinstansiRoute = require('./apkinstansi.route');
 const sopinstansiRoute = require('./sopinstansi.route');
 const videoRoute = require('./video.route');
@@ -49,6 +50,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, manualbookRoute);
     app.use(urlApi, kecamatanRoute);
     app.use(urlApi, visimisiRoute);
+    app.use(urlApi, logoRoute)
     app.use(urlApi, videoRoute);
     app.use(urlApi, alurmppRoute);
     app.use(urlApi, alurbookingRoute);
