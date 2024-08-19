@@ -100,6 +100,29 @@ module.exports = {
         }
     },
 
+    getbyid: async (req, res) => {
+        try {
+        
+            let LayananfileGet = await Layananfile.findOne({
+                where: {
+                    id: req.params.id
+                },
+            });
+
+            //cek jika Layananfile tidak ada
+            if (!LayananfileGet) {
+                res.status(404).json(response(404, 'Layananfile not found'));
+                return;
+            }
+
+            //response menggunakan helper response.formatter
+            res.status(200).json(response(200, 'success get Layananfile by slug', LayananfileGet));
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
     update: async (req, res) => {
         try {
             //mendapatkan data layanan untuk pengecekan
