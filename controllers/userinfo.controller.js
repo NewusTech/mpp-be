@@ -204,6 +204,7 @@ module.exports = {
             const formattedData = userGets.map(user => {
                 return {
                     id: user.id,
+                    user_id: user?.User?.id,
                     name: user.name,
                     slug: user.slug,
                     nik: user.nik,
@@ -283,6 +284,10 @@ module.exports = {
                         model: Desa,
                         attributes: ['name', 'id'],
                         as: 'Desa'
+                    },
+                    {
+                        model: User,
+                        attributes: ['id'],
                     }
                 ]
             });
