@@ -83,7 +83,8 @@ module.exports = {
                     {
                         model: Sopinstansi,
                     },
-                ]
+                ],
+                order: [['id', 'ASC']]
             });
 
             if (!layananData) {
