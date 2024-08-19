@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Logo, Role } = require('../models');
+const { Logo } = require('../models');
 
 const Validator = require("fastest-validator");
 const v = new Validator();

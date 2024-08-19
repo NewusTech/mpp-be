@@ -5,9 +5,6 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Maklumat extends Model {
     static associate(models) {
-      Maklumat.belongsTo(models.Role, {
-        foreignKey: 'role_id'
-      });
     }
   }
   Maklumat.init({

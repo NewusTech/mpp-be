@@ -24,6 +24,7 @@ const carouselRoute = require('./carousel.route');
 const instansiRoute = require('./instansi.route');
 const antrianRoute = require('./antrian.route');
 const sopRoute = require('./sop.route');
+const maklumatRoute = require('./maklumat.route');
 const bookingantrianRoute = require('./bookingantrian.route');
 const layananRoute = require('./layanan.route');
 const layananfileRoute = require('./layananfile.route');
@@ -51,6 +52,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, kecamatanRoute);
     app.use(urlApi, visimisiRoute);
     app.use(urlApi, logoRoute)
+    app.use(urlApi, maklumatRoute)
     app.use(urlApi, videoRoute);
     app.use(urlApi, alurmppRoute);
     app.use(urlApi, alurbookingRoute);
