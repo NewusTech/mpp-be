@@ -286,12 +286,11 @@ module.exports = {
                 return;
             }
 
-            console.log(instansiGet.Apkinstansis)
             const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis // Include the services
+                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis, Layanans // Include the services
             };
 
             res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
