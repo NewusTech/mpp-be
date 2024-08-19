@@ -33,6 +33,7 @@ module.exports = {
                 nip_pj: { type: "string", optional: true },
                 alamat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
+                linkmaps: { type: "string", optional: true },
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
@@ -71,6 +72,7 @@ module.exports = {
                 nip_pj: req.body.nip_pj,
                 telp: req.body.telp,
                 email: req.body.email,
+                linkmaps: req.body.linkmaps,
                 active_offline: req.body.active_offline ? Number(req.body.active_offline) : 0,
                 active_online: req.body.active_online ? Number(req.body.active_online) : 0,
                 status: req.body.status ? Number(req.body.status) : 0,
@@ -222,10 +224,10 @@ module.exports = {
             ]);
 
             const formattedInstansiGets = instansiGets.map(instansi => {
-                const { id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt } = instansi.toJSON();
+                const { id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt } = instansi.toJSON();
                 const jmlLayanan = instansi.Layanans.length;
                 return {
-                    id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
+                    id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan
                 };
             });
 
@@ -286,11 +288,11 @@ module.exports = {
                 return;
             }
 
-            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
+            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis, Layanans // Include the services
+                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis, Layanans // Include the services
             };
 
             res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
@@ -326,6 +328,7 @@ module.exports = {
                 nip_pj: { type: "string", optional: true },
                 alamat: { type: "string", optional: true },
                 image: { type: "string", optional: true },
+                linkmaps: { type: "string", optional: true },
                 active_offline: { type: "number", optional: true },
                 active_online: { type: "number", optional: true },
                 status: { type: "number", optional: true },
@@ -361,6 +364,7 @@ module.exports = {
                 code: req.body.code,
                 pj: req.body.pj,
                 nip_pj: req.body.nip_pj,
+                linkmaps: req.body.linkmaps,
                 telp: req.body.telp,
                 email: req.body.email,
                 alamat: req.body.alamat,

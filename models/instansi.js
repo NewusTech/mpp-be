@@ -39,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     pj: DataTypes.STRING,
     nip_pj: DataTypes.STRING,
     image: DataTypes.STRING,
+    linkmaps: DataTypes.STRING,
     active_online: DataTypes.BOOLEAN,
     active_offline: DataTypes.BOOLEAN,
     status: DataTypes.BOOLEAN,
