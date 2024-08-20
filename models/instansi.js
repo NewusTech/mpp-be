@@ -23,6 +23,9 @@ module.exports = (sequelize, DataTypes) => {
       Instansi.hasMany(models.Antrian, {
         foreignKey: 'instansi_id',
       });
+      Instansi.hasOne(models.Infoinstansi, {
+        foreignKey: 'instansi_id',
+      });
       Instansi.hasMany(models.Bookingantrian, {
         foreignKey: 'instansi_id',
       });

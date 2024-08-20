@@ -28,6 +28,7 @@ const pengumumanRoute = require('./pengumuman.route');
 const maklumatRoute = require('./maklumat.route');
 const bookingantrianRoute = require('./bookingantrian.route');
 const layananRoute = require('./layanan.route');
+const infoinstansiRoute = require('./infoinstansi.route');
 const layananfileRoute = require('./layananfile.route');
 const layananformRoute = require('./layananform.route');
 const surveyformRoute = require('./surveyform.route');
@@ -67,6 +68,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, antrianRoute);
     app.use(urlApi, sopRoute);
     app.use(urlApi, pengumumanRoute);
+    app.use(urlApi, infoinstansiRoute);
     app.use(urlApi, bookingantrianRoute);
     app.use(urlApi, layananRoute);
     app.use(urlApi, apkinstansiRoute);
