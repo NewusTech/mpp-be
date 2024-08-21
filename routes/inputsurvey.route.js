@@ -29,4 +29,6 @@ route.get('/user/userhistorysurvey/', [mid.checkRolesAndLogout(['User'])], surve
 
 route.get('/user/getCheckUserSKM/:id_layanan', [mid.checkRolesAndLogout(['User'])], surveyforminput.getCheckUserSKM);
 
+route.get('/user/statskm/user', surveyforminput.statistikSKM_foruser); 
+
 module.exports = route;

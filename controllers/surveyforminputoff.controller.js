@@ -68,7 +68,7 @@ module.exports = {
             let layananID = {
                 no_skm: no_skm,
                 layanan_id: Number(idlayanan),
-                date: req.body.date ?? null,
+                date: new Date().toISOString().split('T')[0],
                 kritiksaran: req.body.kritiksaran ?? null,
                 name: req.body.name ?? null,
                 email: req.body.email ?? null,
