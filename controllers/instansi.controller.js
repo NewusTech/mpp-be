@@ -1,10 +1,11 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Apkinstansi, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Apkinstansi, Surveyformnum, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const moment = require('moment-timezone');
 const { generatePagination } = require('../pagination/pagination');
 const { Op, Sequelize } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -468,5 +469,124 @@ module.exports = {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
+    },
+
+    reportkinerja: async (req, res) => {
+        try {
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+            const instansi_id = Number(req.params.instansi_id);
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
+
+            if (start_date && end_date) {
+                WhereClause3.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+            } else if (start_date) {
+                WhereClause3.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+            } else if (end_date) {
+                WhereClause3.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+            }
+    
+            if (instansi_id) {
+                WhereClause.instansi_id = instansi_id;
+                WhereClause2.id = instansi_id;
+            }
+    
+            let instansi, layanan;
+    
+            [instansi, layanan] = await Promise.all([
+                Instansi.findAll({
+                    include: [{ 
+                        model: Layanan, 
+                        attributes: ['id', 'name', 'slug'],
+                        include: [{ 
+                            model: Layananformnum, 
+                            attributes: ['id', 'status'],
+                            where: WhereClause3,
+                            required: false,
+                        }],
+                    }],
+                    where: WhereClause2,
+                    attributes: ['id', 'name', 'slug'],
+                }),
+                Layanan.findAll({
+                    include: [{ 
+                        model: Layananformnum, 
+                        attributes: ['id', 'status'],
+                        where: WhereClause3,
+                        required: false,
+                    }],
+                    where: WhereClause,
+                    attributes: ['id', 'name', 'slug'],
+                }),
+            ]);
+    
+            // Menghitung kinerja per layanan
+            const report_perlayanan = layanan.map(item => {
+                const formnums = item.Layananformnums;
+                const status3Count = formnums.filter(fn => fn.status === 3).length;
+                const status4Count = formnums.filter(fn => fn.status === 4).length;
+                const total = status3Count + status4Count;
+    
+                const kinerja = total > 0 ? (status3Count / total) * 100 : 0;
+    
+                return {
+                    id: item.id,
+                    name: item.name,
+                    slug: item.slug,
+                    kinerja: Math.round(kinerja), // Pembulatan nilai kinerja ke integer
+                };
+            });
+    
+            // Menghitung kinerja per instansi
+            const report_perinstansi = instansi.map(inst => {
+                const allLayanan = inst.Layanans;
+                const totalLayanan = allLayanan.length;
+    
+                if (totalLayanan === 0) {
+                    return {
+                        id: inst.id,
+                        name: inst.name,
+                        slug: inst.slug,
+                        kinerja: 0
+                    };
+                }
+    
+                const totalStatus3 = allLayanan.reduce((sum, lay) => {
+                    return sum + lay.Layananformnums.filter(fn => fn.status === 3).length;
+                }, 0);
+    
+                const totalStatus4 = allLayanan.reduce((sum, lay) => {
+                    return sum + lay.Layananformnums.filter(fn => fn.status === 4).length;
+                }, 0);
+    
+                const total = totalStatus3 + totalStatus4;
+                const kinerja = total > 0 ? (totalStatus3 / total) * 100 : 0;
+    
+                return {
+                    id: inst.id,
+                    name: inst.name,
+                    slug: inst.slug,
+                    kinerja: Math.round(kinerja) // Pembulatan nilai kinerja ke integer
+                };
+            });
+    
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: {
+                    instansi: report_perinstansi,
+                    report_perlayanan
+                },
+            });
+    
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
     }
+    
+    
+
 }

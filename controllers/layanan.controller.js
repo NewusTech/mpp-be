@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Layanan, Layananformnum, Surveyformnum, Instansi } = require('../models');
+const { Layanan, Layananformnum, Instansi } = require('../models');
 require('dotenv').config()
 
 const slugify = require('slugify');
