@@ -831,7 +831,7 @@ module.exports = {
                         }
                     ],
                     order: [['id', 'ASC']],
-                    limit: 15,
+                    limit: 10,
                     where: WhereClause,
                 })
             ]);

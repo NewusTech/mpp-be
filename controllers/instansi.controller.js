@@ -5,6 +5,9 @@ const { Instansi, Layanan, Layananformnum, Apkinstansi, Surveyformnum, sequelize
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
 const v = new Validator();
+const fs = require('fs');
+const puppeteer = require('puppeteer');
+const path = require('path');
 const moment = require('moment-timezone');
 const { generatePagination } = require('../pagination/pagination');
 const { Op, Sequelize } = require('sequelize');
@@ -186,9 +189,9 @@ module.exports = {
                 Instansi.findAll({
                     where: whereCondition,
                     include: [
-                        { 
-                            model: Layanan, 
-                            as: 'Layanans', 
+                        {
+                            model: Layanan,
+                            as: 'Layanans',
                             attributes: ['id', 'name'],
                             where: {
                                 status: true,
@@ -208,9 +211,9 @@ module.exports = {
                 Instansi.count({
                     where: whereCondition,
                     include: [
-                        { 
-                            model: Layanan, 
-                            as: 'Layanans', 
+                        {
+                            model: Layanan,
+                            as: 'Layanans',
                             attributes: [],
                             where: {
                                 status: true,
@@ -266,10 +269,10 @@ module.exports = {
 
             let instansiGet = await Instansi.findOne({
                 where: whereCondition,
-                include:[
-                    { 
-                        model: Layanan, 
-                        as: 'Layanans', 
+                include: [
+                    {
+                        model: Layanan,
+                        as: 'Layanans',
                         attributes: ['id', 'name', 'desc', 'syarat', 'dasarhukum'],
                         where: {
                             status: true,
@@ -277,8 +280,8 @@ module.exports = {
                         },
                         required: false
                     },
-                    { 
-                        model: Apkinstansi, 
+                    {
+                        model: Apkinstansi,
                     },
                 ]
             });
@@ -289,11 +292,11 @@ module.exports = {
                 return;
             }
 
-            const { id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
+            const { id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, Layanans, Apkinstansis } = instansiGet.toJSON();
             const jmlLayanan = Layanans.length;
 
             const formattedInstansiGets = {
-                id, name, code,slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis, Layanans // Include the services
+                id, name, code, slug, alamat, telp, email, desc, pj, nip_pj, image, linkmaps, active_online, active_offline, status, jam_buka, jam_tutup, createdAt, updatedAt, deletedAt, jmlLayanan, Apkinstansis, Layanans // Include the services
             };
 
             res.status(200).json(response(200, 'success get instansi by slug', formattedInstansiGets));
@@ -487,21 +490,21 @@ module.exports = {
             } else if (end_date) {
                 WhereClause3.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
             }
-    
+
             if (instansi_id) {
                 WhereClause.instansi_id = instansi_id;
                 WhereClause2.id = instansi_id;
             }
-    
+
             let instansi, layanan;
-    
+
             [instansi, layanan] = await Promise.all([
                 Instansi.findAll({
-                    include: [{ 
-                        model: Layanan, 
+                    include: [{
+                        model: Layanan,
                         attributes: ['id', 'name', 'slug'],
-                        include: [{ 
-                            model: Layananformnum, 
+                        include: [{
+                            model: Layananformnum,
                             attributes: ['id', 'status'],
                             where: WhereClause3,
                             required: false,
@@ -511,8 +514,8 @@ module.exports = {
                     attributes: ['id', 'name', 'slug'],
                 }),
                 Layanan.findAll({
-                    include: [{ 
-                        model: Layananformnum, 
+                    include: [{
+                        model: Layananformnum,
                         attributes: ['id', 'status'],
                         where: WhereClause3,
                         required: false,
@@ -521,16 +524,16 @@ module.exports = {
                     attributes: ['id', 'name', 'slug'],
                 }),
             ]);
-    
+
             // Menghitung kinerja per layanan
             const report_perlayanan = layanan.map(item => {
                 const formnums = item.Layananformnums;
                 const status3Count = formnums.filter(fn => fn.status === 3).length;
                 const status4Count = formnums.filter(fn => fn.status === 4).length;
                 const total = status3Count + status4Count;
-    
+
                 const kinerja = total > 0 ? (status3Count / total) * 100 : 0;
-    
+
                 return {
                     id: item.id,
                     name: item.name,
@@ -538,12 +541,12 @@ module.exports = {
                     kinerja: Math.round(kinerja), // Pembulatan nilai kinerja ke integer
                 };
             });
-    
+
             // Menghitung kinerja per instansi
             const report_perinstansi = instansi.map(inst => {
                 const allLayanan = inst.Layanans;
                 const totalLayanan = allLayanan.length;
-    
+
                 if (totalLayanan === 0) {
                     return {
                         id: inst.id,
@@ -552,18 +555,18 @@ module.exports = {
                         kinerja: 0
                     };
                 }
-    
+
                 const totalStatus3 = allLayanan.reduce((sum, lay) => {
                     return sum + lay.Layananformnums.filter(fn => fn.status === 3).length;
                 }, 0);
-    
+
                 const totalStatus4 = allLayanan.reduce((sum, lay) => {
                     return sum + lay.Layananformnums.filter(fn => fn.status === 4).length;
                 }, 0);
-    
+
                 const total = totalStatus3 + totalStatus4;
                 const kinerja = total > 0 ? (totalStatus3 / total) * 100 : 0;
-    
+
                 return {
                     id: inst.id,
                     name: inst.name,
@@ -571,7 +574,7 @@ module.exports = {
                     kinerja: Math.round(kinerja) // Pembulatan nilai kinerja ke integer
                 };
             });
-    
+
             res.status(200).json({
                 status: 200,
                 message: 'success get',
@@ -580,13 +583,185 @@ module.exports = {
                     report_perlayanan
                 },
             });
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
         }
-    }
-    
-    
+    },
+
+    pdfreportkinerja: async (req, res) => {
+        try {
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+            const instansi_id = Number(req.params.instansi_id);
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
+
+            if (start_date && end_date) {
+                WhereClause3.createdAt = { [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()] };
+            } else if (start_date) {
+                WhereClause3.createdAt = { [Op.gte]: moment(start_date).startOf('day').toDate() };
+            } else if (end_date) {
+                WhereClause3.createdAt = { [Op.lte]: moment(end_date).endOf('day').toDate() };
+            }
+
+            if (instansi_id) {
+                WhereClause.instansi_id = instansi_id;
+                WhereClause2.id = instansi_id;
+            }
+
+            let instansi, layanan;
+
+            [instansi, layanan] = await Promise.all([
+                Instansi.findAll({
+                    include: [{
+                        model: Layanan,
+                        attributes: ['id', 'name', 'slug'],
+                        include: [{
+                            model: Layananformnum,
+                            attributes: ['id', 'status'],
+                            where: WhereClause3,
+                            required: false,
+                        }],
+                    }],
+                    where: WhereClause2,
+                    attributes: ['id', 'name', 'slug'],
+                }),
+                Layanan.findAll({
+                    include: [{
+                        model: Layananformnum,
+                        attributes: ['id', 'status'],
+                        where: WhereClause3,
+                        required: false,
+                    }],
+                    where: WhereClause,
+                    attributes: ['id', 'name', 'slug'],
+                }),
+            ]);
+
+            // Menghitung kinerja per layanan
+            const report_perlayanan = layanan.map(item => {
+                const formnums = item.Layananformnums;
+                const status3Count = formnums.filter(fn => fn.status === 3).length;
+                const status4Count = formnums.filter(fn => fn.status === 4).length;
+                const total = status3Count + status4Count;
+
+                const kinerja = total > 0 ? (status3Count / total) * 100 : 0;
+
+                return {
+                    id: item.id,
+                    name: item.name,
+                    slug: item.slug,
+                    kinerja: Math.round(kinerja), // Pembulatan nilai kinerja ke integer
+                };
+            });
+
+            // Menghitung kinerja per instansi
+            const report_perinstansi = instansi.map(inst => {
+                const allLayanan = inst.Layanans;
+                const totalLayanan = allLayanan.length;
+
+                if (totalLayanan === 0) {
+                    return {
+                        id: inst.id,
+                        name: inst.name,
+                        slug: inst.slug,
+                        kinerja: 0
+                    };
+                }
+
+                const totalStatus3 = allLayanan.reduce((sum, lay) => {
+                    return sum + lay.Layananformnums.filter(fn => fn.status === 3).length;
+                }, 0);
+
+                const totalStatus4 = allLayanan.reduce((sum, lay) => {
+                    return sum + lay.Layananformnums.filter(fn => fn.status === 4).length;
+                }, 0);
+
+                const total = totalStatus3 + totalStatus4;
+                const kinerja = total > 0 ? (totalStatus3 / total) * 100 : 0;
+
+                return {
+                    id: inst.id,
+                    name: inst.name,
+                    slug: inst.slug,
+                    kinerja: Math.round(kinerja) // Pembulatan nilai kinerja ke integer
+                };
+            });
+
+            const templatePath = path.resolve(__dirname, '../views/laporankinerja.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let instansiGet;
+
+            if (instansi_id) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                });
+            }
+
+            let tanggalInfo = '';
+            if (start_date || end_date) {
+                const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = end_date ? new Date(end_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+            const reportTableRows = report_perlayanan.map(layanan => `
+                <tr>
+                    <td>${layanan.name}</td>
+                    <td class="center">${layanan.kinerja}%</td>
+                </tr>
+            `).join('');
+
+            const reportTableRows2 = report_perinstansi.map(instansi => `
+                <tr>
+                    <td>Kinerja ${instansi.name} : ${instansi.kinerja}%</td>
+                </tr>
+            `).join('');
+
+            htmlContent = htmlContent.replace('{{reportTableRows2}}', reportTableRows2);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
 
 }
