@@ -816,7 +816,7 @@ module.exports = {
         try {
             const { idlayanan } = req.params;
 
-            const qrCodeUrl = `${process.env.WEBSITE_URL}surveyoffline/${idlayanan}`;
+            const qrCodeUrl = `${process.env.WEBSITE_URL}survei/offline/${idlayanan}`;
 
             const qrCodeBuffer = await QRCode.toBuffer(qrCodeUrl);
             
