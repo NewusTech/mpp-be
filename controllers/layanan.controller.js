@@ -13,6 +13,7 @@ const { generatePagination } = require('../pagination/pagination');
 const { Op } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const logger = require('../errorHandler/logger');
+const QRCode = require('qrcode');
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
@@ -807,6 +808,24 @@ module.exports = {
             res.status(200).json(response(200, 'Successfully updated layanans, total row data berubah adalah', result));
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    getbarcodesurvey: async (req, res) => {
+        try {
+            const { idlayanan } = req.params;
+
+            const qrCodeUrl = `${process.env.WEBSITE_URL}surveyoffline/${idlayanan}`;
+
+            const qrCodeBuffer = await QRCode.toBuffer(qrCodeUrl);
+            
+            res.setHeader('Content-Type', 'image/png');
+
+            res.status(200).send(qrCodeBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
             console.log(err);
         }
     },

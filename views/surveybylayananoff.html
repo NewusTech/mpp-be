@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Survey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        td {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        img {
+            max-width: 50px;
+            max-height: 50px;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h3 class="center">Laporan Survey</h3>
+    {{instansiInfo}}
+    {{layananInfo}}
+    <table>
+        <thead>
+            <tr>
+                <th class="center">Tanggal</th>
+                <th class="center">Nama</th>
+                <th class="center">Email</th>
+                <th class="center">Pekerjaan</th>
+                <th class="center">Kritik Saran</th>
+                <th class="center">Nilai</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{reportTableRows}}
+            <tr>
+                <td colspan="5" class="center"><strong>Total</strong></td>
+                <td class="center"><strong>{{total_nilai}}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>

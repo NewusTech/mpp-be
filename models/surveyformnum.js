@@ -21,7 +21,12 @@ module.exports = (sequelize, DataTypes) => {
     userinfo_id: DataTypes.INTEGER,
     layanan_id: DataTypes.INTEGER,
     date: DataTypes.STRING,
-    kritiksaran: DataTypes.TEXT
+    kritiksaran: DataTypes.TEXT,
+    name: DataTypes.STRING,
+    email: DataTypes.STRING,
+    pekerjaan: DataTypes.STRING,
+    telepon: DataTypes.STRING,
+    alamat: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Surveyformnum',
