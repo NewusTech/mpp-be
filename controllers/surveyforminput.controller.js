@@ -20,16 +20,16 @@ const pendidikanList = [
     { id: 8, key: 'S1' },
     { id: 9, key: 'S2' },
     { id: 10, key: 'S3' }
-  ];
-  
-  const getPendidikanKey = (id) => {
+];
+
+const getPendidikanKey = (id) => {
     const found = pendidikanList.find(p => p.id === id);
     return found ? found.key : 'Unknown';
-  };
-  
-  const getGenderKey = (id) => {
+};
+
+const getGenderKey = (id) => {
     return id === 1 ? 'Laki-Laki' : id === 2 ? 'Perempuan' : 'Unknown';
-  };
+};
 
 module.exports = {
 
@@ -588,7 +588,7 @@ module.exports = {
             let history;
             const start_date = req.query.start_date;
             const end_date = req.query.end_date;
-    
+
             const WhereClause = {};
             if (idlayanan) {
                 WhereClause.layanan_id = idlayanan;
@@ -606,7 +606,7 @@ module.exports = {
                     [Op.lte]: moment(end_date).endOf('day').toDate()
                 };
             }
-    
+
             [history, totalCount] = await Promise.all([
                 Surveyformnum.findAll({
                     include: [
@@ -624,39 +624,39 @@ module.exports = {
                     where: WhereClause,
                 })
             ]);
-    
+
             const calculateNilai = (surveyforminputs) => {
                 const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
                 let totalNilai = 0;
                 let totalInputs = 0;
-    
+
                 surveyforminputs.forEach(input => {
                     totalNilai += nilaiMap[input.nilai] || 0;
                     totalInputs++;
                 });
-    
+
                 return totalInputs > 0 ? totalNilai / totalInputs : 0;
             };
-    
+
             let totalNilaiAll = 0;
             let totalEntries = 0;
-    
+
             const formatTanggal = (tanggal) => {
                 const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 const dateObj = new Date(tanggal);
                 const hari = dateObj.getDate();
                 const bulanFormatted = bulan[dateObj.getMonth()];
                 const tahun = dateObj.getFullYear();
-    
+
                 return `${hari} ${bulanFormatted} ${tahun}`;
             };
-    
+
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
-    
+
                 totalNilaiAll += surveyforminputsNilai;
                 totalEntries++;
-    
+
                 return {
                     id: data.id,
                     date: formatTanggal(data.date),
@@ -667,14 +667,14 @@ module.exports = {
                     gender: data.Userinfo ? getGenderKey(data.Userinfo.gender) : null
                 };
             });
-    
+
             const total_nilai = totalEntries > 0 ? (totalNilaiAll / totalEntries).toFixed(2) : 0;
-    
+
             // Generate HTML content for PDF
             const templatePath = path.resolve(__dirname, '../views/surveybylayanan.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
             let layananGet;
-    
+
             if (idlayanan) {
                 layananGet = await Layanan.findOne({
                     where: {
@@ -683,10 +683,10 @@ module.exports = {
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
                 });
             }
-    
+
             const instansiInfo = layananGet?.Instansi?.name ? `<p>Instansi : ${layananGet?.Instansi?.name}</p>` : '';
             const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
-    
+
             const reportTableRows = formattedData.map(survey => `
                 <tr>
                     <td>${survey.date}</td>
@@ -697,22 +697,22 @@ module.exports = {
                     <td class="center">${survey.nilai}</td>
                 </tr>
             `).join('');
-    
+
             htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
             htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
             htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
             htmlContent = htmlContent.replace('{{total_nilai}}', total_nilai);
-    
+
             // Launch Puppeteer
             const browser = await puppeteer.launch({
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
             const page = await browser.newPage();
-    
+
             // Set HTML content
             await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    
+
             // Generate PDF
             const pdfBuffer = await page.pdf({
                 format: 'A4',
@@ -723,18 +723,18 @@ module.exports = {
                     left: '1.16in'
                 }
             });
-    
+
             await browser.close();
-    
+
             // Generate filename
             const currentDate = new Date().toISOString().replace(/:/g, '-');
             const filename = `laporan-${currentDate}.pdf`;
-    
+
             // Send PDF buffer
             res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
             res.setHeader('Content-type', 'application/pdf');
             res.send(pdfBuffer);
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);
@@ -779,10 +779,17 @@ module.exports = {
         try {
 
             const WhereClause = {};
+            const { instansi_id } = req.query;
 
-            const WhereClause2 = {};
+            if (instansi_id) {
+                WhereClause.instansi_id = instansi_id;
+            }
 
-            [history, totalCount] = await Promise.all([
+            const countByCriteria = (whereClause) => Surveyformnum.count({
+                include: [{ model: Userinfo, where: whereClause }],
+            });
+
+            [history, countSKM, jmlSKMbyPria, jmlSKMbyWanita, jmlSKMTdkSklh, jmlSKMbySD, jmlSKMbySMP, jmlSKMbySMA, jmlSKMbyD1, jmlSKMbyD2, jmlSKMbyD3, jmlSKMbyS1, jmlSKMbyS2, jmlSKMbyS3, history2] = await Promise.all([
                 Layanan.findAll({
                     include: [{
                         model: Surveyformnum,
@@ -790,8 +797,40 @@ module.exports = {
                         include: [{
                             model: Surveyforminput,
                         }],
-                        where: WhereClause2,
                     }],
+                }),
+                Surveyformnum.count({
+                    where: {
+                        userinfo_id: {
+                            [Op.ne]: null,
+                        },
+                    },
+                }),
+                countByCriteria({ gender: 1 }),
+                countByCriteria({ gender: 2 }),
+                countByCriteria({ pendidikan: 1 }),
+                countByCriteria({ pendidikan: 2 }),
+                countByCriteria({ pendidikan: 3 }),
+                countByCriteria({ pendidikan: 4 }),
+                countByCriteria({ pendidikan: 5 }),
+                countByCriteria({ pendidikan: 6 }),
+                countByCriteria({ pendidikan: 7 }),
+                countByCriteria({ pendidikan: 8 }),
+                countByCriteria({ pendidikan: 9 }),
+                countByCriteria({ pendidikan: 10 }),
+                Layanan.findAll({
+                    include: [
+                        {
+                            model: Surveyformnum,
+                            required: false,
+                            include: [
+                                {
+                                    model: Surveyforminput,
+                                }
+                            ],
+                        }
+                    ],
+                    limit: 15,
                     where: WhereClause,
                 })
             ]);
@@ -831,9 +870,49 @@ module.exports = {
 
             const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
 
-            res.status(200).json(response(200, 'success get data', {
-                rataRataNilaiSKM,
-            }));
+            let nilaiSKM_perlayanan = history2.map(data => {
+                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
+                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
+
+                if (surveyformnumsNilai > 0) {
+                    totalNilai += surveyformnumsNilai;
+                    totalLayanan++;
+                }
+
+                return {
+                    id: data.id,
+                    layanan_name: data.name || null,
+                    // Surveyformnums_count: surveyformnumsCount,
+                    Surveyformnums_nilai: surveyformnumsNilai
+                };
+            });
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: {
+                    rataRataNilaiSKM,
+                    jmlSKMbyGender: {
+                        countSKM,
+                        jmlSKMbyPria,
+                        jmlSKMbyWanita
+                    },
+                    jmlSKMbyEdu: {
+                        countSKM,
+                        jmlSKMTdkSklh,
+                        jmlSKMbySD,
+                        jmlSKMbySMP,
+                        jmlSKMbySMA,
+                        jmlSKMbyD1,
+                        jmlSKMbyD2,
+                        jmlSKMbyD3,
+                        jmlSKMbyS1,
+                        jmlSKMbyS2,
+                        jmlSKMbyS3
+                    },
+                    nilaiSKM_perlayanan,
+                },
+            });
 
         } catch (err) {
             console.error(err);
