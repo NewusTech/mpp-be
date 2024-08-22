@@ -7,6 +7,9 @@ const error = require('./errorHandler/errorHandler')
 const http = require('http'); //socket
 const { Server } = require('socket.io'); //socket
 
+const session = require('express-session');
+const passport = require('./config/passport');
+
 const app = express();
 const server = http.createServer(app); //socket
 const io = new Server(server, {
@@ -21,6 +24,40 @@ const urlApi = "/api";
 global.io = io;
 
 app.use(cors());
+
+app.use(session({
+    secret: '4rN=EeE(YS30Paf',
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Routes
+app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", {
+        failureRedirect: "/",
+        scope: ["email", "profile"],
+    }),
+    (req, res) => {
+        if (!req.user) {
+            return res.status(400).json({ error: "Authentication failed" });
+        }
+
+        // return user details
+        res.status(200).json({
+            status: 'success',
+            message: 'Login berhasil',
+            token: req.user.token
+        });
+    }
+);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -43,7 +80,7 @@ app.use('/static', express.static('public'))
 //socket
 io.on('connection', (socket) => {
     console.log('a user connected');
-    
+
     socket.on('disconnect', () => {
         console.log('user disconnected');
     });
