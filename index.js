@@ -23,10 +23,7 @@ const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors({
-    origin: "http://localhost:3000",
-    credentials: true
-}));
+app.use(cors());
 
 app.use(session({
     secret: '4rN=EeE(YS30Paf',
