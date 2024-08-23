@@ -6,6 +6,7 @@ const logger = require('./errorHandler/logger');
 const error = require('./errorHandler/errorHandler')
 const http = require('http'); //socket
 const { Server } = require('socket.io'); //socket
+const { Userinfo, User, Role, Layanan, Instansi, Permission, Userpermission } = require('./models');
 
 const session = require('express-session');
 const passport = require('./config/passport');
