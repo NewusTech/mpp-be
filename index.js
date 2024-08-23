@@ -35,9 +35,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
-app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+app.get('/auth/google', async (req, res, next) => {
+    try {
+        passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+    } catch (error) {
+        console.error('Error during Google authentication:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 app.get(
     "/auth/google/callback",
@@ -46,16 +51,21 @@ app.get(
         scope: ["email", "profile"],
     }),
     (req, res) => {
-        if (!req.user) {
-            return res.status(400).json({ error: "Authentication failed" });
-        }
+        try {
+            if (!req.user) {
+                return res.status(400).json({ error: "Authentication failed" });
+            }
 
-        // return user details
-        res.status(200).json({
-            status: 'success',
-            message: 'Login berhasil',
-            token: req.user.token
-        });
+            // return user details
+            res.status(200).json({
+                status: 'success',
+                message: 'Login berhasil',
+                token: req.user.token
+            });
+        } catch (error) {
+            console.error("Error in Google authentication callback:", error);
+            res.status(500).json({ error: "Internal server error" });
+        }
     }
 );
 
