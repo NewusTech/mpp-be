@@ -19,6 +19,7 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         // Cek apakah user sudah ada di database berdasarkan email
+        console.log(profile)
         let user = await Userinfo.findOne({ where: { email: profile.emails[0].value } });
 
         if (!user) {

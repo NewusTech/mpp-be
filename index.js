@@ -23,7 +23,9 @@ const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors());
+app.use(cors({
+    credentials: true
+}));
 
 app.use(session({
     secret: '4rN=EeE(YS30Paf',
