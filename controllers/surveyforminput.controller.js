@@ -872,47 +872,47 @@ module.exports = {
 
             const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
 
-            // let nilaiSKM_perlayanan = history2.map(data => {
-            //     // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
-            //     const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
+            let nilaiSKM_perlayanan = history2.map(data => {
+                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
+                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
-            //     if (surveyformnumsNilai > 0) {
-            //         totalNilai += surveyformnumsNilai;
-            //         totalLayanan++;
-            //     }
+                if (surveyformnumsNilai > 0) {
+                    totalNilai += surveyformnumsNilai;
+                    totalLayanan++;
+                }
 
-            //     return {
-            //         id: data.id,
-            //         layanan_name: data.name || null,
-            //         // Surveyformnums_count: surveyformnumsCount,
-            //         Surveyformnums_nilai: surveyformnumsNilai
-            //     };
-            // });
+                return {
+                    id: data.id,
+                    layanan_name: data.name || null,
+                    // Surveyformnums_count: surveyformnumsCount,
+                    Surveyformnums_nilai: surveyformnumsNilai
+                };
+            });
 
             res.status(200).json({
                 status: 200,
                 message: 'success get',
                 data: {
                     rataRataNilaiSKM,
-                    // jmlSKMbyGender: {
-                    //     countSKM,
-                    //     jmlSKMbyPria,
-                    //     jmlSKMbyWanita
-                    // },
-                    // jmlSKMbyEdu: {
-                    //     countSKM,
-                    //     jmlSKMTdkSklh,
-                    //     jmlSKMbySD,
-                    //     jmlSKMbySMP,
-                    //     jmlSKMbySMA,
-                    //     jmlSKMbyD1,
-                    //     jmlSKMbyD2,
-                    //     jmlSKMbyD3,
-                    //     jmlSKMbyS1,
-                    //     jmlSKMbyS2,
-                    //     jmlSKMbyS3
-                    // },
-                    // nilaiSKM_perlayanan,
+                    jmlSKMbyGender: {
+                        countSKM,
+                        jmlSKMbyPria,
+                        jmlSKMbyWanita
+                    },
+                    jmlSKMbyEdu: {
+                        countSKM,
+                        jmlSKMTdkSklh,
+                        jmlSKMbySD,
+                        jmlSKMbySMP,
+                        jmlSKMbySMA,
+                        jmlSKMbyD1,
+                        jmlSKMbyD2,
+                        jmlSKMbyD3,
+                        jmlSKMbyS1,
+                        jmlSKMbyS2,
+                        jmlSKMbyS3
+                    },
+                    nilaiSKM_perlayanan,
                 },
             });
 
