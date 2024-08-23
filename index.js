@@ -57,13 +57,11 @@ app.get(
             }
 
             // return user details
-            // res.status(200).json({
-            //     status: 'success',
-            //     message: 'Login berhasil',
-            //     token: req.user.token
-            // });
-
-            res.redirect(`${process.env.SERVER_URL}/login-success?token=${req.user.token}`);
+            res.status(200).json({
+                status: 'success',
+                message: 'Login berhasil',
+                token: req.user.token
+            });
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
             res.status(500).json({ error: "Internal server error" });
