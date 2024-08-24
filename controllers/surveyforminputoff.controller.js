@@ -211,29 +211,36 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyformnums) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
+                let totalSurveyformnum = surveyformnums.length;
 
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        totalNilai += nilaiMap[input.nilai] || 0;
-                        totalInputs++;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
                     });
                 });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id] / totalSurveyformnum) * 0.11;
+                }
+
+                return nilaiPerSurveyform;
             };
 
             let formattedData = history.map(data => {
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyformnumsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     layanan_name: data.name || null,
                     Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai,
+                    Surveyformnums_nilai: totalNilaiPerLayanan * 25,
                     created_at: data.createdAt
                 };
             });
@@ -294,32 +301,37 @@ module.exports = {
                 })
             ]);
 
-            const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-
             const calculateNilai = (surveyformnums) => {
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
+                let totalSurveyformnum = surveyformnums.length;
 
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        totalNilai += nilaiMap[input.nilai] || 0;
-                        totalInputs++;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
                     });
                 });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
-            };
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id] / totalSurveyformnum) * 0.11;
+                }
 
+                return nilaiPerSurveyform;
+            };
 
             let formattedData = history.map(data => {
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyformnumsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     layanan_name: data.name || null,
                     Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai
+                    Surveyformnums_nilai: totalNilaiPerLayanan * 25
                 };
             });
 
@@ -441,26 +453,33 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyforminputs) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
 
                 surveyforminputs.forEach(input => {
-                    totalNilai += nilaiMap[input.nilai] || 0;
-                    totalInputs++;
-                });
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
+                    });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id]);
+                }
+
+                return nilaiPerSurveyform;
+
             };
 
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyforminputsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     date: data.date,
                     kritiksaran: data.kritiksaran,
-                    nilai: surveyforminputsNilai,
+                    nilai: totalNilaiPerLayanan,
                     name: data.name,
                     pekerjaan: data.pekerjaan,
                     email: data.email,
@@ -491,7 +510,7 @@ module.exports = {
             let history;
             const start_date = req.query.start_date;
             const end_date = req.query.end_date;
-    
+
             const WhereClause = {};
             if (idlayanan) {
                 WhereClause.layanan_id = idlayanan;
@@ -509,7 +528,7 @@ module.exports = {
                     [Op.lte]: moment(end_date).endOf('day').toDate()
                 };
             }
-    
+
             [history, totalCount] = await Promise.all([
                 Surveyformnum.findAll({
                     include: [
@@ -527,59 +546,64 @@ module.exports = {
                     where: WhereClause,
                 })
             ]);
-    
+
             const calculateNilai = (surveyforminputs) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
-    
+                let nilaiPerSurveyform = {};
+
                 surveyforminputs.forEach(input => {
-                    totalNilai += nilaiMap[input.nilai] || 0;
-                    totalInputs++;
-                });
-    
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
+                    });
+
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id]);
+                }
+
+                return nilaiPerSurveyform;
+
             };
-    
+
             let totalNilaiAll = 0;
             let totalEntries = 0;
-    
+
             const formatTanggal = (tanggal) => {
                 const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 const dateObj = new Date(tanggal);
                 const hari = dateObj.getDate();
                 const bulanFormatted = bulan[dateObj.getMonth()];
                 const tahun = dateObj.getFullYear();
-    
+
                 return `${hari} ${bulanFormatted} ${tahun}`;
             };
-    
+
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
-    
-                totalNilaiAll += surveyforminputsNilai;
+
+                let totalNilaiPerLayanan = Object.values(surveyforminputsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
+                totalNilaiAll += totalNilaiPerLayanan;
                 totalEntries++;
-    
+
                 return {
                     id: data.id,
                     date: formatTanggal(data.date),
                     kritiksaran: data.kritiksaran,
-                    nilai: surveyforminputsNilai,
-                    name: data.name,
-                    pekerjaan: data.pekerjaan,
-                    email: data.email,
-                    telepon: data.telepon,
-                    alamat: data.alamat
+                    nilai: totalNilaiPerLayanan,
+                    name: data.Userinfo ? data.Userinfo.name : null,
+                    pendidikan: data.Userinfo ? getPendidikanKey(data.Userinfo.pendidikan) : null,
+                    gender: data.Userinfo ? getGenderKey(data.Userinfo.gender) : null
                 };
             });
-    
+
             const total_nilai = totalEntries > 0 ? (totalNilaiAll / totalEntries).toFixed(2) : 0;
-    
+
             // Generate HTML content for PDF
-            const templatePath = path.resolve(__dirname, '../views/surveybylayananoff.html');
+            const templatePath = path.resolve(__dirname, '../views/surveybylayanan.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
             let layananGet;
-    
+
             if (idlayanan) {
                 layananGet = await Layanan.findOne({
                     where: {
@@ -588,36 +612,36 @@ module.exports = {
                     include: [{ model: Instansi, attributes: ['id', 'name'] }],
                 });
             }
-    
+
             const instansiInfo = layananGet?.Instansi?.name ? `<p>Instansi : ${layananGet?.Instansi?.name}</p>` : '';
             const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
-    
+
             const reportTableRows = formattedData.map(survey => `
                 <tr>
                     <td>${survey.date}</td>
                     <td>${survey.name}</td>
-                    <td>${survey.email}</td>
-                    <td>${survey.pekerjaan}</td>
+                    <td>${survey.pendidikan}</td>
+                    <td>${survey.gender}</td>
                     <td>${survey.kritiksaran}</td>
                     <td class="center">${survey.nilai}</td>
                 </tr>
             `).join('');
-    
+
             htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
             htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
             htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
             htmlContent = htmlContent.replace('{{total_nilai}}', total_nilai);
-    
+
             // Launch Puppeteer
             const browser = await puppeteer.launch({
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
             const page = await browser.newPage();
-    
+
             // Set HTML content
             await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    
+
             // Generate PDF
             const pdfBuffer = await page.pdf({
                 format: 'A4',
@@ -628,18 +652,18 @@ module.exports = {
                     left: '1.16in'
                 }
             });
-    
+
             await browser.close();
-    
+
             // Generate filename
             const currentDate = new Date().toISOString().replace(/:/g, '-');
             const filename = `laporan-${currentDate}.pdf`;
-    
+
             // Send PDF buffer
             res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
             res.setHeader('Content-type', 'application/pdf');
             res.send(pdfBuffer);
-    
+
         } catch (err) {
             res.status(500).json(response(500, 'Internal server error', err));
             console.log(err);

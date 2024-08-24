@@ -207,29 +207,36 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyformnums) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
+                let totalSurveyformnum = surveyformnums.length;
 
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        totalNilai += nilaiMap[input.nilai] || 0;
-                        totalInputs++;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
                     });
                 });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id] / totalSurveyformnum) * 0.11;
+                }
+
+                return nilaiPerSurveyform;
             };
 
             let formattedData = history.map(data => {
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyformnumsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     layanan_name: data.name || null,
                     Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai,
+                    Surveyformnums_nilai: totalNilaiPerLayanan * 25,
                     created_at: data.createdAt
                 };
             });
@@ -389,32 +396,37 @@ module.exports = {
                 })
             ]);
 
-            const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-
             const calculateNilai = (surveyformnums) => {
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
+                let totalSurveyformnum = surveyformnums.length;
 
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        totalNilai += nilaiMap[input.nilai] || 0;
-                        totalInputs++;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
                     });
                 });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
-            };
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id] / totalSurveyformnum) * 0.11;
+                }
 
+                return nilaiPerSurveyform;
+            };
 
             let formattedData = history.map(data => {
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyformnumsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     layanan_name: data.name || null,
                     Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai
+                    Surveyformnums_nilai: totalNilaiPerLayanan * 25
                 };
             });
 
@@ -540,26 +552,33 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyforminputs) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
 
                 surveyforminputs.forEach(input => {
-                    totalNilai += nilaiMap[input.nilai] || 0;
-                    totalInputs++;
-                });
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
+                    });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id]);
+                }
+
+                return nilaiPerSurveyform;
+
             };
 
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
 
+                let totalNilaiPerLayanan = Object.values(surveyforminputsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
                 return {
                     id: data.id,
                     date: data.date,
                     kritiksaran: data.kritiksaran,
-                    nilai: surveyforminputsNilai,
+                    nilai: totalNilaiPerLayanan,
                     name: data.Userinfo ? data.Userinfo.name : null,
                     pendidikan: data.Userinfo ? data.Userinfo.pendidikan : null,
                     gender: data.Userinfo ? data.Userinfo.gender : null
@@ -626,16 +645,21 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyforminputs) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
 
                 surveyforminputs.forEach(input => {
-                    totalNilai += nilaiMap[input.nilai] || 0;
-                    totalInputs++;
-                });
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
+                    });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id]);
+                }
+
+                return nilaiPerSurveyform;
+
             };
 
             let totalNilaiAll = 0;
@@ -654,14 +678,16 @@ module.exports = {
             let formattedData = history.map(data => {
                 const surveyforminputsNilai = data.Surveyforminputs ? calculateNilai(data.Surveyforminputs) : 0;
 
-                totalNilaiAll += surveyforminputsNilai;
+                let totalNilaiPerLayanan = Object.values(surveyforminputsNilai).reduce((sum, nilai) => sum + nilai, 0);
+
+                totalNilaiAll += totalNilaiPerLayanan;
                 totalEntries++;
 
                 return {
                     id: data.id,
                     date: formatTanggal(data.date),
                     kritiksaran: data.kritiksaran,
-                    nilai: surveyforminputsNilai,
+                    nilai: totalNilaiPerLayanan,
                     name: data.Userinfo ? data.Userinfo.name : null,
                     pendidikan: data.Userinfo ? getPendidikanKey(data.Userinfo.pendidikan) : null,
                     gender: data.Userinfo ? getGenderKey(data.Userinfo.gender) : null
@@ -837,57 +863,42 @@ module.exports = {
             ]);
 
             const calculateNilai = (surveyformnums) => {
-                const nilaiMap = { 1: 30, 2: 60, 3: 80, 4: 100 };
-                let totalNilai = 0;
-                let totalInputs = 0;
+                let nilaiPerSurveyform = {};
+                let totalSurveyformnum = surveyformnums.length;
 
                 surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        console.log(input.nilai, input.surveyform_id, input.surveyformnum_id, input.id)
-                        totalNilai += nilaiMap[input.nilai] || 0;
-                        totalInputs++;
+                        if (!nilaiPerSurveyform[input.surveyform_id]) {
+                            nilaiPerSurveyform[input.surveyform_id] = 0;
+                        }
+                        nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
                     });
                 });
 
-                return totalInputs > 0 ? totalNilai / totalInputs : 0;
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id] / totalSurveyformnum) * 0.11;
+                }
+
+                return nilaiPerSurveyform;
             };
 
-            let totalNilai = 0;
-            let totalLayanan = 0;
-
-            history.map(data => {
-                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
-                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
-
-                if (surveyformnumsNilai > 0) {
-                    totalNilai += surveyformnumsNilai;
-                    totalLayanan++;
-                }
-
-                return {
-                    id: data.id,
-                    layanan_name: data.name || null
-                };
-            });
-
-            const rataRataNilaiSKM = totalLayanan > 0 ? totalNilai / totalLayanan : 0;
-
             let nilaiSKM_perlayanan = history2.map(data => {
-                // const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
-                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
+                const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : {};
 
-                if (surveyformnumsNilai > 0) {
-                    totalNilai += surveyformnumsNilai;
-                    totalLayanan++;
-                }
+                // Sum up all nilaiPerSurveyform for the current layanan
+                let totalNilaiPerLayanan = Object.values(surveyformnumsNilai).reduce((sum, nilai) => sum + nilai, 0);
 
                 return {
                     id: data.id,
                     layanan_name: data.name || null,
-                    // Surveyformnums_count: surveyformnumsCount,
-                    Surveyformnums_nilai: surveyformnumsNilai
+                    totalNilaiPerLayanan: totalNilaiPerLayanan * 25
                 };
             });
+
+            // Calculate average SKM value
+            const validNilaiSKM = nilaiSKM_perlayanan.filter(layanan => layanan.totalNilaiPerLayanan > 0);
+            const totalNilaiSKM = validNilaiSKM.reduce((sum, layanan) => sum + layanan.totalNilaiPerLayanan, 0);
+            const rataRataNilaiSKM = validNilaiSKM.length > 0 ? totalNilaiSKM / validNilaiSKM.length : 0;
 
             res.status(200).json({
                 status: 200,
