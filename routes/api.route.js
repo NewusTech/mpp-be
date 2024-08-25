@@ -34,6 +34,7 @@ const layananformRoute = require('./layananform.route');
 const surveyformRoute = require('./surveyform.route');
 const termcondRoute = require('./termcond.route');
 const suratRoute = require('./surat.route');
+const sertifRoute = require('./sertif.route');
 const manualbookRoute = require('./manualbook.route');
 const inputformRoute = require('./inputform.route');
 const inputsurveyRoute = require('./inputsurvey.route');
@@ -47,6 +48,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, permissionRoute);
     app.use(urlApi, artikelRoute);
     app.use(urlApi, faqRoute);
+    app.use(urlApi, sertifRoute);
     app.use(urlApi, contactRoute);
     app.use(urlApi, pengaduanRoute);
     app.use(urlApi, desaRoute);

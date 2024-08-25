@@ -1,5 +1,5 @@
 const { response } = require('../helpers/response.formatter');
-const { Instansi, Layanan, Layanansurat, Layananformnum, Userinfo, sequelize } = require('../models');
+const { Instansi, Layanan, Layanansertif, Layananformnum, Userinfo, sequelize } = require('../models');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +21,7 @@ module.exports = {
                         attributes: ['id', 'name', 'alamat', 'image', 'pj', 'nip_pj'],
                     },
                     {
-                        model: Layanansurat
+                        model: Layanansertif
                     }
                 ]
             });
@@ -38,7 +38,7 @@ module.exports = {
     },
 
     //untuk admin
-    getsurat: async (req, res) => {
+    getsertif: async (req, res) => {
         try {
             let layanan = await Layanan.findOne({
                 where: {
@@ -51,7 +51,7 @@ module.exports = {
                         attributes: ['id', 'name', 'alamat', 'image', 'pj', 'nip_pj'],
                     },
                     {
-                        model: Layanansurat,
+                        model: Layanansertif,
                     }
                 ]
             });
@@ -80,7 +80,7 @@ module.exports = {
             }
 
             // Read HTML template
-            const templatePath = path.resolve(__dirname, '../views/template.html');
+            const templatePath = path.resolve(__dirname, '../views/templatesertif.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
 
             // Replace placeholders with actual data
@@ -89,13 +89,13 @@ module.exports = {
             htmlContent = htmlContent.replace('{{instansiImage}}', instansiImage);
             htmlContent = htmlContent.replace('{{instansiName}}', layanan.Instansi.name ?? '');
             htmlContent = htmlContent.replace('{{instansiAlamat}}', layanan.Instansi.alamat ?? '');
-            htmlContent = htmlContent.replace('{{layananHeader}}', layanan.Layanansurat?.header ?? '');
-            htmlContent = htmlContent.replace('{{layananBody}}', layanan.Layanansurat?.body ?? '');
-            htmlContent = htmlContent.replace('{{layananFooter}}', layanan.Layanansurat?.footer ?? '');
-            htmlContent = htmlContent.replace('{{layanannomor}}', layanan.Layanansurat?.nomor ?? '');
-            htmlContent = htmlContent.replace('{{layanantembusan}}', layanan.Layanansurat?.tembusan ?`Tembusan =  ${layanan.Layanansurat?.tembusan}` : '');
-            htmlContent = htmlContent.replace('{{layananperihal}}', layanan.Layanansurat?.perihal ?? '');
-            htmlContent = htmlContent.replace('{{layanancatatan}}', layanan.Layanansurat?.catatan ? `Catatan =  ${layanan.Layanansurat?.catatan}` : '');
+            htmlContent = htmlContent.replace('{{layananHeader}}', layanan.Layanansertif?.header ?? '');
+            htmlContent = htmlContent.replace('{{layananBody}}', layanan.Layanansertif?.body ?? '');
+            htmlContent = htmlContent.replace('{{layananFooter}}', layanan.Layanansertif?.footer ?? '');
+            htmlContent = htmlContent.replace('{{layanannomor}}', layanan.Layanansertif?.nomor ?? '');
+            htmlContent = htmlContent.replace('{{layanantembusan}}', layanan.Layanansertif?.tembusan ?`Tembusan =  ${layanan.Layanansertif?.tembusan}` : '');
+            htmlContent = htmlContent.replace('{{layananperihal}}', layanan.Layanansertif?.perihal ?? '');
+            htmlContent = htmlContent.replace('{{layanancatatan}}', layanan.Layanansertif?.catatan ? `Catatan =  ${layanan.Layanansertif?.catatan}` : '');
             htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
 
             htmlContent = htmlContent.replace('{{nama}}', getdatauser?.Userinfo?.name ?? '');
@@ -150,7 +150,7 @@ module.exports = {
         }
     },
 
-    editinfosurat: async (req, res) => {
+    editinfosertif: async (req, res) => {
         const transaction = await sequelize.transaction();
 
         try {
@@ -161,7 +161,7 @@ module.exports = {
                 },
                 include: [
                     { model: Instansi },
-                    { model: Layanansurat }
+                    { model: Layanansertif }
                 ],
                 transaction
             });
@@ -218,25 +218,25 @@ module.exports = {
                     });
             }
 
-            // first or create layanansurat
+            // first or create layanansertif
             if (layananUpdateObj.header || layananUpdateObj.body || layananUpdateObj.footer || layananUpdateObj.nomor || layananUpdateObj.catatan || layananUpdateObj.tembusan || layananUpdateObj.perihal) {
-                let layanansuratUpdateObj = {};
-                if (layananUpdateObj.header) layanansuratUpdateObj.header = layananUpdateObj.header;
-                if (layananUpdateObj.body) layanansuratUpdateObj.body = layananUpdateObj.body;
-                if (layananUpdateObj.footer) layanansuratUpdateObj.footer = layananUpdateObj.footer;
-                if (layananUpdateObj.nomor) layanansuratUpdateObj.nomor = layananUpdateObj.nomor;
-                if (layananUpdateObj.catatan) layanansuratUpdateObj.catatan = layananUpdateObj.catatan;
-                if (layananUpdateObj.tembusan) layanansuratUpdateObj.tembusan = layananUpdateObj.tembusan;
-                if (layananUpdateObj.perihal) layanansuratUpdateObj.perihal = layananUpdateObj.perihal;
+                let layanansertifUpdateObj = {};
+                if (layananUpdateObj.header) layanansertifUpdateObj.header = layananUpdateObj.header;
+                if (layananUpdateObj.body) layanansertifUpdateObj.body = layananUpdateObj.body;
+                if (layananUpdateObj.footer) layanansertifUpdateObj.footer = layananUpdateObj.footer;
+                if (layananUpdateObj.nomor) layanansertifUpdateObj.nomor = layananUpdateObj.nomor;
+                if (layananUpdateObj.catatan) layanansertifUpdateObj.catatan = layananUpdateObj.catatan;
+                if (layananUpdateObj.tembusan) layanansertifUpdateObj.tembusan = layananUpdateObj.tembusan;
+                if (layananUpdateObj.perihal) layanansertifUpdateObj.perihal = layananUpdateObj.perihal;
 
-                let [layanansurat, created] = await Layanansurat.findOrCreate({
+                let [layanansertif, created] = await Layanansertif.findOrCreate({
                     where: { layanan_id: layananGet.id },
-                    defaults: layanansuratUpdateObj,
+                    defaults: layanansertifUpdateObj,
                     transaction
                 });
 
                 if (!created) {
-                    await Layanansurat.update(layanansuratUpdateObj, {
+                    await Layanansertif.update(layanansertifUpdateObj, {
                         where: { layanan_id: layananGet.id },
                         transaction
                     });

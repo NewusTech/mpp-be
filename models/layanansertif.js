@@ -3,14 +3,14 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Layanansurat extends Model {
+  class Layanansertif extends Model {
     static associate(models) {
-      Layanansurat.belongsTo(models.Layanan, {
+      Layanansertif.belongsTo(models.Layanan, {
         foreignKey: 'layanan_id',
       });
     }
   }
-  Layanansurat.init({
+  Layanansertif.init({
     layanan_id: DataTypes.INTEGER,
     header: DataTypes.STRING,
     body: DataTypes.STRING,
@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     tembusan: DataTypes.STRING,
   }, {
     sequelize,
-    modelName: 'Layanansurat',
+    modelName: 'Layanansertif',
   });
-  return Layanansurat;
+  return Layanansertif;
 };
