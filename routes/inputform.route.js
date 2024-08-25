@@ -16,6 +16,6 @@ route.get('/user/inputform/detail/:idlayanannum', [mid.checkRolesAndLogout(['Use
 
 route.put('/user/inputform/updatestatus/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.any(), layananforminput.updatestatuspengajuan);
 
-route.put('/user/inputform/file/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.single('file'), layananforminput.uploadfilehasil);
+route.put('/user/inputform/file/:idlayanannum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], upload.fields([{ name: 'file', maxCount: 1 }, { name: 'sertif', maxCount: 1 }]), layananforminput.uploadfilehasil);
 
 module.exports = route;

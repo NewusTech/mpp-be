@@ -268,7 +268,8 @@ module.exports = {
                 updatedAt: layananformnumData?.updatedAt,
                 Layananforminputs: formattedInputData ?? null,
                 status: layananformnumData?.status,
-                fileoutput: layananformnumData?.fileoutput
+                fileoutput: layananformnumData?.fileoutput,
+                filesertif: layananformnumData?.filesertif
             };
 
             res.status(200).json(response(200, 'success get data', result));
@@ -525,16 +526,17 @@ module.exports = {
                 fileoutput: { type: "string", optional: true }
             }
 
-            if (req.file) {
+            if (req.files && req.files.file) {
+                const file = req.files.file[0];
                 const timestamp = new Date().getTime();
-                const uniqueFileName = `${timestamp}-${req.file.originalname}`;
+                const uniqueFileName = `${timestamp}-${file.originalname}`;
 
                 const uploadParams = {
                     Bucket: process.env.AWS_S3_BUCKET,
                     Key: `${process.env.PATH_AWS}/fileoutput/${uniqueFileName}`,
-                    Body: req.file.buffer,
+                    Body: file.buffer,
                     ACL: 'public-read',
-                    ContentType: req.file.mimetype
+                    ContentType: file.mimetype
                 };
 
                 const command = new PutObjectCommand(uploadParams);
@@ -543,9 +545,29 @@ module.exports = {
                 dataKey = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
             }
 
+            if (req.files && req.files.sertif) {
+                const file = req.files.sertif[0];
+                const timestamp = new Date().getTime();
+                const uniqueFileName = `${timestamp}-${file.originalname}`;
+
+                const uploadParams = {
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Key: `${process.env.PATH_AWS}/sertif/${uniqueFileName}`,
+                    Body: file.buffer,
+                    ACL: 'public-read',
+                    ContentType: file.mimetype
+                };
+
+                const command = new PutObjectCommand(uploadParams);
+                await s3Client.send(command);
+
+                dataKey2 = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+            }
+
             //buat object instansi
             let fileUpdateObj = {
-                fileoutput: req.file ? dataKey : null,
+                fileoutput: req.files.file ? dataKey : undefined,
+                filesertif: req.files.sertif ? dataKey2 : undefined,
             }
 
             //validasi menggunakan module fastest-validator
@@ -739,6 +761,7 @@ module.exports = {
                     createdAt: data?.createdAt,
                     updatedAt: data?.updatedAt,
                     fileoutput: data?.fileoutput,
+                    filesertif: data?.filesertif,
                     no_request: data?.no_request,
                 };
             });
@@ -905,6 +928,7 @@ module.exports = {
                     createdAt: data?.createdAt,
                     updatedAt: data?.updatedAt,
                     fileoutput: data?.fileoutput,
+                    filesertif: data?.filesertif,
                     no_request: data?.no_request,
                 });
             });
@@ -979,6 +1003,7 @@ module.exports = {
                 createdAt: Layananformnumget?.createdAt,
                 updatedAt: Layananformnumget?.updatedAt,
                 fileoutput: Layananformnumget?.fileoutput,
+                filesertif: Layananformnumget?.filesertif,
                 input_skm: surveyGet ? true : false,
                 no_request: Layananformnumget?.no_request,
             };
@@ -1135,6 +1160,7 @@ module.exports = {
                     createdAt: data?.createdAt,
                     updatedAt: data?.updatedAt,
                     fileoutput: data?.fileoutput,
+                    filesertif: data?.filesertif,
                     no_request: data?.no_request,
                 };
             });
