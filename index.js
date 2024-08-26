@@ -64,9 +64,9 @@ app.get(
 
             res.cookie('Authorization', req.user.token, {
                 httpOnly: false,
-                secure: false,
+                secure: true,
                 sameSite: 'None',
-                domain: 'mppdigital.newus.id',
+                domain: '.newus.id',
                 maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
 
