@@ -63,14 +63,14 @@ app.get(
             // });
 
             res.cookie('Authorization', req.user.token, {
-                httpOnly: true,
+                httpOnly: false,
                 secure: false,
                 sameSite: 'None',
                 domain: 'mppdigital.newus.id',
                 maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
 
-            res.redirect("https://mppdigital.newus.id?token");
+            res.redirect("https://mppdigital.newus.id");
 
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
