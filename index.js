@@ -63,9 +63,9 @@ app.get(
             // });
 
             res.cookie('Authorization', req.user.token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'None',
+                // httpOnly: true,
+                // secure: true,
+                // sameSite: 'None',
                 domain: '.newus.id',
                 maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
