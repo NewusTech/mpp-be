@@ -66,7 +66,7 @@ app.get(
                 httpOnly: false,
                 secure: true,
                 sameSite: 'None',
-                domain: '.newus.id',
+                domain: '.mppdigital.newus.id',
                 maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
 
