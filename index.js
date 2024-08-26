@@ -63,7 +63,6 @@ app.get(
             // });
 
             res.cookie('Authorization', req.user.token, {
-                httpOnly: true,
                 secure: true,
                 sameSite: 'None',
                 domain: 'mppdigital.newus.id',
