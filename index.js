@@ -23,12 +23,7 @@ const urlApi = "/api";
 
 global.io = io;
 
-const corsOptions = {
-    origin: 'https://mppdigital.newus.id', // Specify your frontend domain
-    credentials: true // Allow cookies to be sent
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(session({
     secret: '4rN=EeE(YS30Paf',
