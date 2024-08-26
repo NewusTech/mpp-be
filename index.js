@@ -58,7 +58,7 @@ app.get(
             res.cookie('Authorization', req.user.token, {
             });
 
-            res.redirect(WEBSITE_URL);
+            res.redirect(process.env.WEBSITE_URL);
 
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
