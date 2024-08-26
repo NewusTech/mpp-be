@@ -55,10 +55,22 @@ app.get(
             if (!req.user) {
                 return res.status(400).json({ error: "Authentication failed" });
             }
+
+            // res.status(200).json({
+            //     status: 'success',
+            //     message: 'Login berhasil',
+            //     token: req.user.token
+            // });
+
             res.cookie('Authorization', req.user.token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'None',
+                domain: 'mppdigital.newus.id',
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
 
-            res.redirect(process.env.WEBSITE_URL);
+            res.redirect("https://mppdigital.newus.id");
 
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
