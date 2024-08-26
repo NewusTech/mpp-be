@@ -55,13 +55,11 @@ app.get(
             if (!req.user) {
                 return res.status(400).json({ error: "Authentication failed" });
             }
-
-            // return user details
-            res.status(200).json({
-                status: 'success',
-                message: 'Login berhasil',
-                token: req.user.token
+            res.cookie('Authorization', req.user.token, {
             });
+
+            res.redirect(WEBSITE_URL);
+
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
             res.status(500).json({ error: "Internal server error" });
