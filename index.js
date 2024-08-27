@@ -23,10 +23,7 @@ const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors({
-    origin: "https://mppdigital.newus.id", // Domain frontend
-    credentials: true
-}));
+app.use(cors());
 
 app.use(session({
     secret: '4rN=EeE(YS30Paf',
@@ -59,21 +56,21 @@ app.get(
                 return res.status(400).json({ error: "Authentication failed" });
             }
 
-            // res.status(200).json({
-            //     status: 'success',
-            //     message: 'Login berhasil',
-            //     token: req.user.token
-            // });
-
-            res.cookie('Authorizations', req.user.token, {
-                domain: 'mppdigital.newus.id',
-                maxAge: 24 * 60 * 60 * 1000, // 1 day
-                secure: true,
-                httpOnly: true,
-                sameSite: 'None'
+            res.status(200).json({
+                status: 'success',
+                message: 'Login berhasil',
+                token: req.user.token
             });
 
-            res.redirect("https://mppdigital.newus.id?token");
+            // res.cookie('Authorization', req.user.token, {
+            //     domain: 'mppdigital.newus.id',
+            //     maxAge: 24 * 60 * 60 * 1000, // 1 day
+            //     secure: true,
+            //     httpOnly: true,
+            //     sameSite: 'None'
+            // });
+
+            // res.redirect("https://mppdigital.newus.id?token");
 
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
