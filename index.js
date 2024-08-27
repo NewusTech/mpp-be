@@ -23,7 +23,10 @@ const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors());
+app.use(cors({
+    origin: "https://mppdigital.newus.id", // Domain frontend
+    credentials: true
+}));
 
 app.use(session({
     secret: '4rN=EeE(YS30Paf',
@@ -67,7 +70,7 @@ app.get(
                 maxAge: 24 * 60 * 60 * 1000, // 1 day
                 secure: true,
                 httpOnly: true,
-                sameSite: None
+                sameSite: 'None'
             });
 
             res.redirect("https://mppdigital.newus.id?token");
