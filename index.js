@@ -56,11 +56,18 @@ app.get(
                 return res.status(400).json({ error: "Authentication failed" });
             }
 
-            res.status(200).json({
-                status: 'success',
-                message: 'Login berhasil',
-                token: req.user.token
-            });
+            // res.status(200).json({
+            //     status: 'success',
+            //     message: 'Login berhasil',
+            //     token: req.user.token
+            // });
+            const token = req.user.token;
+            res.send(`
+                <script>
+                    window.opener.postMessage({ token: '${token}' }, '${process.env.WEBSITE_URL}');
+                    window.close();
+                </script>
+            `);
 
             // res.cookie('Authorization', req.user.token, {
             //     domain: 'mppdigital.newus.id',
