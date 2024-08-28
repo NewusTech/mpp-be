@@ -47,7 +47,7 @@ app.use(session({
         secure: true, // Gunakan `true` jika situs Anda menggunakan HTTPS
         httpOnly: true, // Hanya cookie yang dikirimkan melalui HTTP, bukan JavaScript
         sameSite: 'None', // Ini harus 'none' untuk cross-site requests
-        domain: '.newus.id',
+        domain: 'mppdigital.newus.id',
     }
 }));
 
