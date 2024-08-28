@@ -43,11 +43,11 @@ app.use(session({
     secret: '4rN=EeE(YS30Paf',
     resave: false,
     saveUninitialized: true,
-    cookie: {
-        secure: true, // Gunakan `true` jika situs Anda menggunakan HTTPS
-        httpOnly: true, // Hanya cookie yang dikirimkan melalui HTTP, bukan JavaScript
-        sameSite: 'none', // Ini harus 'none' untuk cross-site requests
-    }
+    // cookie: {
+    //     secure: true, // Gunakan `true` jika situs Anda menggunakan HTTPS
+    //     httpOnly: true, // Hanya cookie yang dikirimkan melalui HTTP, bukan JavaScript
+    //     sameSite: 'none', // Ini harus 'none' untuk cross-site requests
+    // }
 }));
 
 app.use(bodyParser.json());
