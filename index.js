@@ -10,9 +10,6 @@ const { Server } = require('socket.io'); //socket
 const session = require('express-session');
 const passport = require('./config/passport');
 const bodyParser = require('body-parser');
-const RedisStore = require('connect-redis').default;
-const Redis = require('ioredis');
-
 const app = express();
 const server = http.createServer(app); //socket
 
@@ -22,33 +19,16 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
     },
 }); //socket
-
 const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors({
-    origin: true, 
-    credentials: true
-}));
-
-const redisClient = new Redis({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD,
-});
+app.use(cors());
 
 app.use(session({
-    store: new RedisStore({ client: redisClient }),
     secret: '4rN=EeE(YS30Paf',
     resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: true, // Gunakan `true` jika situs Anda menggunakan HTTPS
-        httpOnly: true, // Hanya cookie yang dikirimkan melalui HTTP, bukan JavaScript
-        sameSite: 'None', // Ini harus 'none' untuk cross-site requests
-        domain: 'mppdigital.newus.id',
-    }
+    saveUninitialized: true
 }));
 
 app.use(bodyParser.json());
