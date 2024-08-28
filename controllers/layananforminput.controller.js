@@ -486,9 +486,23 @@ module.exports = {
                 pesansocket = 'sudah direvisi';
             }
 
-            console.log(pesansocket, "ktl", layananGet.Userinfo.id)
+            console.log("pesansocket", pesansocket)
             
             global.io.emit('UpdateStatus', { pesansocket, iduser : layananGet.Userinfo.id });
+
+            const newNotification = {
+                id: Date.now(), // ID unik menggunakan timestamp
+                layananformnum_id: layananGet.id,
+                userinfo: layananGet.userinfo_id,
+                title: `Permohonan ${pesansocket}`, // Judul notifikasi
+                description: `Yth. ${layananGet?.Userinfo?.name}, permohonan Anda dengan nomor permohonan ${layananGet?.no_request} telah selesai diproses.`, // Deskripsi notifikasi
+                url: `${process.env.WEBSITE_URL}/riwayat/${layananGet.id}`,
+                date: new Date().toISOString().split('T')[0] // Tanggal saat notifikasi dibuat
+            };
+        
+            // Simpan notifikasi ke dalam session
+            req.session.notifications = req.session.notifications || [];
+            req.session.notifications.push(newNotification);
 
             //mendapatkan data layanan setelah update
             let layananAfterUpdate = await Layananformnum.findOne({

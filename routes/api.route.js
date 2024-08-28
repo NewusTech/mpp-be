@@ -35,6 +35,7 @@ const surveyformRoute = require('./surveyform.route');
 const termcondRoute = require('./termcond.route');
 const suratRoute = require('./surat.route');
 const sertifRoute = require('./sertif.route');
+const notificationsRoute = require('./notifications.route');
 const manualbookRoute = require('./manualbook.route');
 const inputformRoute = require('./inputform.route');
 const inputsurveyRoute = require('./inputsurvey.route');
@@ -58,6 +59,7 @@ module.exports = function (app, urlApi) {
     app.use(urlApi, logoRoute)
     app.use(urlApi, maklumatRoute)
     app.use(urlApi, videoRoute);
+    app.use(urlApi, notificationsRoute);
     app.use(urlApi, alurmppRoute);
     app.use(urlApi, alurbookingRoute);
     app.use(urlApi, alurpermohonanRoute);

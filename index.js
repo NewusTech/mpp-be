@@ -9,27 +9,48 @@ const { Server } = require('socket.io'); //socket
 
 const session = require('express-session');
 const passport = require('./config/passport');
+const bodyParser = require('body-parser');
+const RedisStore = require('connect-redis').default;
+const Redis = require('ioredis');
 
 const app = express();
 const server = http.createServer(app); //socket
+
 const io = new Server(server, {
     cors: {
-        // origin: "http://localhost:3001",
         origin: "*",
         methods: ["GET", "POST"],
     },
 }); //socket
+
 const urlApi = "/api";
 
 global.io = io;
 
-app.use(cors());
+app.use(cors({
+    origin: true, 
+    credentials: true
+}));
+
+const redisClient = new Redis({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
+});
 
 app.use(session({
+    store: new RedisStore({ client: redisClient }),
     secret: '4rN=EeE(YS30Paf',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: {
+        secure: true, // Gunakan `true` jika situs Anda menggunakan HTTPS
+        httpOnly: true, // Hanya cookie yang dikirimkan melalui HTTP, bukan JavaScript
+        sameSite: 'none', // Ini harus 'none' untuk cross-site requests
+    }
 }));
+
+app.use(bodyParser.json());
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -56,11 +77,6 @@ app.get(
                 return res.status(400).json({ error: "Authentication failed" });
             }
 
-            // res.status(200).json({
-            //     status: 'success',
-            //     message: 'Login berhasil',
-            //     token: req.user.token
-            // });
             const token = req.user.token;
             res.send(`
                 <script>
@@ -68,16 +84,6 @@ app.get(
                     window.close();
                 </script>
             `);
-
-            // res.cookie('Authorization', req.user.token, {
-            //     domain: 'mppdigital.newus.id',
-            //     maxAge: 24 * 60 * 60 * 1000, // 1 day
-            //     secure: true,
-            //     httpOnly: true,
-            //     sameSite: 'None'
-            // });
-
-            // res.redirect("https://mppdigital.newus.id?token");
 
         } catch (error) {
             console.error("Error in Google authentication callback:", error);
