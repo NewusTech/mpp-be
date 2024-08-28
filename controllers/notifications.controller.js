@@ -23,7 +23,7 @@ module.exports = {
     //mendapatkan semua data instansi
     getnotifications : async (req, res) => {
         try{ 
-            const notifications = req.session.notifications;
+            const notifications = req.session;
             res.status(200).json(response(200, 'success get notif', notifications));
         } catch (err) {
             logger.error(`Error : ${err}`);
