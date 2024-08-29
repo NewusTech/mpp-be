@@ -494,15 +494,14 @@ module.exports = {
                 id: Date.now(), // ID unik menggunakan timestamp
                 layananformnum_id: layananGet.id,
                 userinfo: layananGet.userinfo_id,
+                isopen: 0,
                 title: `Permohonan ${pesansocket}`, // Judul notifikasi
                 description: `Yth. ${layananGet?.Userinfo?.name}, permohonan Anda dengan nomor permohonan ${layananGet?.no_request} telah selesai diproses.`, // Deskripsi notifikasi
                 url: `${process.env.WEBSITE_URL}/riwayat/${layananGet.id}`,
                 date: new Date().toISOString().split('T')[0] // Tanggal saat notifikasi dibuat
             };
         
-            // Simpan notifikasi ke dalam session
-            req.session.notifications = req.session.notifications || [];
-            req.session.notifications.push(newNotification);
+            await redisClient.set(`notification:${newNotification.id}`, JSON.stringify(newNotification));
 
             //mendapatkan data layanan setelah update
             let layananAfterUpdate = await Layananformnum.findOne({
