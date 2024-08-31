@@ -22,4 +22,7 @@ route.get('/user/instansi/pdf-kinerja/:instansi_id', [mid.checkRolesAndLogout(['
 route.get('/user/instansi/reportdocterbit', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.reportdokumen); 
 route.get('/user/instansi/pdf-reportdocterbit', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.pdfreportdokumen); 
 
+route.get('/user/instansi/reportmasalah', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.reportpermasalahan); 
+route.get('/user/instansi/pdf-reportmasalah', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.pdfreportpermasalahan); 
+
 module.exports = route;

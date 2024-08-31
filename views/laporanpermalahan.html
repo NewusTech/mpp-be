@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Permasalahan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        td {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        img {
+            max-width: 50px;
+            max-height: 50px;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h3 class="center">Laporan Permasalahan</h3>
+    {{instansiInfo}}
+    {{layananInfo}}
+    {{tanggalInfo}}
+    <table>
+        <thead>
+            <tr>
+                <th class="center" style="width: 10%;">Tanggal</th>
+                <th class="center">Nama</th>
+                <th class="center">Layanan</th>   
+                <th class="center">Nama Admin</th> 
+                <th class="center">Judul Aduan</th>
+                <th class="center">Detail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{reportTableRows}}
+        </tbody>
+    </table>
+</body>
+
+</html>

@@ -338,7 +338,8 @@ module.exports = {
 
             // Generate PDF
             const pdfBuffer = await page.pdf({
-                format: 'A4',
+                format: 'Legal',
+                landscape: true,
                 margin: {
                     top: '1.16in',
                     right: '1.16in',
