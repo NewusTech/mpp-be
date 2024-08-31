@@ -19,4 +19,7 @@ route.delete('/user/instansi/delete/:slug', [mid.checkRolesAndLogout(['Admin Ins
 route.get('/user/instansi/kinerja/:instansi_id', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.reportkinerja); 
 route.get('/user/instansi/pdf-kinerja/:instansi_id', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.pdfreportkinerja); 
 
+route.get('/user/instansi/reportdocterbit', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.reportdokumen); 
+route.get('/user/instansi/pdf-reportdocterbit', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.pdfreportdokumen); 
+
 module.exports = route;

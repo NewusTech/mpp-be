@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Apkinstansi, Surveyformnum, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Apkinstansi, Userinfo, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -763,5 +763,405 @@ module.exports = {
         }
     },
 
+    reportdokumen: async (req, res) => {
+        try {
+            const search = req.query.search ?? null;
+            const isonline = req.query.isonline ?? null;
+            const instansi_id = Number(req.query.instansi_id);
+            const layanan_id = Number(req.query.layanan_id);
+            const start_date = req.query.start_date;
+            let end_date = req.query.end_date;
+            const year = req.query.year ? parseInt(req.query.year) : null;
+            const month = req.query.month ? parseInt(req.query.month) : null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const offset = (page - 1) * limit;
+            let history;
+            let totalCount;
 
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+
+            WhereClause.status = 3;
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                WhereClause2.instansi_id = data.instansi_id;
+            }
+
+            if (data.role === 'Admin Layanan') {
+                WhereClause.layanan_id = data.layanan_id;
+            }
+
+            if (isonline) {
+                WhereClause.isonline = isonline;
+            }
+
+            if (layanan_id) {
+                WhereClause.layanan_id = layanan_id;
+            }
+
+            if (start_date && end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.between]: [new Date(start_date), new Date(end_date)]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: new Date(start_date)
+                };
+            } else if (end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.lte]: new Date(end_date)
+                };
+            }
+
+            if (instansi_id && data.role === 'Super Admin') {
+                WhereClause2.instansi_id = instansi_id;
+            }
+
+            if (search) {
+                WhereClause3[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+
+            if (year && month) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, month - 1, 1),
+                        new Date(year, month, 0, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (year) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, 0, 1),
+                        new Date(year, 11, 31, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (month) {
+                const currentYear = new Date().getFullYear();
+                WhereClause.createdAt = {
+                    [Op.and]: [
+                        { [Op.gte]: new Date(currentYear, month - 1, 1) },
+                        { [Op.lte]: new Date(currentYear, month, 0, 23, 59, 59, 999) }
+                    ]
+                };
+            }
+
+            [history, totalCount] = await Promise.all([
+                Layananformnum.findAll({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            include: [{
+                                model: Instansi,
+                                attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            attributes: ['name', 'nik'],
+                            where: WhereClause3,
+                        },
+                    ],
+                    limit: limit,
+                    offset: offset,
+                    order: [['id', 'DESC']]
+                }),
+                Layananformnum.count({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            include: [{
+                                model: Instansi
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            where: WhereClause3,
+                        },
+                    ],
+                })
+            ]);
+
+            let formattedData = history.map(data => {
+                return {
+                    id: data.id,
+                    userinfo_id: data?.userinfo_id,
+                    name: data?.Userinfo?.name,
+                    nik: data?.Userinfo?.nik,
+                    status: data?.status,
+                    tgl_selesai: data?.tgl_selesai,
+                    isonline: data?.isonline,
+                    layanan_id: data?.layanan_id,
+                    layanan_name: data?.Layanan ? data?.Layanan?.name : null,
+                    instansi_id: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.id : null,
+                    instansi_name: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.name : null,
+                    createdAt: data?.createdAt,
+                    fileoutput: data?.fileoutput,
+                    filesertif: data?.filesertif,
+                    no_request: data?.no_request,
+                };
+            });
+
+            const pagination = generatePagination(totalCount, page, limit, `/api/instansi/reportdocterbit/${req.query.instansi_id}`);
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get',
+                data: formattedData,
+                pagination: pagination
+            });
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
+    pdfreportdokumen: async (req, res) => {
+        try {
+            const search = req.query.search ?? null;
+            const isonline = req.query.isonline ?? null;
+            let instansi_id = Number(req.query.instansi_id);
+            let layanan_id = Number(req.query.layanan_id);
+            const start_date = req.query.start_date;
+            let end_date = req.query.end_date;
+            const year = req.query.year ? parseInt(req.query.year) : null;
+            const month = req.query.month ? parseInt(req.query.month) : null;
+
+            let history;
+
+            const WhereClause = {};
+            const WhereClause2 = {};
+            const WhereClause3 = {};
+
+            if (data.role === 'Admin Instansi' || data.role === 'Admin Verifikasi' || data.role === 'Admin Layanan') {
+                instansi_id = data.instansi_id;
+            }
+
+            if (data.role === 'Admin Layanan') {
+                layanan_id = data.layanan_id;
+            }
+
+            if (isonline) {
+                WhereClause.isonline = isonline;
+            }
+
+            WhereClause.status = 3;
+
+            if (layanan_id) {
+                WhereClause.layanan_id = layanan_id;
+            }
+
+            if (start_date && end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.between]: [new Date(start_date), new Date(end_date)]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: new Date(start_date)
+                };
+            } else if (end_date) {
+                end_date = new Date(end_date);
+                end_date.setHours(23, 59, 59, 999);
+                WhereClause.createdAt = {
+                    [Op.lte]: new Date(end_date)
+                };
+            }
+
+            if (instansi_id && data.role === 'Super Admin') {
+                WhereClause2.instansi_id = instansi_id;
+            }
+
+            if (search) {
+                WhereClause3[Op.or] = [
+                    { name: { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan.name$': { [Op.iLike]: `%${search}%` } },
+                    { '$Layanan->Instansi.name$': { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+
+            if (year && month) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, month - 1, 1),
+                        new Date(year, month, 0, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (year) {
+                WhereClause.createdAt = {
+                    [Op.between]: [
+                        new Date(year, 0, 1),
+                        new Date(year, 11, 31, 23, 59, 59, 999)
+                    ]
+                };
+            } else if (month) {
+                // Hanya bulan ditentukan
+                const currentYear = new Date().getFullYear();
+                WhereClause.createdAt = {
+                    [Op.and]: [
+                        { [Op.gte]: new Date(currentYear, month - 1, 1) },
+                        { [Op.lte]: new Date(currentYear, month, 0, 23, 59, 59, 999) }
+                    ]
+                };
+            }
+
+            history = await Promise.all([
+                Layananformnum.findAll({
+                    where: WhereClause,
+                    include: [
+                        {
+                            model: Layanan,
+                            attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            include: [{
+                                model: Instansi,
+                                attributes: { exclude: ['createdAt', 'updatedAt', "status", 'slug'] },
+                            }],
+                            where: WhereClause2,
+                        },
+                        {
+                            model: Userinfo,
+                            attributes: ['name', 'nik'],
+                            where: WhereClause3,
+                        }
+                    ],
+                    order: [['id', 'DESC']]
+                })
+            ]);
+
+            let formattedData = history[0].map(data => {
+                return {
+                    id: data.id,
+                    userinfo_id: data?.userinfo_id,
+                    name: data?.Userinfo?.name,
+                    nik: data?.Userinfo?.nik,
+                    pesan: data?.pesan,
+                    status: data?.status,
+                    tgl_selesai: data?.tgl_selesai,
+                    isonline: data?.isonline,
+                    layanan_id: data?.layanan_id,
+                    layanan_name: data?.Layanan ? data?.Layanan?.name : null,
+                    instansi_id: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.id : null,
+                    instansi_name: data?.Layanan && data?.Layanan?.Instansi ? data?.Layanan?.Instansi.name : null,
+                    createdAt: data?.createdAt,
+                    updatedAt: data?.updatedAt,
+                    fileoutput: data?.fileoutput,
+                    filesertif: data?.filesertif,
+                    no_request: data?.no_request,
+                };
+            });
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/laporandokumenterbit.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let layananGet, instansiGet;
+
+            if (layanan_id) {
+                layananGet = await Layanan.findOne({
+                    where: {
+                        id: layanan_id
+                    },
+                });
+            }
+
+            if (instansi_id) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi_id
+                    },
+                });
+            }
+
+            const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
+            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+            let tanggalInfo = '';
+            if (start_date || end_date) {
+                const startDateFormatted = start_date ? new Date(start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                const endDateFormatted = end_date ? new Date(end_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
+            }
+
+            const reportTableRows = formattedData?.map(permohonan => {
+                const createdAtDate = new Date(permohonan.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                const createdAtTime = new Date(permohonan.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                const fileOutputLink = permohonan.fileoutput
+                    ? `<a href="${permohonan.fileoutput}">Link</a>`
+                    : 'Tidak ada file';
+
+                    const fileSertifLink = permohonan.filesertif
+                    ? `<a href="${permohonan.filesertif}">Link</a>`
+                    : 'Tidak ada file';
+
+                return `
+                    <tr>
+                        <td class="center">${createdAtDate}</td>
+                        <td class="center">${createdAtTime} WIB</td>
+                        <td>${permohonan.nik}</td>
+                        <td>${permohonan.name}</td>
+                        <td>${permohonan.layanan_name}</td>
+                        <td>${fileOutputLink}</td>
+                        <td>${fileSertifLink}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
+            htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
+            htmlContent = htmlContent.replace('{{tanggalInfo}}', tanggalInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'Legal',
+                landscape: true,
+                margin: {
+                    top: '1.16in',
+                    right: '1.16in',
+                    bottom: '1.16in',
+                    left: '1.16in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
 }

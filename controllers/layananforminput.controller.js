@@ -1178,7 +1178,6 @@ module.exports = {
                 };
             });
 
-            console.log("aaaa", formattedData)
             // Generate HTML content for PDF
             const templatePath = path.resolve(__dirname, '../views/permohonanperlayanan.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
@@ -1268,6 +1267,7 @@ module.exports = {
             // Generate PDF
             const pdfBuffer = await page.pdf({
                 format: 'A4',
+                landscape: true,
                 margin: {
                     top: '1.16in',
                     right: '1.16in',
