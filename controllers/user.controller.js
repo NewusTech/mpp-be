@@ -151,6 +151,7 @@ module.exports = {
             };
 
             let isAdmin = req.query.admin;
+            let isUser = req.query.user;
             let nik = req.body.nik;
             let password = req.body.password;
 
@@ -180,6 +181,12 @@ module.exports = {
             if (isAdmin) {
                 adminCondition['$User.role_id$'] = {
                     [Op.ne]: 5
+                };
+            }
+
+            if (isUser) {
+                adminCondition['$User.role_id$'] = {
+                    [Op.eq]: 5
                 };
             }
 
