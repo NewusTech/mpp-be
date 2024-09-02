@@ -25,4 +25,6 @@ route.get('/user/instansi/pdf-reportdocterbit', [mid.checkRolesAndLogout(['Admin
 route.get('/user/instansi/reportmasalah', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.reportpermasalahan); 
 route.get('/user/instansi/pdf-reportmasalah', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi', 'Super Admin'])], instansiController.pdfreportpermasalahan); 
 
+route.get('/user/instansi/screen', [mid.checkRolesAndLogout(['Admin Instansi','Admin Layanan', 'Admin Verifikasi'])], instansiController.getScreenAntrian); 
+
 module.exports = route;

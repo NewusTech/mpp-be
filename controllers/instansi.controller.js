@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Apkinstansi, Userinfo, Pengaduan, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Apkinstansi, Userinfo, Pengaduan, Antrian, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -1104,7 +1104,7 @@ module.exports = {
                     ? `<a href="${permohonan.fileoutput}">Link</a>`
                     : 'Tidak ada file';
 
-                    const fileSertifLink = permohonan.filesertif
+                const fileSertifLink = permohonan.filesertif
                     ? `<a href="${permohonan.filesertif}">Link</a>`
                     : 'Tidak ada file';
 
@@ -1166,7 +1166,7 @@ module.exports = {
     },
 
     reportpermasalahan: async (req, res) => {
-        try { 
+        try {
             const instansi_id = req.query.instansi_id ?? null;
             const layanan_id = req.query.layanan_id ?? null;
             const admin_id = req.query.admin_id ?? null;
@@ -1302,7 +1302,7 @@ module.exports = {
             }
 
             whereCondition.status = { [Op.ne]: 4 };
-          
+
             if (start_date && end_date) {
                 whereCondition.createdAt = {
                     [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
@@ -1412,6 +1412,53 @@ module.exports = {
             res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
             res.setHeader('Content-type', 'application/pdf');
             res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
+
+    //SCREEN ANTRIAN
+    getScreenAntrian: async (req, res) => {
+        try {
+            const instansi_id = data.instansi_id;
+
+            const whereCondition = {
+                instansi_id: instansi_id,
+                status: true,
+                deletedAt: null
+            };
+
+            const layananGets = await Layanan.findAll({
+                where: whereCondition,
+                attributes: ['id', 'name', 'code'],
+                order: [['id', 'ASC']],
+                include: [{
+                    model: Antrian,
+                    attributes: ['code'],
+                    where: {
+                        createdAt: { [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()] },
+                        status: true,
+                        finishedAt: { [Op.is]: null }
+                    },
+                    required: false
+                }],
+            });
+
+            // Transformasi data untuk mengubah struktur Antrians menjadi antrian_now
+            const transformedData = layananGets.map(layanan => ({
+                id: layanan.id,
+                name: layanan.name,
+                code: layanan.code,
+                antrian_now: layanan.Antrians.length > 0 ? layanan.Antrians[0].code : '-'
+            }));
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get layanan by dinas',
+                data: transformedData,
+            });
 
         } catch (err) {
             res.status(500).json(response(500, 'internal server error', err));
