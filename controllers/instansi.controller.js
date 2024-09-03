@@ -1430,34 +1430,62 @@ module.exports = {
                 deletedAt: null
             };
 
-            const layananGets = await Layanan.findAll({
-                where: whereCondition,
-                attributes: ['id', 'name', 'code'],
-                order: [['id', 'ASC']],
-                include: [{
-                    model: Antrian,
-                    attributes: ['code'],
+            let layananGets, antrian_last
+
+            [layananGets, antrian_last] = await Promise.all([
+                Layanan.findAll({
+                    where: whereCondition,
+                    attributes: ['id', 'name', 'code'],
+                    order: [['id', 'ASC']],
+                    include: [{
+                        model: Antrian,
+                        attributes: ['code'],
+                        where: {
+                            createdAt: { [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()] },
+                            status: true,
+                            finishedAt: { [Op.is]: null }
+                        },
+                        required: false
+                    }],
+                }),
+                Antrian.findOne({
+                    attributes: ['id', 'code', 'updatedAt'],
                     where: {
                         createdAt: { [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()] },
                         status: true,
                         finishedAt: { [Op.is]: null }
                     },
-                    required: false
-                }],
-            });
+                    include: [{
+                        model: Layanan,
+                        attributes: ['name', 'code'],
+                    }],
+                    order: [['updatedAt', 'DESC']]
+                })
+            ]);
 
             // Transformasi data untuk mengubah struktur Antrians menjadi antrian_now
-            const transformedData = layananGets.map(layanan => ({
-                id: layanan.id,
-                name: layanan.name,
-                code: layanan.code,
-                antrian_now: layanan.Antrians.length > 0 ? layanan.Antrians[0].code : '-'
+            const transformedData = layananGets?.map(layanan => ({
+                name: layanan?.name,
+                code: layanan?.code,
+                antrian_now: layanan?.Antrians?.length > 0 ? layanan?.Antrians[0]?.code : '-'
             }));
+
+            let transformedData2
+            if (antrian_last) {
+                transformedData2 = {
+                    name: antrian_last?.Layanan?.name ?? '-',
+                    code: antrian_last?.Layanan?.code ?? '-',
+                    antrian_now: antrian_last.code ?? '-'
+                };
+            }
 
             res.status(200).json({
                 status: 200,
                 message: 'success get layanan by dinas',
-                data: transformedData,
+                data: {
+                    antrian: transformedData,
+                    antrian_last: transformedData2
+                },
             });
 
         } catch (err) {
