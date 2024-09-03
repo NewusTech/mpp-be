@@ -1430,9 +1430,9 @@ module.exports = {
                 deletedAt: null
             };
 
-            let layananGets, antrian_last
+            let layananGets, antrian_last, count
 
-            [layananGets, antrian_last] = await Promise.all([
+            [layananGets, antrian_last, count] = await Promise.all([
                 Layanan.findAll({
                     where: whereCondition,
                     attributes: ['id', 'name', 'code'],
@@ -1460,7 +1460,10 @@ module.exports = {
                         attributes: ['name', 'code'],
                     }],
                     order: [['updatedAt', 'DESC']]
-                })
+                }),
+                Layanan.count({
+                    where: whereCondition
+                }),
             ]);
 
             // Transformasi data untuk mengubah struktur Antrians menjadi antrian_now
@@ -1484,7 +1487,8 @@ module.exports = {
                 message: 'success get layanan by dinas',
                 data: {
                     antrian: transformedData,
-                    antrian_last: transformedData2
+                    antrian_last: transformedData2,
+                    count: count
                 },
             });
 

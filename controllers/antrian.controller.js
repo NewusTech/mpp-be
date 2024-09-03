@@ -496,6 +496,8 @@ module.exports = {
             antrianBerikutnya.audio = audioUrl;
             await antrianBerikutnya.save({ transaction });
 
+            global.io.emit('updateAntrian', antrianBerikutnya?.instansi_id);
+
             await transaction.commit();
 
             res.status(200).json(response(200, 'Panggilan antrian berhasil', antrianBerikutnya));
@@ -540,6 +542,8 @@ module.exports = {
                     id: req.params.idantrian,
                 }
             })
+
+            global.io.emit('updateAntrian', AntrianAfterUpdate?.instansi_id);
 
             //response menggunakan helper response.formatter
             res.status(200).json(response(200, 'success update Antrian', AntrianAfterUpdate));
