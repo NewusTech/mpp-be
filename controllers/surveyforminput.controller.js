@@ -887,8 +887,8 @@ module.exports = {
             });
 
             if (survey) {
-                res.status(222).json({
-                    status: 222,
+                res.status(444).json({
+                    status: 444,
                     message: 'Sudah pernah input survey pada layanan ini',
                 });
             } else {
