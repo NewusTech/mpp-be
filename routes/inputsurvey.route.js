@@ -13,10 +13,10 @@ route.post('/user/inputsurvey/create/off/:idlayanan', surveyforminputoff.inputsu
 route.get('/user/inputsurvey/detail/:idsurveynum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], surveyforminput.getdetailsurveyform);
 route.get('/user/inputsurvey/detail/off/:idsurveynum', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin', 'User'])], surveyforminputoff.getdetailsurveyform);
 
-route.get('/user/historysurvey', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.gethistorysurveyuser);
+route.get('/user/historysurvey', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.gethistorybyinstansi);
 route.get('/user/historysurvey/off', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminputoff.gethistorysurveyuser);
 
-route.get('/user/historysurvey/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.getPDFhistorysurveyuser);
+route.get('/user/historysurvey/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.getPDFhistorybyinstansi);
 route.get('/user/historysurvey/off/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminputoff.getPDFhistorysurveyuser);
 
 route.get('/user/historysurvey/:idlayanan', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.getsurveybylayanan);

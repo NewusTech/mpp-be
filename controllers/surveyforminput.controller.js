@@ -159,7 +159,7 @@ module.exports = {
     },
 
     //get history input survey user
-    gethistorysurveyuser: async (req, res) => {
+    gethistorybyinstansi: async (req, res) => {
         try {
             const instansi_id = Number(req.query.instansi_id);
             const page = parseInt(req.query.page) || 1;
@@ -498,7 +498,7 @@ module.exports = {
 
     //get history survey by layanan
 
-    getPDFhistorysurveyuser: async (req, res) => {
+    getPDFhistorybyinstansi: async (req, res) => {
         try {
             // const instansi_id = 4
             const instansi_id = data?.instansi_id || req.query.instansi_id
