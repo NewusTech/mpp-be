@@ -501,7 +501,7 @@ module.exports = {
     getPDFhistorysurveyuser: async (req, res) => {
         try {
             // const instansi_id = 4
-            const instansi_id = data.instansi_id
+            const instansi_id = data?.instansi_id || req.query.instansi_id
             let history;
 
             const WhereClause = {};
@@ -624,7 +624,7 @@ module.exports = {
                         U8: sortedNilai[7] || 0,
                         U9: sortedNilai[8] || 0,
                         nilai: sortedNilai.reduce((sum, nilai) => sum + nilai, 0), // Hitung total nilai
-                        name: data?.Userinfo ? data?.Userinfo?.name : null,
+                        name: data?.Userinfo?.name || data?.name
                     };
 
                     return result;
