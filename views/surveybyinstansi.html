@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Survey</title>
+    <title>Laporan Indeks Kepuasan Masyarakat</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -18,6 +18,8 @@
         table,
         th,
         td {
+            background-color: #d62b2b !important;
+            /* background-color: #C0C0C0; */
             border: 1px solid black;
         }
 
@@ -48,19 +50,70 @@
 </head>
 
 <body>
-    <h3 class="center">Laporan Survey</h3>
+    <h3 class="center">Laporan Indeks Kepuasan Masyarakat</h3>
     {{instansiInfo}}
     <table>
         <thead>
             <tr>
-                <th class="center">Jenis Layanan</th>
-                <th class="center">Total</th>
-                <th class="center">Nilai</th>
+                <th class="center" style="width: 20%; background: #C0C0C0 !important; ">Responden</th>
+                <th class="center" style="width: 27%;">Layanan</th>
+                <th class="center" style="width: 5%;">U1</th>
+                <th class="center" style="width: 5%;">U2</th>
+                <th class="center" style="width: 5%;">U3</th>
+                <th class="center" style="width: 5%;">U4</th>
+                <th class="center" style="width: 5%;">U5</th>
+                <th class="center" style="width: 5%;">U6</th>
+                <th class="center" style="width: 5%;">U7</th>
+                <th class="center" style="width: 5%;">U8</th>
+                <th class="center" style="width: 5%;">U9</th>
+                <th class="center" style="width: 8%;">Total</th> 
             </tr>
         </thead>
         <tbody>
             {{reportTableRows}}
-          
+            <tr>
+                <td colspan="2"><strong>∑ Nilai/Unsur</strong></td>
+                <td class="center"><strong>{{Su1}}</strong></td>
+                <td class="center"><strong>{{Su2}}</strong></td>
+                <td class="center"><strong>{{Su3}}</strong></td>
+                <td class="center"><strong>{{Su4}}</strong></td>
+                <td class="center"><strong>{{Su5}}</strong></td>
+                <td class="center"><strong>{{Su6}}</strong></td>
+                <td class="center"><strong>{{Su7}}</strong></td>
+                <td class="center"><strong>{{Su8}}</strong></td>
+                <td class="center"><strong>{{Su9}}</strong></td>
+                <td class="center"><strong>{{totalSigmaUnsur}}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>NRR/Unsur</strong></td>
+                <td class="center"><strong>{{NRRU1}}</strong></td>
+                <td class="center"><strong>{{NRRU2}}</strong></td>
+                <td class="center"><strong>{{NRRU3}}</strong></td>
+                <td class="center"><strong>{{NRRU4}}</strong></td>
+                <td class="center"><strong>{{NRRU5}}</strong></td>
+                <td class="center"><strong>{{NRRU6}}</strong></td>
+                <td class="center"><strong>{{NRRU7}}</strong></td>
+                <td class="center"><strong>{{NRRU8}}</strong></td>
+                <td class="center"><strong>{{NRRU9}}</strong></td>
+                <td class="center"><strong>{{totalNRRU}}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>NRR Tertimbang/Unsur</strong></td>
+                <td class="center"><strong>{{NRRUT1}}</strong></td>
+                <td class="center"><strong>{{NRRUT2}}</strong></td>
+                <td class="center"><strong>{{NRRUT3}}</strong></td>
+                <td class="center"><strong>{{NRRUT4}}</strong></td>
+                <td class="center"><strong>{{NRRUT5}}</strong></td>
+                <td class="center"><strong>{{NRRUT6}}</strong></td>
+                <td class="center"><strong>{{NRRUT7}}</strong></td>
+                <td class="center"><strong>{{NRRUT8}}</strong></td>
+                <td class="center"><strong>{{NRRUT9}}</strong></td>
+                <td class="center"><strong>{{totalNRRUT}}</strong></td>
+            </tr>
+            <tr>
+                <td colspan="11"><strong>IKM Unit Pelayanan</strong></td>
+                <td class="center"><strong>{{total_nilai}}</strong></td>
+            </tr>
         </tbody>
     </table>
 </body>
