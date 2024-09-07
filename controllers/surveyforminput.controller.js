@@ -501,7 +501,7 @@ module.exports = {
     getPDFhistorysurveyuser: async (req, res) => {
         try {
             // console.log(data)
-            const instansi_id = 4
+            const instansi_id = data.instansi_id
             let history;
 
             const WhereClause = {};
