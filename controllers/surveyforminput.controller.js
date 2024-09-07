@@ -537,20 +537,19 @@ module.exports = {
 
             let nilaiPerSurveyFormId = {};
             // Objek untuk menghitung jumlah surveyformnum per surveyform_id
-            let countSurveyFormNumPerId = {};
+            let countsurvey;
 
             history?.forEach(data => {
+                countsurvey = data.Surveyformnums.length
                 data.Surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
                         // Jika surveyform_id belum ada dalam objek, inisialisasi dengan 0
                         if (!nilaiPerSurveyFormId[input.surveyform_id]) {
                             nilaiPerSurveyFormId[input.surveyform_id] = 0;
-                            countSurveyFormNumPerId[input.surveyform_id] = 0;
                         }
                         // Tambahkan nilai ke surveyform_id yang sesuai
                         nilaiPerSurveyFormId[input.surveyform_id] += input.nilai;
                         // Hitung jumlah surveyformnum untuk surveyform_id yang sesuai
-                        countSurveyFormNumPerId[input.surveyform_id] += 1;
                     });
                 });
             });
@@ -563,7 +562,7 @@ module.exports = {
             // Hitung rata-rata nilai per surveyform_id
             let rataRataNilaiPerSurveyFormId = {};
             for (let id in nilaiPerSurveyFormId) {
-                rataRataNilaiPerSurveyFormId[id] = nilaiPerSurveyFormId[id] / countSurveyFormNumPerId[id];
+                rataRataNilaiPerSurveyFormId[id] = nilaiPerSurveyFormId[id] / countsurvey;
             }
 
             let totalNRRU = 0
@@ -706,7 +705,6 @@ module.exports = {
                     htmlContent = htmlContent.replace(`{{NRRUT${i}}}`, 0);
                 }
             }
-
 
             htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
             htmlContent = htmlContent.replace('{{totalSigmaUnsur}}', totalSigmaUnsur);
