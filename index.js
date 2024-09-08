@@ -2,7 +2,7 @@ const baseConfig = require('./config/base.config');
 const path = require('path');
 const express = require('express')
 const cors = require('cors');
-const { Expo } = require('expo-server-sdk');
+// const { Expo } = require('expo-server-sdk');
 const logger = require('./errorHandler/logger');
 const error = require('./errorHandler/errorHandler')
 const http = require('http'); //socket
@@ -12,7 +12,7 @@ const session = require('express-session');
 const passport = require('./config/passport');
 const bodyParser = require('body-parser');
 const app = express();
-const expo = new Expo();
+// const expo = new Expo();
 const server = http.createServer(app); //socket
 
 const io = new Server(server, {
@@ -42,44 +42,44 @@ app.use(passport.session());
 
 // notif mobile 
 
-const saveToken = (token) => {
-    if (savedPushTokens.indexOf(token) === -1) {
-        savedPushTokens.push(token);
-    }
-};
+// const saveToken = (token) => {
+//     if (savedPushTokens.indexOf(token) === -1) {
+//         savedPushTokens.push(token);
+//     }
+// };
 
-app.post('/tokens', (req, res) => {
-    saveToken(req.body.token);
-    res.send('Token saved');
-});
+// app.post('/tokens', (req, res) => {
+//     saveToken(req.body.token);
+//     res.send('Token saved');
+// });
 
-// Endpoint untuk mengirim push notification ketika status berubah
-app.post('/sendNotification', async (req, res) => {
-    const { message, status } = req.body;
+// // Endpoint untuk mengirim push notification ketika status berubah
+// app.post('/sendNotification', async (req, res) => {
+//     const { message, status } = req.body;
 
-    const notifications = savedPushTokens.map((pushToken) => ({
-        to: pushToken,
-        sound: 'default',
-        body: message,
-        data: { status },
-    }));
+//     const notifications = savedPushTokens.map((pushToken) => ({
+//         to: pushToken,
+//         sound: 'default',
+//         body: message,
+//         data: { status },
+//     }));
 
-    let chunks = expo.chunkPushNotifications(notifications);
-    let tickets = [];
+//     let chunks = expo.chunkPushNotifications(notifications);
+//     let tickets = [];
 
-    (async () => {
-        for (let chunk of chunks) {
-            try {
-                let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-                tickets.push(...ticketChunk);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-    })();
+//     (async () => {
+//         for (let chunk of chunks) {
+//             try {
+//                 let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+//                 tickets.push(...ticketChunk);
+//             } catch (error) {
+//                 console.error(error);
+//             }
+//         }
+//     })();
 
-    res.send('Notifications sent');
-});
+//     res.send('Notifications sent');
+// });
 
 // Routes
 app.get('/auth/google', async (req, res, next) => {
