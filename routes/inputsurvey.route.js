@@ -16,6 +16,8 @@ route.get('/user/inputsurvey/detail/off/:idsurveynum', [mid.checkRolesAndLogout(
 route.get('/user/historysurvey', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.gethistorybyinstansi);
 route.get('/user/historysurvey/off', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminputoff.gethistorysurveyuser);
 
+route.get('/user/historysurveyall/pdf', [mid.checkRolesAndLogout(['Super Admin'])], surveyforminput.getPDFhistoryALL);
+
 route.get('/user/historysurvey/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminput.getPDFhistorybyinstansi);
 route.get('/user/historysurvey/off/pdf', [mid.checkRolesAndLogout(['Admin Instansi', 'Admin Verifikasi', 'Admin Layanan', 'Super Admin'])], surveyforminputoff.getPDFhistorysurveyuser);
 

@@ -498,6 +498,103 @@ module.exports = {
 
     //get history survey by layanan
 
+    getPDFhistoryALL: async (req, res) => {
+        try {
+           
+            let history;
+
+            const WhereClause = {};
+
+            [history] = await Promise.all([
+                Layanan.findAll({
+                    include: [
+                        {
+                            model: Surveyformnum,
+                            include: [
+                                {
+                                    model: Surveyforminput,
+                                    order: [['id', 'ASC']]
+                                },
+                                {
+                                    model: Userinfo,
+                                    attributes: ['id', 'name', 'pendidikan', 'gender'],
+                                },
+                            ],
+                            where: WhereClause
+                        },
+                        {
+                            model: Instansi,
+                            attributes: ['id', 'name']
+                        }
+                    ],
+                })
+            ]);
+
+            let nilaiPerSurveyFormId = {};
+            // Objek untuk menghitung jumlah surveyformnum per surveyform_id
+            let countsurvey;
+
+            history?.forEach(data => {
+                countsurvey = data.Surveyformnums.length
+                data.Surveyformnums.forEach(surveyformnum => {
+                    // console.log(surveyformnum)
+                    surveyformnum.Surveyforminputs.forEach(input => {
+                        console.log(input.nilai, input.surveyform_id, input.surveyformnum_id, surveyformnum.layanan_id, data.Instansi.id)
+                        // Jika surveyform_id belum ada dalam objek, inisialisasi dengan 0
+                        if (!nilaiPerSurveyFormId[input.surveyform_id]) {
+                            nilaiPerSurveyFormId[input.surveyform_id] = 0;
+                        }
+                        // Tambahkan nilai ke surveyform_id yang sesuai
+                        nilaiPerSurveyFormId[input.surveyform_id] += input.nilai;
+                        // Hitung jumlah surveyformnum untuk surveyform_id yang sesuai
+                    });
+                });
+            });
+
+            console.log(nilaiPerSurveyFormId)
+
+            const templatePath = path.resolve(__dirname, '../views/surveyall.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+
+            // // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'Legal',
+                landscape: true,
+                margin: {
+                    top: '0.5in',
+                    right: '0.5in',
+                    bottom: '0.5in',
+                    left: '0.5in'
+                }
+            });
+
+            await browser.close();
+
+            // // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `skm-${currentDate}.pdf`;
+
+            // // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+            // res.status(500).json(response(200, 'aaa'));
+        } catch (err) {
+            res.status(500).json(response(500, 'Internal server error', err));
+            console.log(err);
+        }
+    },
+
     getPDFhistorybyinstansi: async (req, res) => {
         try {
             // const instansi_id = 4
