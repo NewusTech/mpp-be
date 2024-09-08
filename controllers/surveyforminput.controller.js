@@ -500,7 +500,7 @@ module.exports = {
 
     getPDFhistoryALL: async (req, res) => {
         try {
-           
+
             let history;
 
             const WhereClause = {};
@@ -530,31 +530,210 @@ module.exports = {
                 })
             ]);
 
-            let nilaiPerSurveyFormId = {};
-            // Objek untuk menghitung jumlah surveyformnum per surveyform_id
-            let countsurvey;
+            let instansiSurveyMap = {}; // Menyimpan total nilai per instansi dan surveyform_id asli
+            let mappedSurveyPerInstansi = {}; // Menyimpan peta surveyform_id jadi rentang 1-9 per instansi
+            let nilaiPerSurveyFormId = {}; // Menyimpan hasil akhir setelah perhitungan    
+            let countsurvey = 0;
+
+            const calculateforHistory = (surveyforminputs) => {
+                let nilaiPerSurveyform = {};
+
+                surveyforminputs.forEach(input => {
+                    if (!nilaiPerSurveyform[input.surveyform_id]) {
+                        nilaiPerSurveyform[input.surveyform_id] = 0;
+                    }
+                    nilaiPerSurveyform[input.surveyform_id] += input.nilai || 0;
+                });
+
+                for (let surveyform_id in nilaiPerSurveyform) {
+                    nilaiPerSurveyform[surveyform_id] = (nilaiPerSurveyform[surveyform_id]);
+                }
+
+                return nilaiPerSurveyform;
+
+            };
+
+            let formattedData = history.map(service => {
+                return service.Surveyformnums?.map(data => {
+                    const surveyforminputsNilai = data?.Surveyforminputs ? calculateforHistory(data?.Surveyforminputs) : {};
+
+                    // Urutkan nilai berdasarkan ID terkecil hingga terbesar
+                    const sortedKeys = Object.keys(surveyforminputsNilai).sort((a, b) => a - b);
+                    const sortedNilai = sortedKeys.map(key => surveyforminputsNilai[key]);
+
+                    // Masukkan nilai ke U1 - U9 sesuai urutan
+                    const result = {
+                        id: data?.id,
+                        instansi: service?.Instansi.name,
+                        layanan: service?.name,
+                        U1: sortedNilai[0] || 0,
+                        U2: sortedNilai[1] || 0,
+                        U3: sortedNilai[2] || 0,
+                        U4: sortedNilai[3] || 0,
+                        U5: sortedNilai[4] || 0,
+                        U6: sortedNilai[5] || 0,
+                        U7: sortedNilai[6] || 0,
+                        U8: sortedNilai[7] || 0,
+                        U9: sortedNilai[8] || 0,
+                        nilai: sortedNilai.reduce((sum, nilai) => sum + nilai, 0), // Hitung total nilai
+                        name: data?.Userinfo?.name || data?.name
+                    };
+
+                    return result;
+                });
+            }).flat();
 
             history?.forEach(data => {
-                countsurvey = data.Surveyformnums.length
+                countsurvey += data.Surveyformnums.length
+                const instansiId = data.Instansi.id;
+
+                if (!instansiSurveyMap[instansiId]) {
+                    instansiSurveyMap[instansiId] = {};
+                }
+
                 data.Surveyformnums.forEach(surveyformnum => {
-                    // console.log(surveyformnum)
                     surveyformnum.Surveyforminputs.forEach(input => {
-                        console.log(input.nilai, input.surveyform_id, input.surveyformnum_id, surveyformnum.layanan_id, data.Instansi.id)
-                        // Jika surveyform_id belum ada dalam objek, inisialisasi dengan 0
-                        if (!nilaiPerSurveyFormId[input.surveyform_id]) {
-                            nilaiPerSurveyFormId[input.surveyform_id] = 0;
+                        if (!instansiSurveyMap[instansiId][input.surveyform_id]) {
+                            instansiSurveyMap[instansiId][input.surveyform_id] = 0;
                         }
-                        // Tambahkan nilai ke surveyform_id yang sesuai
-                        nilaiPerSurveyFormId[input.surveyform_id] += input.nilai;
-                        // Hitung jumlah surveyformnum untuk surveyform_id yang sesuai
+                        instansiSurveyMap[instansiId][input.surveyform_id] += input.nilai;
                     });
                 });
             });
 
-            console.log(nilaiPerSurveyFormId)
+            // Menerapkan mapping surveyform_id ke 1-9
+            Object.keys(instansiSurveyMap).forEach(instansiId => {
+                const surveyFormIds = Object.keys(instansiSurveyMap[instansiId]); // Ambil semua surveyform_id
+                mappedSurveyPerInstansi[instansiId] = {}; // Buat peta baru
 
+                surveyFormIds.forEach((formId, index) => {
+                    mappedSurveyPerInstansi[instansiId][formId] = index + 1; // Map ke rentang 1-9
+                });
+            });
+
+            // Menghitung nilai berdasarkan mapped survey per instansi
+            for (const instansiId in mappedSurveyPerInstansi) {
+                for (const originalFormId in mappedSurveyPerInstansi[instansiId]) {
+                    const mappedId = mappedSurveyPerInstansi[instansiId][originalFormId]; // Ambil mapped ID
+
+                    if (!nilaiPerSurveyFormId[mappedId]) {
+                        nilaiPerSurveyFormId[mappedId] = 0; // Inisialisasi nilai
+                    }
+
+                    // Tambahkan nilai dari instansiSurveyMap ke nilaiPerSurveyFormId
+                    nilaiPerSurveyFormId[mappedId] += instansiSurveyMap[instansiId][originalFormId];
+                }
+            }
+
+            let totalSigmaUnsur = 0
+            for (let id in nilaiPerSurveyFormId) {
+                totalSigmaUnsur += nilaiPerSurveyFormId[id];
+            }
+
+            // Hitung rata-rata nilai per surveyform_id
+            let rataRataNilaiPerSurveyFormId = {};
+            for (let id in nilaiPerSurveyFormId) {
+                rataRataNilaiPerSurveyFormId[id] = nilaiPerSurveyFormId[id] / countsurvey;
+            }
+
+            let totalNRRU = 0
+            for (let id in rataRataNilaiPerSurveyFormId) {
+                totalNRRU += rataRataNilaiPerSurveyFormId[id];
+            }
+
+            // Hitung nilai rata-rata dikalikan 0.11
+            let hasilPerSurveyFormId = {};
+            for (let id in rataRataNilaiPerSurveyFormId) {
+                hasilPerSurveyFormId[id] = rataRataNilaiPerSurveyFormId[id] * 0.11;
+            }
+
+            // Totalkan hasilPerSurveyFormId
+            let totalHasil = 0;
+            for (let id in hasilPerSurveyFormId) {
+                totalHasil += hasilPerSurveyFormId[id];
+            }
+
+            let hasilfix = totalHasil * 25;
+        
             const templatePath = path.resolve(__dirname, '../views/surveyall.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
+
+            if (nilaiPerSurveyFormId && Object.keys(nilaiPerSurveyFormId).length > 0) {
+                sortedKeys = Object.keys(nilaiPerSurveyFormId).sort((a, b) => a - b).slice(0, 9);
+
+                sortedKeys.forEach((key, index) => {
+                    htmlContent = htmlContent.replace(`{{Su${index + 1}}}`, nilaiPerSurveyFormId[key] ?? 0);
+                });
+            } else {
+                // Jika nilaiPerSurveyFormId kosong, isi Su1-Su9 dengan 0
+                for (let index = 0; index < 9; index++) {
+                    htmlContent = htmlContent.replace(`{{Su${index + 1}}}`, 0);
+                }
+            }
+
+            // Untuk rataRataNilaiPerSurveyFormId
+            if (rataRataNilaiPerSurveyFormId && Object.keys(rataRataNilaiPerSurveyFormId).length > 0) {
+                sortedKeys = Object.keys(rataRataNilaiPerSurveyFormId).sort((a, b) => a - b).slice(0, 9);
+
+                // Masukkan nilai dari NRRU1 hingga NRRU9 berdasarkan urutan key
+                sortedKeys.forEach((key, index) => {
+                    htmlContent = htmlContent.replace(`{{NRRU${index + 1}}}`, rataRataNilaiPerSurveyFormId[key]?.toFixed(2) || 0);
+                });
+            } else {
+                // Jika rataRataNilaiPerSurveyFormId kosong, isi NRRU1-NRRU9 dengan 0
+                for (let i = 1; i <= 9; i++) {
+                    htmlContent = htmlContent.replace(`{{NRRU${i}}}`, 0);
+                }
+            }
+
+            // Untuk hasilPerSurveyFormId
+            if (hasilPerSurveyFormId && Object.keys(hasilPerSurveyFormId).length > 0) {
+                sortedKeys = Object.keys(hasilPerSurveyFormId).sort((a, b) => a - b).slice(0, 9);
+
+                // Masukkan nilai dari NRRUT1 hingga NRRUT9 berdasarkan urutan key
+                sortedKeys.forEach((key, index) => {
+                    htmlContent = htmlContent.replace(`{{NRRUT${index + 1}}}`, hasilPerSurveyFormId[key]?.toFixed(2) || 0);
+                });
+            } else {
+                // Jika hasilPerSurveyFormId kosong, isi NRRUT1-NRRUT9 dengan 0
+                for (let i = 1; i <= 9; i++) {
+                    htmlContent = htmlContent.replace(`{{NRRUT${i}}}`, 0);
+                }
+            }
+
+            let reportTableRows;
+            if (formattedData?.length > 0) {
+                reportTableRows = formattedData?.map(survey => `
+                    <tr>
+                        <td>${survey?.name}</td>
+                        <td class="center">${survey?.instansi}</td>
+                        <td class="center">${survey?.layanan}</td>
+                        <td class="center">${survey?.U1}</td>
+                        <td class="center">${survey?.U2}</td>
+                        <td class="center">${survey?.U3}</td>
+                        <td class="center">${survey?.U4}</td>
+                        <td class="center">${survey?.U5}</td>
+                        <td class="center">${survey?.U6}</td>
+                        <td class="center">${survey?.U7}</td>
+                        <td class="center">${survey?.U8}</td>
+                        <td class="center">${survey?.U9}</td>
+                        <td class="center">${survey?.nilai}</td>
+                    </tr>
+                `).join('');
+            } else {
+                reportTableRows = `
+                    <tr>
+                        <td class="center" colspan="12" style="color: red;"><strong>DATA KOSONG</strong></td>
+                    </tr>
+                `
+            }
+
+         htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows ? reportTableRows : '');
+
+            htmlContent = htmlContent.replace('{{totalSigmaUnsur}}', totalSigmaUnsur);
+            htmlContent = htmlContent.replace('{{totalNRRU}}', totalNRRU?.toFixed(2));
+            htmlContent = htmlContent.replace('{{totalNRRUT}}', totalHasil?.toFixed(2));
+            htmlContent = htmlContent.replace('{{total_nilai}}', hasilfix?.toFixed(2));
 
             // // Launch Puppeteer
             const browser = await puppeteer.launch({
