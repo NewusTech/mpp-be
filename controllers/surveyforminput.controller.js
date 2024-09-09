@@ -723,7 +723,7 @@ module.exports = {
             } else {
                 reportTableRows = `
                     <tr>
-                        <td class="center" colspan="12" style="color: red;"><strong>DATA KOSONG</strong></td>
+                        <td class="center" colspan="13" style="color: red;"><strong>DATA KOSONG</strong></td>
                     </tr>
                 `
             }
