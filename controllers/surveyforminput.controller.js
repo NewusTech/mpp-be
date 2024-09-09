@@ -654,7 +654,7 @@ module.exports = {
             }
 
             let hasilfix = totalHasil * 25;
-        
+
             const templatePath = path.resolve(__dirname, '../views/surveyall.html');
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
 
@@ -728,8 +728,7 @@ module.exports = {
                 `
             }
 
-         htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows ? reportTableRows : '');
-
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows ? reportTableRows : '');
             htmlContent = htmlContent.replace('{{totalSigmaUnsur}}', totalSigmaUnsur);
             htmlContent = htmlContent.replace('{{totalNRRU}}', totalNRRU?.toFixed(2));
             htmlContent = htmlContent.replace('{{totalNRRUT}}', totalHasil?.toFixed(2));
