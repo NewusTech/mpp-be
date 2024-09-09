@@ -32,12 +32,14 @@ module.exports = {
             });
             const instansiCount = await Instansi.count({
                 where: {
-                    status: true
+                    status: true,
+                    deletedAt: null
                 }
             });
             const layananCount = await Layanan.count({
                 where: {
-                    status: true
+                    status: true,
+                    deletedAt: null
                 }
             });
 
