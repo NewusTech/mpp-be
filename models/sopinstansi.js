@@ -12,6 +12,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Sopinstansi.init({
     file: DataTypes.STRING,
+    name: DataTypes.STRING,
+    desc: DataTypes.STRING,
     instansi_id: DataTypes.INTEGER,
   }, {
     sequelize,

@@ -25,6 +25,8 @@ module.exports = {
             //membuat schema untuk validasi
             const schema = {
                 instansi_id: { type: "number" },
+                name: { type: "string", optional: true },
+                desc: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -50,6 +52,8 @@ module.exports = {
             let layananCreateObj = {
                 instansi_id: Number(req.params.id),
                 file: req.file ? fileKey : undefined,
+                name: req.body.name,
+                desc: req.body.desc,
             }
 
             //validasi menggunakan module fastest-validator
@@ -140,6 +144,8 @@ module.exports = {
 
             //membuat schema untuk validasi
             const schema = {
+                name: { type: "string", optional: true },
+                desc: { type: "string", optional: true },
             }
 
             if (req.file) {
@@ -164,6 +170,8 @@ module.exports = {
             //buat object layanan
             let layananUpdateObj = {
                 file: req.file ? fileKey : layananGet.file,
+                name: req.body.name,
+                desc: req.body.desc,
             }
 
             //validasi menggunakan module fastest-validator
