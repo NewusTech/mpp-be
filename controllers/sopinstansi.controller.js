@@ -86,8 +86,8 @@ module.exports = {
                 include: [
                     {
                         model: Sopinstansi,
-                        separate: true,
-                        order: [['id', 'DESC']]
+                        // separate: true,
+                        // order: [['id', 'DESC']]
                     },
                 ],
             });
