@@ -138,7 +138,7 @@ module.exports = {
 
             //cek apakah data layanan ada
             if (!layananGet) {
-                res.status(404).json(response(404, 'layanan not found'));
+                res.status(404).json(response(404, 'data not found'));
                 return;
             }
 
