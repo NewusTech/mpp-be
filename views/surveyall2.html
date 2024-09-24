@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Indeks Kepuasan Masyarakat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid black;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .font1 {
+            font-size: 16px;
+        }
+
+        .font2 {
+            font-size: 14px;
+        }
+
+        .font3 {
+            font-size: 24px;
+        }
+
+        .font4 {
+            font-size: 22px;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th class="font1" style="width: 47%;">Keterangan</th>
+                <th class="center font1" style="width: 3%;">No.</th>
+                <th class="center font1" style="width: 38%;">Unsur Pelayanan</th>
+                <th class="center font1" style="width: 12%;">Nilai Rata-Rata</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="9" valign="top" style="padding-top: 0px;">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="font2">U1 s.d. U9</td>
+                                <td class="font2">=</td>
+                                <td class="font2">Unsur-Unsur pelayanan</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">NRR</td>
+                                <td class="font2">=</td>
+                                <td class="font2">Nilai rata-rata</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">NRR / Unsur</td>
+                                <td class="font2">=</td>
+                                <td class="font2">Jumlah nilai per unsur dibagi jumlah kuesioner yang terisi</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">NRR <br> Tertimbang / Unsur</td>
+                                <td class="font2">=</td>
+                                <td class="font2">NRR per unsur x 0,11</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">IKM Unit Pelayanan</td>
+                                <td class="font2">=</td>
+                                <td class="font2">Jumlah NRR Tertimbang x 25</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td class="center font2">
+                    U1
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-1</td>
+                <td class="center font2">
+                    {{NRRU1}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U2
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-2</td>
+                <td class="center font2">
+                    {{NRRU2}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U3
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-3</td>
+                <td class="center font2">
+                    {{NRRU3}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U4
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-4</td>
+                <td class="center font2">
+                    {{NRRU4}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U5
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-5</td>
+                <td class="center font2">
+                    {{NRRU5}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U6
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-6</td>
+                <td class="center font2">
+                    {{NRRU6}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U7
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-7</td>
+                <td class="center font2">
+                    {{NRRU7}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U8
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-8</td>
+                <td class="center font2">
+                    {{NRRU8}}
+                </td>
+            </tr>
+            <tr>
+                <td class="center font2">
+                    U9
+                </td>
+                <td class="font2">Unsur-Unsur/Kuisioner Pelayanan ke-9</td>
+                <td class="center font2">
+                    {{NRRU9}}
+                </td>
+            </tr>
+            <tr>
+                <td class="font3" valign="top" style="text-align: left;">
+                    <strong>SKM UNIT PELAYANAN : <span style="float: right;">{{total_nilai}}</strong></span>
+                </td>
+                <td colspan="3" rowspan="2">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="font4 center"><strong>NILAI IKM</strong></td>
+                                <td class="font4 center" colspan="2"><strong>MUTU PELAYANAN</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="font3 center"><strong>{{total_nilai2}}</strong></td>
+                                <td class="font3 center"><strong>{{predikat_nilai}}</strong></td>
+                                <td class="font3 center"><strong>{{predikat_detail}}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td class="font1" >
+                    <strong>Mutu Pelayanan :</strong>
+
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="font2">A</td>
+                                <td class="font2">(Sangat Baik) </td>
+                                <td class="font2">: 88,31 - 100,00</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">B</td>
+                                <td class="font2">(Baik) </td>
+                                <td class="font2">: 76,61 - 88,30</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">C</td>
+                                <td class="font2">(Kurang Baik)</td>
+                                <td class="font2">: 65,00 - 76,60</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">D</td>
+                                <td class="font2">(Tidak Baik) </td>
+                                <td class="font2">: 25,00 - 64,99</td>
+                            </tr>
+                            <tr>
+                                <td class="font2">E</td>
+                                <td class="font2">(Sangat Tidak Baik)</td>
+                                <td class="font2">: 0,00 - 24,99</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
