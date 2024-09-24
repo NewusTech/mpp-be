@@ -500,10 +500,25 @@ module.exports = {
 
     getPDFhistoryALL: async (req, res) => {
         try {
-
             let history;
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
 
             const WhereClause = {};
+
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
+            }
 
             [history] = await Promise.all([
                 Layanan.findAll({
@@ -656,7 +671,10 @@ module.exports = {
             let hasilfix = totalHasil * 25;
 
             const templatePath = path.resolve(__dirname, '../views/surveyall.html');
+            const templatePath2 = path.resolve(__dirname, '../views/surveyall2.html');
+
             let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let htmlContent2 = fs.readFileSync(templatePath2, 'utf8');
 
             if (nilaiPerSurveyFormId && Object.keys(nilaiPerSurveyFormId).length > 0) {
                 sortedKeys = Object.keys(nilaiPerSurveyFormId).sort((a, b) => a - b).slice(0, 9);
@@ -678,11 +696,13 @@ module.exports = {
                 // Masukkan nilai dari NRRU1 hingga NRRU9 berdasarkan urutan key
                 sortedKeys.forEach((key, index) => {
                     htmlContent = htmlContent.replace(`{{NRRU${index + 1}}}`, rataRataNilaiPerSurveyFormId[key]?.toFixed(2) || 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${index + 1}}}`, rataRataNilaiPerSurveyFormId[key]?.toFixed(2) || 0);
                 });
             } else {
                 // Jika rataRataNilaiPerSurveyFormId kosong, isi NRRU1-NRRU9 dengan 0
                 for (let i = 1; i <= 9; i++) {
                     htmlContent = htmlContent.replace(`{{NRRU${i}}}`, 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${i}}}`, 0);
                 }
             }
 
@@ -733,6 +753,25 @@ module.exports = {
             htmlContent = htmlContent.replace('{{totalNRRU}}', totalNRRU?.toFixed(2));
             htmlContent = htmlContent.replace('{{totalNRRUT}}', totalHasil?.toFixed(2));
             htmlContent = htmlContent.replace('{{total_nilai}}', hasilfix?.toFixed(2));
+            htmlContent2 = htmlContent2.replace('{{total_nilai}}', hasilfix?.toFixed(2));
+            htmlContent2 = htmlContent2.replace('{{total_nilai2}}', hasilfix?.toFixed(2));
+
+            if (hasilfix >= 88.31 && hasilfix <= 100) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'A');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT BAIK');
+            } else if (hasilfix >= 76.61 && hasilfix <= 88.30) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'B');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'BAIK');
+            } else if (hasilfix >= 65.00 && hasilfix <= 76.60) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'C');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'KURANG BAIK');
+            } else if (hasilfix >= 25.00 && hasilfix <= 64.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'D');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'TIDAK BAIK');
+            } else if (hasilfix >= 0 && hasilfix <= 24.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'E');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT TIDAK BAIK');
+            }
 
             // // Launch Puppeteer
             const browser = await puppeteer.launch({
@@ -742,7 +781,8 @@ module.exports = {
             const page = await browser.newPage();
 
             // // Set HTML content
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+            let finalHtmlContent = htmlContent.replace('{{footerContent}}', htmlContent2);
+            await page.setContent(finalHtmlContent, { waitUntil: 'networkidle0' });
 
             // // Generate PDF
             const pdfBuffer = await page.pdf({
@@ -779,7 +819,25 @@ module.exports = {
             const instansi_id = data?.instansi_id || req.query.instansi_id
             let history;
 
+            const start_date = req.query.start_date;
+            const end_date = req.query.end_date;
+
             const WhereClause = {};
+
+            if (start_date && end_date) {
+                WhereClause.createdAt = {
+                    [Op.between]: [moment(start_date).startOf('day').toDate(), moment(end_date).endOf('day').toDate()]
+                };
+            } else if (start_date) {
+                WhereClause.createdAt = {
+                    [Op.gte]: moment(start_date).startOf('day').toDate()
+                };
+            } else if (end_date) {
+                WhereClause.createdAt = {
+                    [Op.lte]: moment(end_date).endOf('day').toDate()
+                };
+            }
+
             const WhereClause2 = {};
             if (instansi_id) {
                 WhereClause2.id = instansi_id;
@@ -804,7 +862,13 @@ module.exports = {
                         {
                             model: Instansi,
                             attributes: ['name'],
-                            where: WhereClause2
+                            where: WhereClause2,
+                            include: [
+                                {
+                                    model: Surveyform,
+                                    attributes: ['field'],
+                                }
+                            ]
                         },
                     ],
                 })
@@ -814,7 +878,17 @@ module.exports = {
             // Objek untuk menghitung jumlah surveyformnum per surveyform_id
             let countsurvey;
 
+            const templatePath = path.resolve(__dirname, '../views/surveybyinstansi.html');
+            const templatePath2 = path.resolve(__dirname, '../views/surveybyinstansi2.html');
+
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let htmlContent2 = fs.readFileSync(templatePath2, 'utf8');
+
             history?.forEach(data => {
+                data?.Instansi?.Surveyforms?.forEach((surveyform, index) => {
+                    htmlContent2 = htmlContent2.replace(`{{field${index + 1}}}`, surveyform.field ?? '-');
+                });
+                
                 countsurvey = data.Surveyformnums.length
                 data.Surveyformnums.forEach(surveyformnum => {
                     surveyformnum.Surveyforminputs.forEach(input => {
@@ -906,9 +980,6 @@ module.exports = {
                 });
             }).flat();
 
-            const templatePath = path.resolve(__dirname, '../views/surveybyinstansi.html');
-            let htmlContent = fs.readFileSync(templatePath, 'utf8');
-
             let reportTableRows;
             if (formattedData?.length > 0) {
                 reportTableRows = formattedData?.map(survey => `
@@ -958,11 +1029,13 @@ module.exports = {
                 // Masukkan nilai dari NRRU1 hingga NRRU9 berdasarkan urutan key
                 sortedKeys.forEach((key, index) => {
                     htmlContent = htmlContent.replace(`{{NRRU${index + 1}}}`, rataRataNilaiPerSurveyFormId[key]?.toFixed(2) || 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${index + 1}}}`, rataRataNilaiPerSurveyFormId[key]?.toFixed(2) || 0);
                 });
             } else {
                 // Jika rataRataNilaiPerSurveyFormId kosong, isi NRRU1-NRRU9 dengan 0
                 for (let i = 1; i <= 9; i++) {
                     htmlContent = htmlContent.replace(`{{NRRU${i}}}`, 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${i}}}`, 0);
                 }
             }
 
@@ -986,6 +1059,25 @@ module.exports = {
             htmlContent = htmlContent.replace('{{totalNRRU}}', totalNRRU?.toFixed(2));
             htmlContent = htmlContent.replace('{{totalNRRUT}}', totalHasil?.toFixed(2));
             htmlContent = htmlContent.replace('{{total_nilai}}', hasilfix?.toFixed(2));
+            htmlContent2 = htmlContent2.replace('{{total_nilai}}', hasilfix?.toFixed(2));
+            htmlContent2 = htmlContent2.replace('{{total_nilai2}}', hasilfix?.toFixed(2));
+
+            if (hasilfix >= 88.31 && hasilfix <= 100) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'A');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT BAIK');
+            } else if (hasilfix >= 76.61 && hasilfix <= 88.30) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'B');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'BAIK');
+            } else if (hasilfix >= 65.00 && hasilfix <= 76.60) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'C');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'KURANG BAIK');
+            } else if (hasilfix >= 25.00 && hasilfix <= 64.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'D');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'TIDAK BAIK');
+            } else if (hasilfix >= 0 && hasilfix <= 24.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'E');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT TIDAK BAIK');
+            }
 
             // // Launch Puppeteer
             const browser = await puppeteer.launch({
@@ -995,7 +1087,8 @@ module.exports = {
             const page = await browser.newPage();
 
             // // Set HTML content
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+            let finalHtmlContent = htmlContent.replace('{{footerContent}}', htmlContent2);
+            await page.setContent(finalHtmlContent, { waitUntil: 'networkidle0' });
 
             // // Generate PDF
             const pdfBuffer = await page.pdf({
@@ -1175,7 +1268,13 @@ module.exports = {
                         },
                         {
                             model: Instansi,
-                            attributes: ['name']
+                            attributes: ['name'],
+                            include: [
+                                {
+                                    model: Surveyform,
+                                    attributes: ['field'],
+                                }
+                            ]
                         },
                     ],
                     where: {
@@ -1190,6 +1289,12 @@ module.exports = {
             let sigmaunsur;
             let NRRU;
             let NRRUT;
+
+            const templatePath = path.resolve(__dirname, '../views/surveybylayanan.html');
+            const templatePath2 = path.resolve(__dirname, '../views/surveybylayanan2.html');
+
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let htmlContent2 = fs.readFileSync(templatePath2, 'utf8');
 
             const calculateNilai = (surveyformnums) => {
                 let nilaiPerSurveyform = {};
@@ -1246,6 +1351,11 @@ module.exports = {
             };
 
             let calculateData = history?.map(data => {
+
+                data?.Instansi?.Surveyforms?.forEach((surveyform, index) => {
+                    htmlContent2 = htmlContent2.replace(`{{field${index + 1}}}`, surveyform.field ?? '-');
+                });
+                
                 const surveyformnumsCount = data.Surveyformnums ? data.Surveyformnums.length : 0;
                 const surveyformnumsNilai = data.Surveyformnums ? calculateNilai(data.Surveyformnums) : 0;
 
@@ -1286,8 +1396,6 @@ module.exports = {
             });
 
             // // Generate HTML content for PDF
-            const templatePath = path.resolve(__dirname, '../views/surveybylayanan.html');
-            let htmlContent = fs.readFileSync(templatePath, 'utf8');
 
             const instansiInfo = history[0]?.Instansi?.name ? `<p>Instansi : ${history[0]?.Instansi?.name}</p>` : '';
             const layananInfo = history[0]?.name ? `<p>Layanan : ${history[0]?.name}</p>` : '';
@@ -1312,6 +1420,25 @@ module.exports = {
             htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
             htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows ? reportTableRows : '');
             htmlContent = htmlContent.replace('{{total_nilai}}', calculateData[0]?.Surveyformnums_nilai ? calculateData[0]?.Surveyformnums_nilai.toFixed(2) : 0);
+            htmlContent2 = htmlContent2.replace('{{total_nilai}}', calculateData[0]?.Surveyformnums_nilai ? calculateData[0]?.Surveyformnums_nilai.toFixed(2) : 0);
+            htmlContent2 = htmlContent2.replace('{{total_nilai2}}', calculateData[0]?.Surveyformnums_nilai ? calculateData[0]?.Surveyformnums_nilai.toFixed(2) : 0);
+
+            if (calculateData[0]?.Surveyformnums_nilai >= 88.31 && calculateData[0]?.Surveyformnums_nilai <= 100) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'A');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT BAIK');
+            } else if (calculateData[0]?.Surveyformnums_nilai >= 76.61 && calculateData[0]?.Surveyformnums_nilai <= 88.30) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'B');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'BAIK');
+            } else if (calculateData[0]?.Surveyformnums_nilai >= 65.00 && calculateData[0]?.Surveyformnums_nilai <= 76.60) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'C');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'KURANG BAIK');
+            } else if (calculateData[0]?.Surveyformnums_nilai >= 25.00 && calculateData[0]?.Surveyformnums_nilai <= 64.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'D');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'TIDAK BAIK');
+            } else if (calculateData[0]?.Surveyformnums_nilai >= 0 && calculateData[0]?.Surveyformnums_nilai <= 24.99) {
+                htmlContent2 = htmlContent2.replace('{{predikat_nilai}}', 'E');
+                htmlContent2 = htmlContent2.replace('{{predikat_detail}}', 'SANGAT TIDAK BAIK');
+            }
 
             let sortedKeys
             let totalSigmaUnsur = 0
@@ -1356,10 +1483,12 @@ module.exports = {
                 // Masukkan nilai dari NRRU ke NRRU1 hingga NRRU9 berdasarkan urutan key
                 sortedKeys.forEach((key, index) => {
                     htmlContent = htmlContent.replace(`{{NRRU${index + 1}}}`, NRRU[key]?.toFixed(2) || 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${index + 1}}}`, NRRU[key]?.toFixed(2) || 0);
                 });
             } else {
                 for (let i = 1; i < 10; i += 1) {
                     htmlContent = htmlContent.replace(`{{NRRU${i}}}`, 0);
+                    htmlContent2 = htmlContent2.replace(`{{NRRU${i}}}`, 0);
                 }
             }
 
@@ -1378,8 +1507,8 @@ module.exports = {
             });
             const page = await browser.newPage();
 
-            // // Set HTML content
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+            let finalHtmlContent = htmlContent.replace('{{footerContent}}', htmlContent2);
+            await page.setContent(finalHtmlContent, { waitUntil: 'networkidle0' });
 
             // // Generate PDF
             const pdfBuffer = await page.pdf({

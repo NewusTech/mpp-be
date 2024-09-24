@@ -46,6 +46,10 @@
         .center {
             text-align: center;
         }
+
+        .page-break {
+            page-break-before: always;
+        }
     </style>
 </head>
 
@@ -66,7 +70,7 @@
                 <th class="center" style="width: 5%;">U7</th>
                 <th class="center" style="width: 5%;">U8</th>
                 <th class="center" style="width: 5%;">U9</th>
-                <th class="center" style="width: 6%;">Total</th> 
+                <th class="center" style="width: 6%;">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -116,6 +120,11 @@
             </tr>
         </tbody>
     </table>
+    
+    <div class="page-break"></div>
+
+    {{footerContent}}
+
 </body>
 
 </html>
