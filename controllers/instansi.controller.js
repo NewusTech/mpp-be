@@ -1,6 +1,6 @@
 const { response } = require('../helpers/response.formatter');
 
-const { Instansi, Layanan, Layananformnum, Apkinstansi, Userinfo, Pengaduan, Antrian, sequelize } = require('../models');
+const { Instansi, Layanan, Layananformnum, Apkinstansi, Userinfo, User, Role, Kecamatan, Desa, Pengaduan, Antrian, sequelize } = require('../models');
 
 const slugify = require('slugify');
 const Validator = require("fastest-validator");
@@ -10,7 +10,7 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const moment = require('moment-timezone');
 const { generatePagination } = require('../pagination/pagination');
-const { Op, Sequelize } = require('sequelize');
+const { Op, Sequelize, where } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const s3Client = new S3Client({
@@ -1422,6 +1422,135 @@ module.exports = {
             console.log(err);
         }
     },
+
+    reportgeolayanan: async (req, res) => {
+        try {
+            const search = req.query.search ?? null;
+            const instansi = req.query.instansi ?? null;
+            const layanan = req.query.layanan ?? null;
+            const desa = req.query.desa ?? null;
+            const kecamatan = req.query.kecamatan ?? null;
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const showDeleted = req.query.showDeleted ?? null;
+            
+            const offset = (page - 1) * limit;
+            const userWhereClause = {
+                deletedAt: showDeleted !== null ? { [Op.not]: null } : null,
+                role_id: 5,
+            };
+
+            const LayananformnumWhereClause = {
+                ...(layanan && { layanan_id: layanan })
+            };
+
+            const LayananClause = {
+                ...(instansi && { instansi_id: instansi }),
+            };
+
+            const searchCondition = {
+                ...(
+                  search
+                    ? {
+                        [Op.or]: [
+                          { nik: { [Op.iLike]: `%${search}%` } },
+                          { name: { [Op.iLike]: `%${search}%` } }
+                        ]
+                      }
+                    : {}
+                ),
+                ...(kecamatan && { kecamatan_id: kecamatan }),
+                ...(desa && { desa_id: desa }) 
+              };
+
+            const [userGets, totalCount] = await Promise.all([
+                Userinfo.findAll({
+                    distinct: true, 
+                    order: [['id', 'ASC']],
+                    where: searchCondition,
+                    limit,
+                    offset,
+                    include: [
+                        {
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                        },
+                        { model: Kecamatan, attributes: ['name', 'id'], as: 'Kecamatan' },
+                        { model: Desa, attributes: ['name', 'id'], as: 'Desa' },
+                        { 
+                            model: Layananformnum, 
+                            attributes: ['id'],
+                            where: LayananformnumWhereClause,
+                            include: [
+                                {
+                                    model: Layanan,
+                                    attributes: ['id'],
+                                    // where: LayananClause,
+                                },
+                            ]
+                        },
+                    ]
+                }),
+                Userinfo.count({
+                    distinct: true, 
+                    where: searchCondition,
+                    include: [
+                        {
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                        },
+                        { 
+                            model: Layananformnum, 
+                            attributes: ['id'],
+                            where: LayananformnumWhereClause,
+                            include: [
+                                {
+                                    model: Layanan,
+                                    attributes: ['id'],
+                                },
+                            ]
+                        },
+                        { model: Kecamatan, attributes: ['name', 'id'], as: 'Kecamatan' },
+                        { model: Desa, attributes: ['name', 'id'], as: 'Desa' }
+                    ]
+                })
+            ]);
+
+            const pagination = generatePagination(totalCount, page, limit, '/api/user/instansi/reportgeolayanan');
+            const formattedData = userGets.map(user => ({
+                id: user.id,
+                name: user.name,
+                slug: user.slug,
+                nik: user.nik,
+                email: user.email,
+                telepon: user.telepon,
+                kecamatan_id: user.kecamatan_id,
+                kecamatan_name: user.Kecamatan?.name,
+                desa_id: user.desa_id,
+                desa_name: user.Desa?.name,
+                alamat: user.alamat,
+            }));
+
+            res.status(200).json({
+                status: 200,
+                message: 'success get user',
+                data1: userGets,
+                data: formattedData,
+                pagination
+            });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({
+                status: 500,
+                message: 'internal server error',
+                error: err.message
+            });
+        }
+    },
+
 
     //SCREEN ANTRIAN
     getScreenAntrian: async (req, res) => {
