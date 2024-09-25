@@ -1554,6 +1554,194 @@ module.exports = {
         }
     },
 
+    pdfgeolayanan: async (req, res) => {
+        try {
+
+            const search = req.query.search ?? null;
+            const instansi = req.query.instansi ?? null;
+            const layanan = req.query.layanan ?? null;
+            const desa = req.query.desa ?? null;
+            const kecamatan = req.query.kecamatan ?? null;
+            const showDeleted = req.query.showDeleted ?? null;
+
+            const userWhereClause = {
+                deletedAt: showDeleted !== null ? { [Op.not]: null } : null,
+                role_id: 5,
+            };
+
+            let LayananformnumWhereClause;
+            if (layanan) LayananformnumWhereClause = {
+                layanan_id: layanan 
+            }
+            
+            let LayananClause; 
+            if (instansi) LayananClause = {
+                instansi_id: instansi
+            };
+
+            const searchCondition = {
+                ...(
+                    search
+                        ? {
+                            [Op.or]: [
+                                { nik: { [Op.iLike]: `%${search}%` } },
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        }
+                        : {}
+                ),
+                ...(kecamatan && { kecamatan_id: kecamatan }),
+                ...(desa && { desa_id: desa })
+            };
+
+            const [userGets, totalCount] = await Promise.all([
+                Userinfo.findAll({
+                    distinct: true,
+                    order: [['id', 'ASC']],
+                    where: searchCondition,
+                    include: [
+                        {
+                            model: Layananformnum,
+                            attributes: ['id'], 
+                            include: [
+                                {
+                                    model: Layanan,
+                                    attributes: ['id', 'instansi_id'],
+                                    where: LayananClause,
+                                },
+                            ],
+                            where: LayananformnumWhereClause,
+                        },
+                        {
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                        },
+                        { model: Kecamatan, attributes: ['name', 'id'], as: 'Kecamatan' },
+                        { model: Desa, attributes: ['name', 'id'], as: 'Desa' },
+                       
+                    ]
+                }),
+                Userinfo.count({
+                    distinct: true,
+                    where: searchCondition,
+                    include: [
+                        {
+                            model: User,
+                            where: userWhereClause,
+                            attributes: ['id'],
+                        },
+                        {
+                            model: Layananformnum,
+                            attributes: ['id'],
+                            where: LayananformnumWhereClause,
+                            include: [
+                                {
+                                    model: Layanan,
+                                    attributes: ['id'],
+                                    where: LayananClause,
+                                },
+                            ]
+                        },
+                        { model: Kecamatan, attributes: ['name', 'id'], as: 'Kecamatan' },
+                        { model: Desa, attributes: ['name', 'id'], as: 'Desa' }
+                    ]
+                })
+            ]);
+
+            const formattedData = userGets.map(user => ({
+                id: user.id,
+                name: user.name,
+                slug: user.slug,
+                nik: user.nik,
+                email: user.email,
+                telepon: user.telepon,
+                kecamatan_id: user.kecamatan_id,
+                kecamatan_name: user.Kecamatan?.name,
+                desa_id: user.desa_id,
+                desa_name: user.Desa?.name,
+                alamat: user.alamat,
+            }));
+
+            // Generate HTML content for PDF
+            const templatePath = path.resolve(__dirname, '../views/laporangeolayanan.html');
+            let htmlContent = fs.readFileSync(templatePath, 'utf8');
+            let instansiGet, layananGet;
+
+            if (instansi) {
+                instansiGet = await Instansi.findOne({
+                    where: {
+                        id: instansi
+                    },
+                });
+            }
+
+            if (layanan) {
+                layananGet = await Layanan.findOne({
+                    where: {
+                        id: layanan
+                    },
+                });
+            }
+
+            const instansiInfo = instansiGet?.name ? `<p>Instansi : ${instansiGet?.name}</p>` : '';
+            const layananInfo = layananGet?.name ? `<p>Layanan : ${layananGet?.name}</p>` : '';
+
+            const reportTableRows = formattedData?.map(lastdata => {
+                const createdAtDate = new Date(lastdata.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                return `
+                     <tr>
+                         <td>${lastdata?.name}</td>
+                         <td>${lastdata?.nik}</td>
+                         <td>${lastdata?.kecamatan_name}</td>
+                         <td>${lastdata?.desa_name}</td>
+                     </tr>
+                 `;
+            }).join('');
+
+            htmlContent = htmlContent.replace('{{instansiInfo}}', instansiInfo);
+            htmlContent = htmlContent.replace('{{layananInfo}}', layananInfo);
+            htmlContent = htmlContent.replace('{{reportTableRows}}', reportTableRows);
+
+            // Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+
+            // Set HTML content
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf({
+                format: 'Legal',
+                landscape: true,
+                margin: {
+                    top: '1.0in',
+                    right: '1.0in',
+                    bottom: '1.0in',
+                    left: '1.0in'
+                }
+            });
+
+            await browser.close();
+
+            // Generate filename
+            const currentDate = new Date().toISOString().replace(/:/g, '-');
+            const filename = `laporan-${currentDate}.pdf`;
+
+            // Send PDF buffer
+            res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
+            res.setHeader('Content-type', 'application/pdf');
+            res.send(pdfBuffer);
+
+        } catch (err) {
+            res.status(500).json(response(500, 'internal server error', err));
+            console.log(err);
+        }
+    },
 
     //SCREEN ANTRIAN
     getScreenAntrian: async (req, res) => {
