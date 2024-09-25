@@ -1433,44 +1433,58 @@ module.exports = {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const showDeleted = req.query.showDeleted ?? null;
-            
+
             const offset = (page - 1) * limit;
             const userWhereClause = {
                 deletedAt: showDeleted !== null ? { [Op.not]: null } : null,
                 role_id: 5,
             };
 
-            const LayananformnumWhereClause = {
-                ...(layanan && { layanan_id: layanan })
-            };
-
-            const LayananClause = {
-                ...(instansi && { instansi_id: instansi }),
+            let LayananformnumWhereClause;
+            if (layanan) LayananformnumWhereClause = {
+                layanan_id: layanan 
+            }
+            
+            let LayananClause; 
+            if (instansi) LayananClause = {
+                instansi_id: instansi
             };
 
             const searchCondition = {
                 ...(
-                  search
-                    ? {
-                        [Op.or]: [
-                          { nik: { [Op.iLike]: `%${search}%` } },
-                          { name: { [Op.iLike]: `%${search}%` } }
-                        ]
-                      }
-                    : {}
+                    search
+                        ? {
+                            [Op.or]: [
+                                { nik: { [Op.iLike]: `%${search}%` } },
+                                { name: { [Op.iLike]: `%${search}%` } }
+                            ]
+                        }
+                        : {}
                 ),
                 ...(kecamatan && { kecamatan_id: kecamatan }),
-                ...(desa && { desa_id: desa }) 
-              };
+                ...(desa && { desa_id: desa })
+            };
 
             const [userGets, totalCount] = await Promise.all([
                 Userinfo.findAll({
-                    distinct: true, 
+                    distinct: true,
                     order: [['id', 'ASC']],
                     where: searchCondition,
                     limit,
                     offset,
                     include: [
+                        {
+                            model: Layananformnum,
+                            attributes: ['id'], 
+                            include: [
+                                {
+                                    model: Layanan,
+                                    attributes: ['id', 'instansi_id'],
+                                    where: LayananClause,
+                                },
+                            ],
+                            where: LayananformnumWhereClause,
+                        },
                         {
                             model: User,
                             where: userWhereClause,
@@ -1478,22 +1492,11 @@ module.exports = {
                         },
                         { model: Kecamatan, attributes: ['name', 'id'], as: 'Kecamatan' },
                         { model: Desa, attributes: ['name', 'id'], as: 'Desa' },
-                        { 
-                            model: Layananformnum, 
-                            attributes: ['id'],
-                            where: LayananformnumWhereClause,
-                            include: [
-                                {
-                                    model: Layanan,
-                                    attributes: ['id'],
-                                    // where: LayananClause,
-                                },
-                            ]
-                        },
+                       
                     ]
                 }),
                 Userinfo.count({
-                    distinct: true, 
+                    distinct: true,
                     where: searchCondition,
                     include: [
                         {
@@ -1501,14 +1504,15 @@ module.exports = {
                             where: userWhereClause,
                             attributes: ['id'],
                         },
-                        { 
-                            model: Layananformnum, 
+                        {
+                            model: Layananformnum,
                             attributes: ['id'],
                             where: LayananformnumWhereClause,
                             include: [
                                 {
                                     model: Layanan,
                                     attributes: ['id'],
+                                    where: LayananClause,
                                 },
                             ]
                         },
@@ -1536,7 +1540,6 @@ module.exports = {
             res.status(200).json({
                 status: 200,
                 message: 'success get user',
-                data1: userGets,
                 data: formattedData,
                 pagination
             });
