@@ -42,8 +42,17 @@ const inputsurveyRoute = require("./inputsurvey.route");
 const historyformRoute = require("./historyform.route");
 const bukutamuRoute = require("./bukutamu.route");
 const push = require("./push.route");
+const { createBullBoard } = require('bull-board');
+const { BullAdapter } = require('bull-board/bullAdapter');
+const panggilanAntrianQueue = require('../queues/panggilanAntrianQueue');
+
+const { router } = createBullBoard([
+  new BullAdapter(panggilanAntrianQueue), // Adapter untuk queue panggilan antrian
+]);
 
 module.exports = function (app, urlApi) {
+  app.use('/admin/queues', router);
+  
   app.use(urlApi, userRoute);
   app.use(urlApi, userinfoRoute);
   app.use(urlApi, roleRoute);

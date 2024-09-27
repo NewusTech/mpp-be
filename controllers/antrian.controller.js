@@ -16,6 +16,8 @@ const moment = require('moment-timezone');
 const { Sequelize, Op } = require('sequelize');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
+const panggilanAntrianQueue = require('../queues/panggilanAntrianQueue');
+
 const s3Client = new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
@@ -403,6 +405,111 @@ module.exports = {
         }
     },
 
+    // panggilAntrianBerikutnya: async (req, res) => {
+    //     const transaction = await sequelize.transaction();
+    //     try {
+    // const { sluglayanan } = req.params;
+
+    // const today = new Date();
+    // const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    // const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // // Cari antrian berikutnya yang belum dipanggil (statusnya false)
+    // const antrianBerikutnya = await Antrian.findOne({
+    //     where: {
+    //         status: false,
+    //         createdAt: {
+    //             [Op.between]: [startOfDay, endOfDay]
+    //         },
+    //     },
+    //     include: [
+    //         {
+    //             model: Instansi,
+    //             attributes: ['id', 'name', 'code'],
+
+    //         }, {
+    //             model: Layanan,
+    //             attributes: ['id', 'name', 'code'],
+    //             where: {
+    //                 slug: sluglayanan,
+    //             },
+    //         }
+    //     ],
+    //     order: [
+    //         ['createdAt', 'ASC']
+    //     ],
+    //     transaction
+    // });
+
+    // if (!antrianBerikutnya) {
+    //     await transaction.rollback();
+    //     return res.status(404).json({ status: 404, message: 'Tidak ada antrian yang tersedia' });
+    // }
+
+    // // Update status antrian menjadi true (sudah dipanggil)
+    // antrianBerikutnya.status = true;
+    // antrianBerikutnya.updatedAt = Date.now();
+    // await antrianBerikutnya.save({ transaction });
+
+    // // Generate suara panggilan antrian
+    // const panggilanAntrian = `Antrian ${antrianBerikutnya?.code}, silahkan ke loket ${antrianBerikutnya?.Layanan?.code}`;
+    // const languageCode = 'id';
+
+    // const generateAndUploadAudio = async (text, language) => {
+    //     try {
+    //         const url = await tts.getAudioUrl(text, {
+    //             lang: language || 'id',
+    //             slow: false,
+    //             host: 'https://translate.google.com',
+    //         });
+
+    //         const response = await axios({
+    //             url,
+    //             method: 'GET',
+    //             responseType: 'arraybuffer', // Perlu array buffer untuk membuat Buffer di Nodejs
+    //         });
+
+    //         const now = new Date();
+    //         const datetime = now.toISOString().replace(/[-:.]/g, '');
+    //         const audioFileName = `antrian_audio_${uuidv4()}_${datetime}.mp3`;
+
+    //         const uploadParams = {
+    //             Bucket: process.env.AWS_S3_BUCKET,
+    //             Key: `audio/${audioFileName}`,
+    //             Body: response.data, // Buffer dari response arraybuffer
+    //             ContentType: 'audio/mpeg',
+    //             ACL: 'public-read',
+    //         };
+
+    //         const command = new PutObjectCommand(uploadParams);
+    //         await s3Client.send(command);
+
+    //         const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+    //         return fileUrl;
+    //     } catch (error) {
+    //         console.error('Error converting text to speech or uploading to S3:', error);
+    //         throw error;
+    //     }
+    // };
+
+    // const audioUrl = await generateAndUploadAudio(panggilanAntrian, languageCode);
+
+    // antrianBerikutnya.audio = audioUrl;
+    // await antrianBerikutnya.save({ transaction });
+
+    // global.io.emit('updateAntrian', antrianBerikutnya?.instansi_id);
+
+    // await transaction.commit();
+
+    // res.status(200).json(response(200, 'Panggilan antrian berhasil', antrianBerikutnya));
+    //     } catch (err) {
+    //         await transaction.rollback();
+    //         console.error(err);
+    //         res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+    //     }
+    // },
+
     panggilAntrianBerikutnya: async (req, res) => {
         const transaction = await sequelize.transaction();
         try {
@@ -498,6 +605,8 @@ module.exports = {
 
             global.io.emit('updateAntrian', antrianBerikutnya?.instansi_id);
 
+            await panggilanAntrianQueue.add({ antrianId: antrianBerikutnya.id, audio: antrianBerikutnya.audio, status: 'false' });
+
             await transaction.commit();
 
             res.status(200).json(response(200, 'Panggilan antrian berhasil', antrianBerikutnya));
@@ -506,6 +615,42 @@ module.exports = {
             await transaction.rollback();
             console.error(err);
             res.status(500).json({ status: 500, message: 'Internal server error', error: err });
+        }
+    },
+
+    panggilUlangAntrian: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const antriandata = await Antrian.findOne({
+                where: {
+                    id: id
+                }
+            });
+
+            if (!antriandata) {
+                await transaction.rollback();
+                return res.status(404).json({ status: 404, message: 'Tidak ada antrian yang tersedia' });
+            }
+
+            const job = await panggilanAntrianQueue.add(
+                {
+                    antrianId: antriandata.id,
+                    audio: antriandata.audio,
+                    status: 'false'
+                },
+                { priority: 1 }  // Priority 1 makes sure this job is at the top
+            );
+    
+            res.status(200).json({
+                status: 200,
+                message: 'Antrian successfully re-added to the top',
+                jobId: job.id,  // Return only the job ID or relevant data
+            });
+
+        } catch (error) {
+            console.error('Error re-adding job to the queue:', error);
+            res.status(500).json({ status: 500, message: 'Internal server error', error });
         }
     },
 
@@ -581,7 +726,7 @@ module.exports = {
                 }
             }
 
-            let riwayatAntrian = await Promise.all([ 
+            let riwayatAntrian = await Promise.all([
                 Antrian.findAll({
                     where: {
                         createdAt: {
@@ -621,13 +766,13 @@ module.exports = {
                 const endDateFormatted = endOfToday2 ? new Date(endOfToday2).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
                 tanggalInfo = `<p>Periode Tanggal : ${startDateFormatted} s.d. ${endDateFormatted ? endDateFormatted : 'Hari ini'} </p>`;
             }
-           
+
             const reportTableRows = riwayatAntrian[0]?.map(antrian => {
                 const createdAtDate = new Date(antrian.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
                 const createdAtTime = new Date(antrian.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const updatedAtTime = new Date(antrian.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const statusText = antrian.status ? 'Selesai' : 'Menunggu';
-            
+
                 return `
                     <tr>
                         <td>${antrian.code}</td>

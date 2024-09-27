@@ -7,6 +7,12 @@ module.exports = {
     "database": process.env.DB_NAME_DEVELOPMENT,
     "host": process.env.DB_HOST,
     "dialect": process.env.DB_DIALECT,
+    pool: {
+      max: 10, // Maksimum 10 koneksi
+      min: 0,
+      acquire: 60000, // Waktu maksimum untuk menunggu koneksi
+      idle: 10000 // Waktu maksimum koneksi yang idle
+    },
   },
   "test": {
     "username": process.env.DB_USERNAME,
