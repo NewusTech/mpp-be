@@ -328,7 +328,7 @@ module.exports = {
             const formattedTime = moment(BookingantrianGet?.waktu, 'HH:mm:ss').format('HH.mm');
 
             const barcode = BookingantrianGet?.qrcode || '';
-            const instansiImage = path.join(`${process.env.SERVER_URL}/static/images/DesignLogoMpp.png`);
+            const instansiImage = path.join(`${process.env.SERVER_URL}/static/images/DesignLogoMpp2.png`);
             htmlContent = htmlContent.replace('{{instansiImage}}', instansiImage);
 
             htmlContent = htmlContent.replace('{{barcode}}', barcode);
