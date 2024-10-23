@@ -21,7 +21,10 @@ module.exports = {
             });
 
             let instansi = await Instansi.findAll({
-                attributes: ['name', 'image']
+                attributes: ['name', 'image'],
+                where:{
+                    deletedAt: null
+                }
             })
 
             //cek jika maklumat tidak ada
