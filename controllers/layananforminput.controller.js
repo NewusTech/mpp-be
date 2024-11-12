@@ -637,9 +637,9 @@ module.exports = {
       });
 
       const token = await getToken();
-      if (!token) {
-        return res.status(400).json({ error: "Token not found" });
-      }
+      // if (!token) {
+      //   return res.status(400).json({ error: "Token not found" });
+      // }
 
       // Kirim notifikasi menggunakan Expo
       const message = {
@@ -648,7 +648,11 @@ module.exports = {
         token: token, // Token diambil dari memori
       };
 
-      const hasil = await sendPushNotification(token, message);
+      let hasil
+
+      if (token){
+        hasil = await sendPushNotification(token, message);
+      }
 
       console.log(hasil);
 
