@@ -153,7 +153,8 @@ module.exports = {
                 instansi_id,
                 layanan_id,
                 userinfo_id,
-                status: 0
+                status: 0,
+                createdAt: Date.now()
             };
 
             const newAntrian = await Antrian.create(antrianCreateObj, { transaction });
