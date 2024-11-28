@@ -1,75 +1,81 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Instansis', {
+    await queryInterface.createTable("Instansis", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
       },
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       code: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       slug: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       alamat: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       pj: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       nip_pj: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+      },
+      gelar: {
+        type: Sequelize.STRING,
+      },
+      jabatan: {
+        type: Sequelize.STRING,
       },
       desc: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
       },
       telp: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       email: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       image: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
       },
       active_online: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
       },
       active_offline: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
       },
       jam_buka: {
-        type: Sequelize.TIME
+        type: Sequelize.TIME,
       },
       jam_tutup: {
-        type: Sequelize.TIME
+        type: Sequelize.TIME,
       },
       status: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       deletedAt: {
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
 
   //untuk drop table ketika melakukan revert migrations
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Instansis');
-  }
+    await queryInterface.dropTable("Instansis");
+  },
 };
