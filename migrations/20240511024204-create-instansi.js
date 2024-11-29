@@ -27,12 +27,6 @@ module.exports = {
       nip_pj: {
         type: Sequelize.STRING,
       },
-      gelar: {
-        type: Sequelize.STRING,
-      },
-      jabatan: {
-        type: Sequelize.STRING,
-      },
       desc: {
         type: Sequelize.TEXT,
       },
